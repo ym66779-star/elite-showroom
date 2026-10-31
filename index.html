@@ -1,0 +1,2795 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>معرض النخبة للسيارات | المنصة السحابية الاحترافية</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- مكتبات Firebase الرسمية (App + Firestore + Storage) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
+  <style>
+    body { font-family: 'Cairo', sans-serif; background-color: var(--bg-main, #f1f5f9); color: var(--text-main, #1e293b); transition: background-color 0.25s, color 0.25s; }
+    .glass-header { background: linear-gradient(135deg, #090d16 0%, #172554 100%); }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+    input[type="range"] { accent-color: #1e3a8a; }
+
+    /* ثيم الوضع الليلي الفاخر (Luxury Dark Mode) */
+    body.dark-mode { --bg-main: #090d16; --text-main: #f8fafc; }
+    body.dark-mode .bg-white { background-color: #111827 !important; color: #f8fafc !important; border-color: #1f2937 !important; }
+    body.dark-mode .bg-slate-50, body.dark-mode .bg-slate-100 { background-color: #1e293b !important; color: #f1f5f9 !important; border-color: #334155 !important; }
+    body.dark-mode input:not([type="range"]), body.dark-mode select, body.dark-mode textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+    body.dark-mode .text-slate-900, body.dark-mode .text-slate-800, body.dark-mode .text-slate-700 { color: #f8fafc !important; }
+    body.dark-mode .text-slate-600, body.dark-mode .text-slate-500 { color: #94a3b8 !important; }
+    body.dark-mode .text-blue-950, body.dark-mode .text-blue-900 { color: #fbbf24 !important; }
+    body.dark-mode .border-slate-100, body.dark-mode .border-slate-200, body.dark-mode .border-slate-300 { border-color: #1e293b !important; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printable-quote-area, #printable-quote-area * { visibility: visible; }
+      #printable-quote-area { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-24 sm:pb-14">
+
+  <!-- الهيدر الرئيسي -->
+  <header class="glass-header text-white shadow-xl sticky top-0 z-30 border-b border-blue-800/40 no-print">
+    <div class="max-w-7xl mx-auto px-3 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="App.resetFilters()">
+        <div class="bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg">🚘</div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-lg font-black tracking-wide">معرض النخبة للسيارات</h1>
+            <span id="cloud-status-badge" onclick="event.stopPropagation(); App.handleCloudBadgeClick()" class="bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 cursor-pointer transition" title="حالة الاتصال بقاعدة بيانات Firebase">
+              <span id="cloud-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span id="cloud-text">جاري الاتصال...</span>
+            </span>
+          </div>
+          <p class="text-[10px] text-amber-300/90 font-semibold">نظام المبيعات والفحص الهندسي المعتمد (Cloud Sync)</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
+        <!-- زر الوضع الليلي الفاخر -->
+        <button onclick="App.toggleDarkMode()" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-600/60 text-amber-300 w-9 h-8 rounded-xl flex items-center justify-center text-sm shadow-xs transition" title="تبديل الوضع الليلي / النهاري">
+          <span id="dark-mode-icon">🌙</span>
+        </button>
+
+        <button onclick="App.openCompareModal()" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-600/60 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 shadow-xs">
+          <span>⚖️</span> <span id="compare-btn-text">المقارنة</span> (<span id="compare-count" class="text-amber-400 font-black">0</span>)
+        </button>
+
+        <button onclick="App.openClientFavModal()" class="bg-rose-700/90 hover:bg-rose-600 text-white text-xs px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1.5 shadow-xs">
+          <span>❤️</span> <span id="client-fav-btn-text">مفضلتي</span> (<span id="client-favorites-count">0</span>)
+        </button>
+
+        <button id="open-tradein-modal-btn" onclick="App.openTradeInModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1.5 shadow-md">
+          <span>🔄</span> استبدل أو بع سيارتك
+        </button>
+
+        <!-- أزرار الإدارة الموحدة -->
+        <button id="open-command-center-btn" onclick="App.openCommandCenter('overview')" class="hidden bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs px-3.5 py-1.5 rounded-xl font-black transition items-center gap-1.5 shadow-lg">
+          <span>🎛️</span> مركز القيادة
+          <span id="total-tasks-badge" class="bg-slate-950 text-amber-400 text-[10px] px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+
+        <button id="open-add-car-btn" onclick="App.openCarFormModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-xl font-black transition items-center gap-1 shadow-md">
+          <span>➕</span> إضافة سيارة
+        </button>
+
+        <button id="admin-auth-btn" onclick="App.handleAuthClick()" class="bg-white text-slate-950 text-xs px-3.5 py-1.5 rounded-xl font-black transition flex items-center gap-1 shadow hover:bg-slate-100">
+          <span>🔐</span> دخول الإدارة
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- المحتوى الرئيسي -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full no-print">
+    <!-- شريط الملخص السريع للإدارة -->
+    <div id="admin-quick-bar" class="hidden mb-6"></div>
+
+    <!-- قسم البحث والفلاتر والترتيب الذكي -->
+    <section class="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/90 mb-6 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-1.5 flex-wrap" id="quick-filter-chips">
+          <span class="text-xs font-black text-slate-500 ml-1">⚡ فئات سريعة:</span>
+          <button onclick="App.setQuickFilter('ALL')" data-chip="ALL" class="chip-btn bg-blue-900 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition shadow-xs">الكل</button>
+          <button onclick="App.setQuickFilter('AVAILABLE')" data-chip="AVAILABLE" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">متاحة فوراً</button>
+          <button onclick="App.setQuickFilter('TOP_SCORE')" data-chip="TOP_SCORE" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">⭐ فحص زيرو (+9.5)</button>
+          <button onclick="App.setQuickFilter('UNDER_2M')" data-chip="UNDER_2M" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">💰 أقل من 2 مليون</button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs font-bold text-slate-500">ترتيب حسب:</span>
+            <select id="sort-by-select" onchange="App.applyFilters()" class="border border-slate-300 rounded-xl px-2.5 py-1 text-xs font-black text-blue-950 bg-slate-50 focus:outline-none">
+              <option value="NEWEST">الأحدث بالمعرض</option>
+              <option value="PRICE_ASC">السعر: من الأقل للأعلى</option>
+              <option value="PRICE_DESC">السعر: من الأعلى للأقل</option>
+              <option value="SCORE_DESC">الأعلى تقييماً في الفحص</option>
+              <option value="KM_ASC">الأقل عداد كيلومترات</option>
+            </select>
+          </div>
+          <button onclick="App.resetFilters()" class="text-xs text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1">
+            <span>🔄</span> مسح الفلاتر
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <input id="filter-search" oninput="App.applyFilters()" type="text" placeholder="🔍 ابحث بالماركة، الموديل، أو الكماليات..." class="border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-blue-900" />
+        <select id="filter-brand" onchange="App.applyFilters()" class="border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none focus:border-blue-900">
+          <option value="ALL">جميع الماركات</option>
+        </select>
+        <select id="filter-year" onchange="App.applyFilters()" class="border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none focus:border-blue-900">
+          <option value="ALL">جميع سنوات الصنع</option>
+        </select>
+        <input id="filter-max-price" oninput="App.applyFilters()" type="number" min="0" placeholder="أقصى ميزانية (ج.م)" class="border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-blue-900" />
+        <input id="filter-max-km" oninput="App.applyFilters()" type="number" min="0" placeholder="أقصى عداد (كم) مثال: 50000" class="border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-blue-900" />
+      </div>
+    </section>
+
+    <!-- عنوان المعرض وعداد السيارات -->
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-black text-slate-900">السيارات المعتمدة المتاحة بالمعرض</h2>
+        <p class="text-xs text-slate-500">جميع السيارات مفحوصة فنياً في 4 محاور أساسية ومعتمدة بضمان معرض النخبة</p>
+      </div>
+      <span id="cars-count-badge" class="bg-blue-950 text-amber-400 text-xs sm:text-sm font-black px-4 py-1.5 rounded-xl shadow-xs border border-blue-800">0 سيارات</span>
+    </div>
+
+    <!-- شبكة عرض السيارات -->
+    <div id="cars-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <!-- شريط التنقل السفلي الذكي للموبايل (Bottom App Bar) -->
+  <nav class="fixed bottom-8 inset-x-3 sm:hidden bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-2 z-40 border border-slate-700 flex justify-around items-center text-[11px] no-print">
+    <button onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center gap-0.5 text-amber-400 font-bold p-1">
+      <span class="text-base">🏠</span> الرئيسية
+    </button>
+    <button onclick="App.openCompareModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
+      <span class="text-base">⚖️</span> المقارنة (<span id="m-compare-count" class="text-amber-400 font-black">0</span>)
+    </button>
+    <button onclick="App.openClientFavModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
+      <span class="text-base">❤️</span> المفضلة (<span id="m-fav-count" class="text-rose-400 font-black">0</span>)
+    </button>
+    <button onclick="App.openTradeInModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
+      <span class="text-base">🔄</span> استبدل
+    </button>
+    <button onclick="App.toggleChat()" class="flex flex-col items-center gap-0.5 text-amber-300 font-bold p-1">
+      <span class="text-base">🤖</span> المستشار
+    </button>
+  </nav>
+
+  <!-- زر الشات والمستشار الذكي للابتوب -->
+  <button id="floating-chat-btn" onclick="App.toggleChat()" class="hidden sm:flex fixed bottom-12 right-5 bg-blue-950 hover:bg-blue-900 text-white w-14 h-14 rounded-full shadow-2xl items-center justify-center text-2xl z-40 transition transform hover:scale-105 border-2 border-amber-400 no-print">
+    💬
+  </button>
+
+  <!-- نافذة المستشار الذكي -->
+  <div id="chat-modal" class="fixed bottom-24 sm:bottom-28 right-3 left-3 sm:left-auto sm:right-5 bg-white sm:w-96 rounded-2xl shadow-2xl border border-slate-200 hidden flex-col z-40 overflow-hidden no-print">
+    <div class="glass-header text-white p-3.5 flex justify-between items-center">
+      <div>
+        <h3 class="font-black text-sm flex items-center gap-1.5"><span>🤖</span> مستشار النخبة الذكي</h3>
+        <p class="text-[10px] text-amber-300">تحليل فوري للميزانية وترشيح كاش أو تقسيط</p>
+      </div>
+      <button onclick="App.toggleChat(false)" class="bg-white/10 hover:bg-white/20 text-white w-7 h-7 rounded-full font-bold text-xs flex items-center justify-center">✕</button>
+    </div>
+    <div id="chat-messages" class="p-3.5 h-72 overflow-y-auto space-y-3 bg-slate-50 text-xs font-medium flex flex-col custom-scroll">
+      <div class="bg-blue-100 text-blue-950 p-3 rounded-2xl rounded-tr-none max-w-[90%] self-start shadow-xs leading-relaxed">
+        أهلاً بك في <b>معرض النخبة</b>! اضغط على زر الترشيح بالأسفل وأدخل ميزانيتك لأقترح عليك أفضل سيارة كاش أو بالتقسيط فوراً.
+      </div>
+    </div>
+    <div class="p-2.5 bg-slate-100 border-t grid grid-cols-2 gap-1.5">
+      <button onclick="App.quickChat('matchmaker')" class="col-span-2 bg-amber-500 hover:bg-amber-400 text-slate-950 p-2 rounded-xl text-xs font-black transition shadow-xs">✨ رشح لي أفضل سيارة حسب ميزانيتي</button>
+      <button onclick="App.quickChat('prices')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">💰 قائمة الأسعار</button>
+      <button onclick="App.quickChat('installment')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">💳 نظام التقسيط</button>
+      <button onclick="App.quickChat('howto')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">🚗 خطوات الشراء</button>
+      <button onclick="App.quickChat('human')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">👨‍💻 تواصل مع مشرف</button>
+    </div>
+  </div>
+
+  <!-- حاوية النوافذ المنبثقة الرئيسية -->
+  <div id="modal-backdrop" class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs hidden items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+    <div id="modal-content-box" class="w-full flex justify-center my-auto"></div>
+  </div>
+
+  <!-- نافذة التأكيد الأمني (Confirmation Dialog) -->
+  <div id="confirm-backdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div id="confirm-content-box" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-200"></div>
+  </div>
+
+  <!-- إشعارات Toast المصنفة -->
+  <div id="toast-notification" class="fixed bottom-24 sm:bottom-12 left-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 z-50 font-bold text-xs sm:text-sm border-r-4 border-amber-400 flex items-center gap-2 pointer-events-none"></div>
+
+  <!-- شريط الحالة السفلي -->
+  <footer class="fixed bottom-0 inset-x-0 bg-slate-950 text-slate-300 z-30 border-t border-slate-800 shadow-2xl no-print">
+    <div class="max-w-7xl mx-auto px-4 h-8 flex items-center justify-between text-[10px]">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> منصة معرض النخبة (مربوطة بمشروع elite-showroom)</span>
+        <button onclick="App.restoreDefaults()" class="text-slate-400 hover:text-amber-300 underline cursor-pointer">استعادة السيارات الافتراضية</button>
+      </div>
+      <span id="footer-session-info" class="font-bold text-amber-400">وضع تصفح العميل</span>
+    </div>
+  </footer>
+
+  <script>
+    /**
+     * 1. طبقة التخزين المحلي الآمن (SafeStorage)
+     */
+    class SafeStorage {
+      static memoryFallback = {};
+      static get(key, defaultVal = null) {
+        try {
+          const item = window.localStorage.getItem(key);
+          return item ? JSON.parse(item) : defaultVal;
+        } catch (e) {
+          return this.memoryFallback[key] !== undefined ? this.memoryFallback[key] : defaultVal;
+        }
+      }
+      static set(key, value) {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+          this.memoryFallback[key] = value;
+        }
+      }
+      static remove(key) {
+        try {
+          window.localStorage.removeItem(key);
+        } catch (e) {
+          delete this.memoryFallback[key];
+        }
+      }
+    }
+
+    /**
+     * 2. محرك الربط السحابي المباشر بمشروع (elite-showroom) على Firebase
+     */
+    class FirebaseCloudService {
+      static CONFIG_KEY = 'elite_firebase_config_v1';
+      static DEFAULT_CONFIG = {
+        apiKey: "AIzaSyCPnc4qit9-e8cwQoQF6pUrngfXsIFuvmE",
+        authDomain: "elite-showroom.firebaseapp.com",
+        projectId: "elite-showroom",
+        storageBucket: "elite-showroom.firebasestorage.app",
+        messagingSenderId: "888173683784",
+        appId: "1:888173683784:web:1f25e6de059c3786e8647d",
+        measurementId: "G-5KS1NLDPHC"
+      };
+      static app = null;
+      static db = null;
+      static storage = null;
+      static isConnected = false;
+      static unsubscribers = [];
+
+      static getSavedConfig() {
+        const saved = SafeStorage.get(this.CONFIG_KEY, null);
+        if (saved && saved.apiKey && saved.projectId) return saved;
+        return this.DEFAULT_CONFIG;
+      }
+
+      static init() {
+        const cfg = this.getSavedConfig();
+        if (cfg && cfg.apiKey && cfg.projectId) {
+          return this.connect(cfg, false);
+        }
+        this.updateStatusIndicator();
+        return false;
+      }
+
+      static async connect(configObj, showNotification = true) {
+        try {
+          if (!window.firebase) throw new Error('مكتبة Firebase غير محملة');
+          if (!firebase.apps.length) {
+            this.app = firebase.initializeApp(configObj);
+          } else {
+            this.app = firebase.app();
+          }
+          this.db = firebase.firestore();
+          try {
+            this.storage = firebase.storage();
+          } catch (sErr) {
+            this.storage = null;
+          }
+
+          SafeStorage.set(this.CONFIG_KEY, configObj);
+          this.isConnected = true;
+          this.updateStatusIndicator();
+          await this.pushLocalToCloudIfEmpty();
+          this.startRealtimeListeners();
+          if (showNotification) App.showToast('☁️ تم الاتصال بقاعدة بيانات elite-showroom بنجاح!', 'success');
+          return true;
+        } catch (err) {
+          console.error('Firebase Init Error:', err);
+          this.isConnected = false;
+          this.updateStatusIndicator();
+          if (showNotification) App.showToast('❌ تعذر الاتصال بـ Firebase، تأكد من اتصال الإنترنت.', 'error');
+          return false;
+        }
+      }
+
+      static disconnect() {
+        this.unsubscribers.forEach(unsub => { try { unsub(); } catch (e) {} });
+        this.unsubscribers = [];
+        this.isConnected = false;
+        this.updateStatusIndicator();
+        App.showToast('🔌 تم فصل السحابة مؤقتاً والعودة للتخزين المحلي.', 'warning');
+      }
+
+      static updateStatusIndicator() {
+        const dot = document.getElementById('cloud-dot');
+        const txt = document.getElementById('cloud-text');
+        const badge = document.getElementById('cloud-status-badge');
+        if (!dot || !txt || !badge) return;
+        if (this.isConnected) {
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-ping';
+          txt.textContent = 'متصل سحابياً (Firebase Live)';
+          badge.className = 'bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-600/60 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 cursor-pointer transition';
+        } else {
+          dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+          txt.textContent = 'تخزين محلي فوري';
+          badge.className = 'bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 cursor-pointer transition';
+        }
+      }
+
+      static async pushLocalToCloudIfEmpty() {
+        if (!this.isConnected || !this.db) return;
+        try {
+          const snap = await this.db.collection('elite_state').doc('main_store').get();
+          if (!snap.exists) {
+            CarRepository.getAllCars();
+            AuthService.initDB();
+            await this.syncToCloud();
+          }
+        } catch (e) {
+          console.warn('Firestore initial check warning:', e);
+        }
+      }
+
+      static async syncToCloud() {
+        if (!this.isConnected || !this.db) return;
+        try {
+          const payload = {
+            cars: SafeStorage.get(CarRepository.KEY, []),
+            soldCars: SafeStorage.get(CarRepository.SOLD_KEY, []),
+            reservations: SafeStorage.get(CarRepository.RESERVATIONS_KEY, []),
+            inspections: SafeStorage.get(CarRepository.INSPECTIONS_KEY, []),
+            tradeIns: SafeStorage.get(CarRepository.TRADEIN_KEY, []),
+            archivedTradeIns: SafeStorage.get(CarRepository.ARCHIVED_TRADEIN_KEY, []),
+            admins: SafeStorage.get(AuthService.DB_KEY, []),
+            updatedAt: new Date().toISOString()
+          };
+          await this.db.collection('elite_state').doc('main_store').set(payload, { merge: true });
+        } catch (e) {
+          console.warn('Cloud Sync Write Error:', e);
+        }
+      }
+
+      static startRealtimeListeners() {
+        if (!this.isConnected || !this.db) return;
+        this.unsubscribers.forEach(u => { try { u(); } catch (e) {} });
+        const unsub = this.db.collection('elite_state').doc('main_store').onSnapshot((doc) => {
+          if (doc.exists) {
+            const data = doc.data();
+            if (Array.isArray(data.cars)) SafeStorage.set(CarRepository.KEY, data.cars);
+            if (Array.isArray(data.soldCars)) SafeStorage.set(CarRepository.SOLD_KEY, data.soldCars);
+            if (Array.isArray(data.reservations)) SafeStorage.set(CarRepository.RESERVATIONS_KEY, data.reservations);
+            if (Array.isArray(data.inspections)) SafeStorage.set(CarRepository.INSPECTIONS_KEY, data.inspections);
+            if (Array.isArray(data.tradeIns)) SafeStorage.set(CarRepository.TRADEIN_KEY, data.tradeIns);
+            if (Array.isArray(data.archivedTradeIns)) SafeStorage.set(CarRepository.ARCHIVED_TRADEIN_KEY, data.archivedTradeIns);
+            if (Array.isArray(data.admins) && data.admins.length > 0) SafeStorage.set(AuthService.DB_KEY, data.admins);
+            App.syncAll(false);
+          }
+        }, (err) => {
+          console.warn('Realtime listener error:', err);
+        });
+        this.unsubscribers.push(unsub);
+      }
+
+      static async uploadCarImage(file, onProgress) {
+        if (this.isConnected && this.storage && window.location.protocol.startsWith('http')) {
+          try {
+            const safeName = `cars/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            const ref = this.storage.ref().child(safeName);
+            const uploadTask = ref.put(file);
+
+            return await new Promise((resolve, reject) => {
+              uploadTask.on('state_changed',
+                (snapshot) => {
+                  const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                  if (onProgress) onProgress(pct);
+                },
+                (err) => reject(err),
+                async () => {
+                  const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                  resolve(downloadUrl);
+                }
+              );
+            });
+          } catch (storageErr) {
+            console.warn('Firebase Storage fallback to Smart WebP Compression:', storageErr);
+          }
+        }
+        if (onProgress) onProgress(50);
+        const compressedDataUrl = await this.compressImageFile(file);
+        if (onProgress) onProgress(100);
+        return compressedDataUrl;
+      }
+
+      static compressImageFile(file, maxWidth = 780, quality = 0.72) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let w = img.width;
+              let h = img.height;
+              if (w > maxWidth) {
+                h = Math.round((h * maxWidth) / w);
+                w = maxWidth;
+              }
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              resolve(canvas.toDataURL('image/webp', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    /**
+     * 3. نموذج بيانات السيارة المطور مع دعم ألبوم صور متعدد (CarModel)
+     */
+    class CarModel {
+      constructor(data = {}) {
+        this.id = data.id || ('CAR-' + Date.now().toString().slice(-4) + Math.floor(10 + Math.random() * 89));
+        this.brand = String(data.brand || '').trim();
+        this.model = String(data.model || '').trim();
+        this.year = Number(data.year) || 2025;
+        this.price = Math.max(0, Number(data.price) || 0);
+        this.mileageKm = Math.max(0, Number(data.mileageKm) || 0);
+        this.inspectionScore = Math.min(10, Math.max(1, Number(data.inspectionScore) || 9.5));
+        this.engineScore = Number(data.engineScore) || this.inspectionScore;
+        this.gearScore = Number(data.gearScore) || this.inspectionScore;
+        this.bodyScore = Number(data.bodyScore) || this.inspectionScore;
+        this.interiorScore = Number(data.interiorScore) || this.inspectionScore;
+
+        const defaultImg = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80';
+        this.imageUrl = String(data.imageUrl || '').trim() || (Array.isArray(data.images) && data.images[0]) || defaultImg;
+        this.images = Array.isArray(data.images) && data.images.length > 0
+          ? data.images
+          : [this.imageUrl];
+
+        this.description = String(data.description || '').trim();
+        this.dealerPhone = String(data.dealerPhone || '201000000001').replace(/[^0-9]/g, '');
+        this.maxInstallmentMonths = Math.min(120, Math.max(6, Number(data.maxInstallmentMonths) || 60));
+        this.viewsCount = Math.max(0, Number(data.viewsCount) || 0);
+        this.favoritesCount = Math.max(0, Number(data.favoritesCount) || 0);
+        this.lastViewedAt = data.lastViewedAt || 'لم تُشاهد بعد';
+        this.soldAt = data.soldAt || null;
+        this.soldBy = data.soldBy || null;
+        this.soldViaStaff = data.soldViaStaff || null;
+        this.isReserved = Boolean(data.isReserved);
+        this.reservedByClient = data.reservedByClient || null;
+      }
+
+      toMap() { return { ...this }; }
+      get formattedPrice() { return this.price.toLocaleString('ar-EG') + ' ج.م'; }
+      get formattedMileage() { return this.mileageKm.toLocaleString('ar-EG') + ' كم'; }
+      get inspectionBadge() {
+        if (this.inspectionScore >= 9.5) return '⭐ فحص ممتاز (بحالة الزيرو)';
+        if (this.inspectionScore >= 8.5) return '💎 استعمال راقٍ جداً';
+        return '🚗 حالة فنية جيدة جداً';
+      }
+    }
+
+    /**
+     * 4. مستودع البيانات المركزي المتصل بـ Firebase (CarRepository)
+     */
+    class CarRepository {
+      static KEY = 'elite_pro_cars_v1';
+      static SOLD_KEY = 'elite_pro_sold_v1';
+      static FAVORITES_KEY = 'elite_pro_favs_v1';
+      static CLIENT_COMP_KEY = 'elite_pro_c_comp_v1';
+      static ADMIN_COMP_KEY = 'elite_pro_a_comp_v1';
+      static RESERVATIONS_KEY = 'elite_pro_res_v1';
+      static INSPECTIONS_KEY = 'elite_pro_insp_v1';
+      static TRADEIN_KEY = 'elite_pro_ti_v1';
+      static ARCHIVED_TRADEIN_KEY = 'elite_pro_arch_ti_v1';
+      static CLIENT_RES_IDS_KEY = 'elite_pro_my_res_ids_v1';
+      static sessionViewedCars = new Set();
+
+      static getDefaultCarsList() {
+        return [
+          new CarModel({
+            id: 'CAR-1001', brand: 'مرسيدس بنز', model: 'C200 AMG Night Package', year: 2025, price: 3650000, mileageKm: 8000,
+            inspectionScore: 9.8, engineScore: 10, gearScore: 10, bodyScore: 9.8, interiorScore: 9.6,
+            imageUrl: 'https://images.unsplash.com/photo-1618843479319-56172926f442?auto=format&fit=crop&w=900&q=80',
+            images: [
+              'https://images.unsplash.com/photo-1618843479319-56172926f442?auto=format&fit=crop&w=900&q=80',
+              'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=900&q=80',
+              'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=900&q=80'
+            ],
+            description: 'بحالة الزيرو تماماً، باقة AMG الرياضية الكاملة، سقف بانوراما، كاميرات 360 درجة، صيانات توكيل.', maxInstallmentMonths: 60, viewsCount: 25
+          }),
+          new CarModel({
+            id: 'CAR-1002', brand: 'بي إم دبليو', model: 'X5 M-Sport xDrive40i', year: 2024, price: 5900000, mileageKm: 19000,
+            inspectionScore: 9.4, engineScore: 9.6, gearScore: 9.5, bodyScore: 9.2, interiorScore: 9.4,
+            imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=80',
+            images: [
+              'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=80',
+              'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=900&q=80'
+            ],
+            description: 'دفع رباعي xDrive، فرش جلد طبيعي جملي، نظام صوتي Harman Kardon، فبريكا بالكامل بدون خدوش.', maxInstallmentMonths: 72, viewsCount: 19
+          }),
+          new CarModel({
+            id: 'CAR-1003', brand: 'تويوتا', model: 'كورولا فئة أولى Comfort', year: 2024, price: 1350000, mileageKm: 32000,
+            inspectionScore: 9.0, engineScore: 9.5, gearScore: 9.2, bodyScore: 8.8, interiorScore: 8.7,
+            imageUrl: 'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=900&q=80',
+            images: [
+              'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=900&q=80'
+            ],
+            description: 'اعتمادية فائقة، استعمال راقٍ جداً، فبريكا بالكامل من الإكصدام للإكصدام، استهلاك اقتصادي للوقود.', maxInstallmentMonths: 60, viewsCount: 41
+          }),
+          new CarModel({
+            id: 'CAR-1004', brand: 'كيا', model: 'سبورتاج GT-Line Turbo', year: 2025, price: 1950000, mileageKm: 5000,
+            inspectionScore: 9.7, engineScore: 9.9, gearScore: 9.8, bodyScore: 9.7, interiorScore: 9.5,
+            imageUrl: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=900&q=80',
+            images: [
+              'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=900&q=80'
+            ],
+            description: 'أعلى فئة GT-Line، شاشات بانورامية منحنية، كراسي كهرباء وتبريد، بحالة الزيرو.', maxInstallmentMonths: 60, viewsCount: 33
+          })
+        ];
+      }
+
+      static getAllCars() {
+        const saved = SafeStorage.get(this.KEY, null);
+        if (!saved || !Array.isArray(saved)) {
+          const defaults = this.getDefaultCarsList();
+          this.saveAll(defaults, false);
+          return defaults;
+        }
+        return saved.map(i => new CarModel(i));
+      }
+
+      static saveAll(cars, syncCloud = true) {
+        SafeStorage.set(this.KEY, cars.map(c => c.toMap()));
+        if (syncCloud) FirebaseCloudService.syncToCloud();
+      }
+
+      static getSoldCars() { return (SafeStorage.get(this.SOLD_KEY, []) || []).map(i => new CarModel(i)); }
+      static saveSold(soldCars, syncCloud = true) {
+        SafeStorage.set(this.SOLD_KEY, soldCars.map(c => c.toMap()));
+        if (syncCloud) FirebaseCloudService.syncToCloud();
+      }
+
+      static findCarAnywhere(id) {
+        const active = this.getAllCars().find(c => c.id === id);
+        if (active) return { car: active, isSold: false };
+        const sold = this.getSoldCars().find(c => c.id === id);
+        if (sold) return { car: sold, isSold: true };
+        return { car: null, isSold: false };
+      }
+
+      static addCar(car) {
+        const cars = this.getAllCars();
+        cars.unshift(car);
+        this.saveAll(cars);
+        return cars;
+      }
+
+      static updateCar(updatedCar) {
+        const cars = this.getAllCars().map(c => c.id === updatedCar.id ? updatedCar : c);
+        this.saveAll(cars);
+        return cars;
+      }
+
+      static deleteCar(id) {
+        const cars = this.getAllCars().filter(c => c.id !== id);
+        this.saveAll(cars);
+        this.cleanOrphanedCarReferences(id);
+        return cars;
+      }
+
+      static cleanOrphanedCarReferences(carId) {
+        const cComp = (SafeStorage.get(this.CLIENT_COMP_KEY, []) || []).filter(id => id !== carId);
+        const aComp = (SafeStorage.get(this.ADMIN_COMP_KEY, []) || []).filter(id => id !== carId);
+        SafeStorage.set(this.CLIENT_COMP_KEY, cComp);
+        SafeStorage.set(this.ADMIN_COMP_KEY, aComp);
+      }
+
+      static markAsSold(id, approvedByAdmin, handledByStaff = null) {
+        let cars = this.getAllCars();
+        let soldCars = this.getSoldCars();
+        const idx = cars.findIndex(c => c.id === id);
+        if (idx !== -1) {
+          const car = cars[idx];
+          car.soldAt = new Date().toLocaleString('ar-EG');
+          car.soldBy = approvedByAdmin;
+          car.soldViaStaff = handledByStaff || approvedByAdmin;
+          car.isReserved = false;
+          soldCars.unshift(car);
+          cars.splice(idx, 1);
+          this.saveAll(cars, false);
+          this.saveSold(soldCars, false);
+          this.cleanOrphanedCarReferences(id);
+
+          let resList = this.getReservations().map(r => {
+            if (r.carId === id && r.status !== 'sold') {
+              r.status = 'closed_car_sold';
+            }
+            return r;
+          });
+          this.updateReservations(resList);
+          return true;
+        }
+        return false;
+      }
+
+      static incrementClientView(id) {
+        if (AuthService.isLogged() || this.sessionViewedCars.has(id)) return;
+        this.sessionViewedCars.add(id);
+        const now = new Date().toLocaleString('ar-EG');
+        const cars = this.getAllCars().map(c => {
+          if (c.id === id) { c.viewsCount++; c.lastViewedAt = now; }
+          return c;
+        });
+        this.saveAll(cars);
+      }
+
+      static getFavorites() { return SafeStorage.get(this.FAVORITES_KEY, []) || []; }
+      static toggleFavorite(id) {
+        let favs = this.getFavorites();
+        let cars = this.getAllCars();
+        const isFav = favs.includes(id);
+        if (isFav) {
+          favs = favs.filter(f => f !== id);
+          cars = cars.map(c => { if (c.id === id && c.favoritesCount > 0) c.favoritesCount--; return c; });
+        } else {
+          favs.push(id);
+          cars = cars.map(c => { if (c.id === id) c.favoritesCount++; return c; });
+        }
+        SafeStorage.set(this.FAVORITES_KEY, favs);
+        this.saveAll(cars);
+        return !isFav;
+      }
+
+      static getCompare(isAdmin) {
+        const key = isAdmin ? this.ADMIN_COMP_KEY : this.CLIENT_COMP_KEY;
+        const activeIds = new Set(this.getAllCars().map(c => String(c.id)));
+        const rawList = SafeStorage.get(key, []) || [];
+        const validComp = rawList.map(String).filter(id => activeIds.has(id));
+        SafeStorage.set(key, validComp);
+        return validComp;
+      }
+
+      static toggleCompare(id, isAdmin) {
+        const targetId = String(id);
+        const key = isAdmin ? this.ADMIN_COMP_KEY : this.CLIENT_COMP_KEY;
+        let comp = this.getCompare(isAdmin);
+        if (comp.includes(targetId)) {
+          comp = comp.filter(c => c !== targetId);
+          SafeStorage.set(key, comp);
+          return { ok: true, added: false };
+        } else {
+          if (comp.length >= 3) return { ok: false, added: false };
+          comp.push(targetId);
+          SafeStorage.set(key, comp);
+          return { ok: true, added: true };
+        }
+      }
+
+      static clearCompare(isAdmin) {
+        const key = isAdmin ? this.ADMIN_COMP_KEY : this.CLIENT_COMP_KEY;
+        SafeStorage.set(key, []);
+      }
+
+      static getAdminWatchlist(username) {
+        if (!username) return [];
+        const activeIds = new Set(this.getAllCars().map(c => c.id));
+        const list = (SafeStorage.get(`elite_pro_wl_${username}`, []) || []).filter(item => activeIds.has(item.id));
+        SafeStorage.set(`elite_pro_wl_${username}`, list);
+        return list;
+      }
+
+      static toggleAdminWatchlist(id, username, adminName) {
+        if (!username) return false;
+        let list = this.getAdminWatchlist(username);
+        const exists = list.some(item => item.id === id);
+        if (exists) {
+          list = list.filter(item => item.id !== id);
+          SafeStorage.set(`elite_pro_wl_${username}`, list);
+          return false;
+        } else {
+          list.push({ id, addedBy: adminName, addedAt: new Date().toLocaleString('ar-EG') });
+          SafeStorage.set(`elite_pro_wl_${username}`, list);
+          return true;
+        }
+      }
+
+      static getReservations() { return SafeStorage.get(this.RESERVATIONS_KEY, []) || []; }
+      static updateReservations(list) {
+        SafeStorage.set(this.RESERVATIONS_KEY, list);
+        FirebaseCloudService.syncToCloud();
+      }
+      static hasClientReservedCar(carId) {
+        const myResIds = SafeStorage.get(this.CLIENT_RES_IDS_KEY, []) || [];
+        const activeRes = this.getReservations().filter(r => r.status === 'pending_admin' || r.status === 'confirmed_by_staff');
+        return myResIds.includes(carId) && activeRes.some(r => r.carId === carId);
+      }
+
+      static addReservation(resObj, isClientSession = true) {
+        let list = this.getReservations();
+        const duplicate = list.find(r => r.carId === resObj.carId && r.clientPhone === resObj.clientPhone && (r.status === 'pending_admin' || r.status === 'confirmed_by_staff'));
+        if (duplicate) return false;
+        list.unshift(resObj);
+        this.updateReservations(list);
+        if (isClientSession) {
+          const myIds = SafeStorage.get(this.CLIENT_RES_IDS_KEY, []) || [];
+          if (!myIds.includes(resObj.carId)) {
+            myIds.push(resObj.carId);
+            SafeStorage.set(this.CLIENT_RES_IDS_KEY, myIds);
+          }
+        }
+        return true;
+      }
+
+      static getInspections() { return SafeStorage.get(this.INSPECTIONS_KEY, []) || []; }
+      static updateInspections(list) {
+        SafeStorage.set(this.INSPECTIONS_KEY, list);
+        FirebaseCloudService.syncToCloud();
+      }
+      static addInspection(inspObj) {
+        let list = this.getInspections();
+        const duplicate = list.find(i => i.carId === inspObj.carId && i.clientPhone === inspObj.clientPhone && i.status === 'pending');
+        if (duplicate) return false;
+        list.unshift(inspObj);
+        this.updateInspections(list);
+        return true;
+      }
+
+      static getTradeIns() { return SafeStorage.get(this.TRADEIN_KEY, []) || []; }
+      static updateTradeIns(list) {
+        SafeStorage.set(this.TRADEIN_KEY, list);
+        FirebaseCloudService.syncToCloud();
+      }
+      static addTradeIn(reqObj) {
+        let list = this.getTradeIns();
+        list.unshift(reqObj);
+        this.updateTradeIns(list);
+        return true;
+      }
+      static getArchivedTradeIns() { return SafeStorage.get(this.ARCHIVED_TRADEIN_KEY, []) || []; }
+      static updateArchivedTradeIns(list) {
+        SafeStorage.set(this.ARCHIVED_TRADEIN_KEY, list);
+        FirebaseCloudService.syncToCloud();
+      }
+      static archiveTradeIn(id, adminName) {
+        let tradeIns = this.getTradeIns();
+        let archived = this.getArchivedTradeIns();
+        const idx = tradeIns.findIndex(i => i.id === id);
+        if (idx !== -1) {
+          const item = tradeIns[idx];
+          item.archivedAt = new Date().toLocaleString('ar-EG');
+          item.archivedBy = adminName;
+          archived.unshift(item);
+          tradeIns.splice(idx, 1);
+          SafeStorage.set(this.TRADEIN_KEY, tradeIns);
+          this.updateArchivedTradeIns(archived);
+        }
+      }
+    }
+
+    /**
+     * 5. نظام إدارة الجلسات والصلاحيات (AuthService)
+     */
+    class AuthService {
+      static SESSION_KEY = 'elite_pro_auth_session_v1';
+      static DB_KEY = 'elite_pro_admins_db_v1';
+
+      static initDB() {
+        const existing = SafeStorage.get(this.DB_KEY, null);
+        if (!existing || !Array.isArray(existing) || existing.length === 0) {
+          const defaults = [
+            { username: 'admin', pass: 'Elite@2026#Secure', role: 'SuperAdmin', name: 'المدير العام' },
+            { username: 'yasser', pass: 'Yasser*99', role: 'Staff', name: 'يسري (مشرف المبيعات)' }
+          ];
+          SafeStorage.set(this.DB_KEY, defaults);
+        }
+      }
+
+      static getAdmins() {
+        this.initDB();
+        return SafeStorage.get(this.DB_KEY, []);
+      }
+
+      static getSession() {
+        const s = SafeStorage.get(this.SESSION_KEY, null);
+        if (!s || !s.username) return null;
+        const found = this.getAdmins().find(a => a.username === s.username && a.role === s.role);
+        return found ? found : null;
+      }
+
+      static isLogged() { return Boolean(this.getSession()); }
+      static getRole() { const s = this.getSession(); return s ? s.role : 'Client'; }
+      static getName() { const s = this.getSession(); return s ? s.name : 'عميل'; }
+      static getUsername() { const s = this.getSession(); return s ? s.username : null; }
+
+      static login(u, p) {
+        const found = this.getAdmins().find(a => a.username.toLowerCase() === u.toLowerCase() && a.pass === p);
+        if (found) {
+          SafeStorage.set(this.SESSION_KEY, { username: found.username, role: found.role, name: found.name });
+          return true;
+        }
+        return false;
+      }
+
+      static logout() { SafeStorage.remove(this.SESSION_KEY); }
+    }
+
+    /**
+     * 6. المتحكم المركزي الشامل (window.App)
+     */
+    window.App = {
+      quickFilter: 'ALL',
+      activeCommandTab: 'overview',
+      tempUploadedImages: [],
+      currentCalcState: { down: 0, months: 36, monthly: 0 },
+
+      init() {
+        AuthService.initDB();
+        CarRepository.getAllCars();
+        if (SafeStorage.get('elite_dark_mode_v1', false)) {
+          document.body.classList.add('dark-mode');
+          const dmIcon = document.getElementById('dark-mode-icon');
+          if (dmIcon) dmIcon.textContent = '☀️';
+        }
+        this.populateFilterDropdowns();
+        this.syncAll(false);
+        FirebaseCloudService.init();
+
+        const backdrop = document.getElementById('modal-backdrop');
+        if (backdrop) {
+          backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) this.closeModal();
+          });
+        }
+      },
+
+      toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        SafeStorage.set('elite_dark_mode_v1', isDark);
+        const dmIcon = document.getElementById('dark-mode-icon');
+        if (dmIcon) dmIcon.textContent = isDark ? '☀️' : '🌙';
+        this.showToast(isDark ? '🌙 تم تفعيل الوضع الليلي الفاخر' : '☀️ تم تفعيل الوضع النهاري', 'info');
+      },
+
+      showToast(msg, type = 'info') {
+        const t = document.getElementById('toast-notification');
+        if (!t) return;
+        const colors = {
+          success: 'border-emerald-400 bg-slate-900 text-white',
+          warning: 'border-amber-400 bg-slate-900 text-white',
+          error: 'border-rose-500 bg-rose-950 text-white',
+          info: 'border-blue-400 bg-slate-900 text-white'
+        };
+        t.className = `fixed bottom-24 sm:bottom-12 left-5 px-5 py-3 rounded-xl shadow-2xl transform transition-all duration-300 z-50 font-bold text-xs sm:text-sm border-r-4 flex items-center gap-2 pointer-events-none ${colors[type] || colors.info}`;
+        t.textContent = msg;
+        t.classList.remove('translate-y-24', 'opacity-0');
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => t.classList.add('translate-y-24', 'opacity-0'), 3200);
+      },
+
+      confirmAction(title, message, confirmText, confirmColorClass, onConfirm) {
+        const backdrop = document.getElementById('confirm-backdrop');
+        const box = document.getElementById('confirm-content-box');
+        if (!backdrop || !box) return;
+        box.innerHTML = `
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl mx-auto font-black">⚠️</div>
+          <h4 class="font-black text-base text-slate-900">${this.escapeHtml(title)}</h4>
+          <p class="text-xs text-slate-500 leading-relaxed">${this.escapeHtml(message)}</p>
+          <div class="flex gap-2 pt-2">
+            <button id="confirm-yes-btn" class="flex-1 ${confirmColorClass} text-white font-black py-2.5 rounded-xl text-xs shadow transition">${this.escapeHtml(confirmText)}</button>
+            <button id="confirm-no-btn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">إلغاء</button>
+          </div>
+        `;
+        backdrop.classList.remove('hidden');
+        backdrop.classList.add('flex');
+
+        const closeConfirm = () => {
+          backdrop.classList.add('hidden');
+          backdrop.classList.remove('flex');
+        };
+        document.getElementById('confirm-no-btn').onclick = closeConfirm;
+        document.getElementById('confirm-yes-btn').onclick = () => {
+          closeConfirm();
+          if (onConfirm) onConfirm();
+        };
+      },
+
+      restoreDefaults() {
+        this.confirmAction(
+          'استعادة السيارات الافتراضية',
+          'هل ترغب في إعادة ضبط قائمة السيارات المتاحة إلى الـ 4 سيارات الافتراضية ومزامنتها مع السحابة؟',
+          'نعم، استعادة الآن',
+          'bg-blue-900 hover:bg-blue-800',
+          () => {
+            CarRepository.saveAll(CarRepository.getDefaultCarsList(), true);
+            this.resetFilters();
+            this.syncAll();
+            this.showToast('✨ تم استعادة السيارات الـ 4 الافتراضية ومزامنتها سحابياً!', 'success');
+          }
+        );
+      },
+
+      escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+      },
+
+      openModalHtml(htmlContent) {
+        const backdrop = document.getElementById('modal-backdrop');
+        const box = document.getElementById('modal-content-box');
+        if (!backdrop || !box) return;
+        box.innerHTML = htmlContent;
+        backdrop.classList.remove('hidden');
+        backdrop.classList.add('flex');
+      },
+
+      closeModal() {
+        const backdrop = document.getElementById('modal-backdrop');
+        const box = document.getElementById('modal-content-box');
+        if (backdrop) {
+          backdrop.classList.add('hidden');
+          backdrop.classList.remove('flex');
+        }
+        if (box) box.innerHTML = '';
+      },
+
+      whatsApp(phone, customText = '') {
+        const cleanPhone = String(phone || '201000000001').replace(/[^0-9]/g, '');
+        const url = `https://wa.me/${cleanPhone}${customText ? '?text=' + encodeURIComponent(customText) : ''}`;
+        this.showToast('💬 جاري فتح محادثة واتساب الرسمية...', 'success');
+        window.open(url, '_blank');
+      },
+
+      shareCarNative(carId) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car) return;
+        const shareText = `شاهد سيارة ${car.brand} ${car.model} موديل ${car.year} بسعر ${car.formattedPrice} (فحص ${car.inspectionScore}/10) في معرض النخبة للسيارات. كود: ${car.id}`;
+        if (navigator.share) {
+          navigator.share({
+            title: `معرض النخبة - ${car.brand} ${car.model}`,
+            text: shareText,
+            url: window.location.href
+          }).catch(() => {});
+        } else {
+          this.whatsApp(car.dealerPhone, shareText);
+        }
+      },
+
+      syncAll() {
+        this.populateFilterDropdowns();
+        this.applyFilters();
+        this.updateAdminUI();
+      },
+
+      populateFilterDropdowns() {
+        const cars = CarRepository.getAllCars();
+        const brandSelect = document.getElementById('filter-brand');
+        const yearSelect = document.getElementById('filter-year');
+        if (!brandSelect || !yearSelect) return;
+
+        const currentBrand = brandSelect.value || 'ALL';
+        const currentYear = yearSelect.value || 'ALL';
+
+        const brands = [...new Set(cars.map(c => c.brand))];
+        const years = [...new Set(cars.map(c => c.year))].sort((a, b) => b - a);
+
+        brandSelect.innerHTML = `<option value="ALL">جميع الماركات</option>` + brands.map(b => `<option value="${this.escapeHtml(b)}">${this.escapeHtml(b)}</option>`).join('');
+        yearSelect.innerHTML = `<option value="ALL">جميع سنوات الصنع</option>` + years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+        if (brands.includes(currentBrand)) brandSelect.value = currentBrand;
+        if (years.map(String).includes(String(currentYear))) yearSelect.value = currentYear;
+      },
+
+      setQuickFilter(type) {
+        this.quickFilter = type;
+        document.querySelectorAll('.chip-btn').forEach(btn => {
+          if (btn.getAttribute('data-chip') === type) {
+            btn.className = 'chip-btn bg-blue-900 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition shadow-xs';
+          } else {
+            btn.className = 'chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition';
+          }
+        });
+        this.applyFilters();
+      },
+
+      resetFilters() {
+        const fs = document.getElementById('filter-search');
+        const fb = document.getElementById('filter-brand');
+        const fy = document.getElementById('filter-year');
+        const fmp = document.getElementById('filter-max-price');
+        const fmk = document.getElementById('filter-max-km');
+        const sbs = document.getElementById('sort-by-select');
+
+        if (fs) fs.value = '';
+        if (fb) fb.value = 'ALL';
+        if (fy) fy.value = 'ALL';
+        if (fmp) fmp.value = '';
+        if (fmk) fmk.value = '';
+        if (sbs) sbs.value = 'NEWEST';
+
+        this.setQuickFilter('ALL');
+        this.showToast('🔄 تم إعادة ضبط جميع الفلاتر والترتيب.', 'info');
+      },
+
+      applyFilters() {
+        const cars = CarRepository.getAllCars();
+        const q = (document.getElementById('filter-search')?.value || '').toLowerCase().trim();
+        const b = document.getElementById('filter-brand')?.value || 'ALL';
+        const y = document.getElementById('filter-year')?.value || 'ALL';
+        const maxP = Number(document.getElementById('filter-max-price')?.value) || Infinity;
+        const maxKm = Number(document.getElementById('filter-max-km')?.value) || Infinity;
+        const sortBy = document.getElementById('sort-by-select')?.value || 'NEWEST';
+
+        let filtered = cars.filter(c => {
+          const matchesText = !q || c.brand.toLowerCase().includes(q) || c.model.toLowerCase().includes(q) || c.description.toLowerCase().includes(q);
+          const matchesBrand = (b === 'ALL' || c.brand === b);
+          const matchesYear = (y === 'ALL' || c.year === Number(y));
+          const matchesPrice = (c.price <= maxP);
+          const matchesKm = (c.mileageKm <= maxKm);
+
+          let matchesQuick = true;
+          if (this.quickFilter === 'AVAILABLE') matchesQuick = !c.isReserved;
+          if (this.quickFilter === 'TOP_SCORE') matchesQuick = c.inspectionScore >= 9.5;
+          if (this.quickFilter === 'UNDER_2M') matchesQuick = c.price <= 2000000;
+
+          return matchesText && matchesBrand && matchesYear && matchesPrice && matchesKm && matchesQuick;
+        });
+
+        if (sortBy === 'PRICE_ASC') filtered.sort((a, b) => a.price - b.price);
+        if (sortBy === 'PRICE_DESC') filtered.sort((a, b) => b.price - a.price);
+        if (sortBy === 'SCORE_DESC') filtered.sort((a, b) => b.inspectionScore - a.inspectionScore);
+        if (sortBy === 'KM_ASC') filtered.sort((a, b) => a.mileageKm - b.mileageKm);
+
+        this.renderCarsGrid(filtered);
+      },
+
+      renderCarsGrid(cars) {
+        const grid = document.getElementById('cars-grid-container');
+        const countBadge = document.getElementById('cars-count-badge');
+        if (countBadge) countBadge.textContent = `${cars.length} سيارات`;
+        if (!grid) return;
+
+        const isAdmin = AuthService.isLogged();
+        const username = AuthService.getUsername();
+        const favs = isAdmin ? CarRepository.getAdminWatchlist(username).map(w => w.id) : CarRepository.getFavorites();
+        const compares = CarRepository.getCompare(isAdmin);
+        const clientFavCount = CarRepository.getFavorites().length;
+
+        const compEl = document.getElementById('compare-count');
+        const mCompEl = document.getElementById('m-compare-count');
+        const favEl = document.getElementById('client-favorites-count');
+        const mFavEl = document.getElementById('m-fav-count');
+
+        if (compEl) compEl.textContent = compares.length;
+        if (mCompEl) mCompEl.textContent = compares.length;
+        if (favEl) favEl.textContent = clientFavCount;
+        if (mFavEl) mFavEl.textContent = clientFavCount;
+
+        if (cars.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full bg-white rounded-3xl p-12 text-center border border-dashed border-slate-300">
+              <div class="text-4xl mb-3">🔍</div>
+              <h3 class="font-black text-base text-slate-800">لا توجد سيارات مطابقة لمعايير البحث الحالية</h3>
+              <p class="text-xs text-slate-500 mt-1 mb-4">جرب تعديل الميزانية أو مسح الفلاتر لعرض جميع سيارات المعرض</p>
+              <button onclick="App.resetFilters()" class="bg-blue-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow">عرض كل السيارات</button>
+            </div>`;
+          return;
+        }
+
+        grid.innerHTML = cars.map(c => {
+          const isCompared = compares.includes(String(c.id));
+          const isFav = favs.includes(c.id);
+          const photosCount = Array.isArray(c.images) ? c.images.length : 1;
+          return `
+            <div class="bg-white rounded-2xl overflow-hidden shadow-xs border border-slate-200/90 transition duration-300 hover:shadow-xl flex flex-col justify-between group">
+              <div>
+                <div class="relative h-52 overflow-hidden bg-slate-900 cursor-pointer" onclick="App.openDetails('${c.id}')">
+                  <img src="${this.escapeHtml(c.imageUrl)}" alt="${this.escapeHtml(c.brand)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-slate-950/30"></div>
+
+                  <div class="absolute top-3 inset-x-3 flex justify-between items-start gap-2 z-10">
+                    <div class="flex items-center gap-1.5">
+                      ${c.isReserved
+                        ? `<span class="bg-purple-700 text-white text-[11px] font-black px-3 py-1 rounded-xl shadow-md flex items-center gap-1">🔒 محجوزة</span>`
+                        : `<span class="bg-emerald-600/95 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow-md">✓ متاحة</span>`
+                      }
+                      ${photosCount > 1 ? `<span class="bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-xl">📷 ${photosCount}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" onclick="event.stopPropagation(); App.toggleCompare('${c.id}')" class="px-2.5 py-1.5 rounded-xl shadow text-[11px] font-black transition ${isCompared ? 'bg-amber-500 text-slate-950 ring-2 ring-white' : 'bg-slate-900/85 text-white hover:bg-slate-900'}">
+                        ${isCompared ? '✓ بالمقارنة' : '⚖️ قارن'}
+                      </button>
+                      <button type="button" onclick="event.stopPropagation(); App.toggleFav('${c.id}')" title="${isAdmin ? 'إضافة لمتابعتي' : 'إضافة للمفضلة'}" class="bg-slate-900/85 hover:bg-slate-900 text-white w-8 h-8 rounded-xl shadow flex items-center justify-center text-sm transition">
+                        ${isFav ? (isAdmin ? '⭐' : '❤️') : '🤍'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="absolute bottom-3 inset-x-3 flex justify-between items-center text-white z-10">
+                    <span class="bg-slate-900/85 backdrop-blur-xs text-amber-300 text-[11px] font-black px-2.5 py-1 rounded-lg border border-amber-400/30">
+                      فحص ${c.inspectionScore}/10
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" onclick="event.stopPropagation(); App.shareCarNative('${c.id}')" class="bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg transition">📤 مشاركة</button>
+                      <span class="text-[11px] font-bold bg-black/50 px-2 py-0.5 rounded-lg">👁️ ${c.viewsCount}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-4 cursor-pointer" onclick="App.openDetails('${c.id}')">
+                  <div class="flex justify-between items-start gap-2 mb-1">
+                    <h3 class="font-black text-base text-slate-900 line-clamp-1">${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)}</h3>
+                    <span class="bg-blue-50 text-blue-900 text-xs font-black px-2 py-0.5 rounded-lg shrink-0">${c.year}</span>
+                  </div>
+                  <p class="text-xs text-slate-500 font-semibold mb-2">العداد: <b class="text-slate-700">${c.formattedMileage}</b> | تقسيط حتى <b>${c.maxInstallmentMonths} شهر</b></p>
+                  <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${this.escapeHtml(c.description)}</p>
+                </div>
+              </div>
+
+              <div class="px-4 pb-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+                <div>
+                  <span class="block text-[10px] text-slate-400 font-bold">السعر النقدي</span>
+                  <span class="font-black text-base text-blue-900">${c.formattedPrice}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  ${isAdmin ? `
+                    <button type="button" onclick="event.stopPropagation(); App.openCarFormModal('${c.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-2 rounded-xl transition" title="تعديل السيارة">✏️</button>
+                  ` : ''}
+                  <button type="button" onclick="App.openDetails('${c.id}')" class="bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs">
+                    التفاصيل والتقسيط ←
+                  </button>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+      },
+
+      updateAdminUI() {
+        const isAdmin = AuthService.isLogged();
+        const role = AuthService.getRole();
+        const name = AuthService.getName();
+        const cars = CarRepository.getAllCars();
+        const soldCars = CarRepository.getSoldCars();
+
+        const authBtn = document.getElementById('admin-auth-btn');
+        const addBtn = document.getElementById('open-add-car-btn');
+        const cmdBtn = document.getElementById('open-command-center-btn');
+        const clientTiBtn = document.getElementById('open-tradein-modal-btn');
+        const quickBar = document.getElementById('admin-quick-bar');
+        const footerInfo = document.getElementById('footer-session-info');
+        const compTxt = document.getElementById('compare-btn-text');
+        const favTxt = document.getElementById('client-fav-btn-text');
+        const compCount = document.getElementById('compare-count');
+        const favCount = document.getElementById('client-favorites-count');
+
+        if (compTxt) compTxt.textContent = isAdmin ? 'مقارنة الإدارة' : 'المقارنة';
+        if (favTxt) favTxt.textContent = isAdmin ? 'مفضلة العملاء' : 'مفضلتي';
+        if (compCount) compCount.textContent = CarRepository.getCompare(isAdmin).length;
+        if (favCount) favCount.textContent = CarRepository.getFavorites().length;
+
+        const showEl = (el, show) => {
+          if (!el) return;
+          el.classList.toggle('hidden', !show);
+          el.classList.toggle('flex', show);
+        };
+
+        if (isAdmin) {
+          if (footerInfo) footerInfo.textContent = `مسجل دخول: ${name} (${role === 'SuperAdmin' ? 'مدير عام' : 'مشرف'})`;
+          if (authBtn) {
+            authBtn.innerHTML = `<span>🔓</span> خروج`;
+            authBtn.className = 'bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded-xl font-black flex items-center gap-1 shadow-xs transition';
+          }
+
+          showEl(addBtn, true);
+          showEl(cmdBtn, true);
+          showEl(clientTiBtn, false);
+
+          const pendingRes = CarRepository.getReservations().filter(r => r.status === 'pending_admin' || r.status === 'confirmed_by_staff').length;
+          const pendingInsp = CarRepository.getInspections().filter(i => i.status === 'pending').length;
+          const pendingTi = CarRepository.getTradeIns().length;
+          const totalTasks = pendingRes + pendingInsp + pendingTi;
+
+          const tasksBadge = document.getElementById('total-tasks-badge');
+          if (tasksBadge) tasksBadge.textContent = totalTasks;
+
+          const totalRevenue = soldCars.reduce((s, c) => s + c.price, 0);
+          if (quickBar) {
+            quickBar.innerHTML = `
+              <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-4 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-3 border border-blue-800/40">
+                <div class="flex items-center gap-3">
+                  <div class="bg-amber-500/20 border border-amber-400/40 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-black">
+                    ${role === 'SuperAdmin' ? '👑 المدير العام' : '👤 مشرف المبيعات'}: ${this.escapeHtml(name)}
+                  </div>
+                  <div class="hidden sm:flex items-center gap-4 text-xs">
+                    <span>المتاح: <b class="text-amber-300">${cars.length}</b></span>
+                    <span>المباع: <b class="text-emerald-400">${soldCars.length}</b> (${totalRevenue.toLocaleString('ar-EG')} ج.م)</span>
+                    <span>حجوزات معلقة: <b class="text-purple-300">${pendingRes}</b></span>
+                    <span>معاينات: <b class="text-cyan-300">${pendingInsp}</b></span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <button onclick="App.openCommandCenter('reservations')" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">📋 الحجوزات (${pendingRes})</button>
+                  <button onclick="App.openCommandCenter('inspections')" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">🚗 المعاينات (${pendingInsp})</button>
+                  <button onclick="App.openCommandCenter('tradein')" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">🔄 الاستبدال (${pendingTi})</button>
+                  <button onclick="App.openCommandCenter('cloud')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3 py-1.5 rounded-xl font-black transition">☁️ حالة السحابة</button>
+                </div>
+              </div>
+            `;
+            quickBar.classList.remove('hidden');
+          }
+        } else {
+          if (footerInfo) footerInfo.textContent = 'وضع تصفح العميل';
+          if (authBtn) {
+            authBtn.innerHTML = '<span>🔐</span> دخول الإدارة';
+            authBtn.className = 'bg-white text-slate-950 text-xs px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1 shadow hover:bg-slate-100 transition';
+          }
+
+          showEl(addBtn, false);
+          showEl(cmdBtn, false);
+          showEl(clientTiBtn, true);
+          if (quickBar) quickBar.classList.add('hidden');
+        }
+      },
+
+      handleCloudBadgeClick() {
+        if (AuthService.isLogged()) {
+          this.openCommandCenter('cloud');
+        } else {
+          this.showToast(FirebaseCloudService.isConnected ? '☁️ المعرض متصل بقاعدة بيانات elite-showroom السحابية مباشر!' : '💡 سجل دخول الإدارة لإدارة الاتصال السحابي.', 'info');
+        }
+      },
+
+      /**
+       * 7. مركز القيادة الشامل (جميع الـ 6 تبويبات مكتملة 100%)
+       */
+      openCommandCenter(tab = 'overview') {
+        if (!AuthService.isLogged()) return;
+        this.activeCommandTab = tab;
+        const role = AuthService.getRole();
+        const cars = CarRepository.getAllCars();
+        const soldCars = CarRepository.getSoldCars();
+        const reservations = CarRepository.getReservations();
+        const activeRes = reservations.filter(r => r.status !== 'sold' && r.status !== 'closed_car_sold');
+        const inspections = CarRepository.getInspections();
+        const tradeIns = CarRepository.getTradeIns();
+        const archivedTi = CarRepository.getArchivedTradeIns();
+
+        const tabs = [
+          { id: 'overview', label: '📊 الأداء والإحصائيات', count: null },
+          { id: 'reservations', label: '📋 الحجوزات والمبيعات', count: activeRes.length },
+          { id: 'inspections', label: '🚗 مواعيد المعاينات', count: inspections.filter(i => i.status === 'pending').length },
+          { id: 'tradein', label: '🔄 الاستبدال والأرشيف', count: tradeIns.length },
+          { id: 'sold', label: '🏷️ أرشيف المباعة', count: soldCars.length },
+          { id: 'cloud', label: '⚙️ المشرفين و Firebase', count: null }
+        ];
+
+        let tabBodyHtml = '';
+
+        if (tab === 'overview') {
+          const allHistory = [...cars, ...soldCars];
+          const totalViews = allHistory.reduce((s, c) => s + c.viewsCount, 0);
+          const totalRev = soldCars.reduce((s, c) => s + c.price, 0);
+
+          const brandViews = {};
+          allHistory.forEach(c => { brandViews[c.brand] = (brandViews[c.brand] || 0) + c.viewsCount; });
+          const maxBViews = Math.max(1, ...Object.values(brandViews));
+
+          const staffMap = {};
+          const ensureSt = (n) => {
+            if (!n || n.includes('بانتظار')) return null;
+            if (!staffMap[n]) staffMap[n] = { sales: 0, res: 0, insp: 0, ti: 0 };
+            return staffMap[n];
+          };
+          soldCars.forEach(c => { const s = ensureSt(c.soldViaStaff || c.soldBy); if (s) s.sales++; });
+          reservations.forEach(r => { if (r.status === 'confirmed_by_staff' || r.status === 'sold') { const s = ensureSt(r.handledBy); if (s) s.res++; } });
+          inspections.forEach(i => { if (i.status === 'completed') { const s = ensureSt(i.handledBy); if (s) s.insp++; } });
+          archivedTi.forEach(a => { const s = ensureSt(a.archivedBy); if (s) s.ti++; });
+
+          tabBodyHtml = `
+            <div class="space-y-6">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-50 p-4 rounded-2xl border">
+                  <span class="text-xs text-slate-500 font-bold">إجمالي السيارات المتاحة</span>
+                  <h4 class="text-2xl font-black text-blue-950 mt-1">${cars.length}</h4>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border">
+                  <span class="text-xs text-slate-500 font-bold">السيارات المباعة</span>
+                  <h4 class="text-2xl font-black text-emerald-600 mt-1">${soldCars.length}</h4>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border">
+                  <span class="text-xs text-slate-500 font-bold">إجمالي المبيعات المحققة</span>
+                  <h4 class="text-lg font-black text-amber-600 mt-1">${totalRev.toLocaleString('ar-EG')} ج.م</h4>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border">
+                  <span class="text-xs text-slate-500 font-bold">مشاهدات العملاء الفعلية</span>
+                  <h4 class="text-2xl font-black text-indigo-900 mt-1">${totalViews}</h4>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50 p-4 rounded-2xl border">
+                  <h4 class="font-black text-sm text-slate-900 mb-3">🔥 الماركات الأكثر طلباً ومشاهدة</h4>
+                  <div class="space-y-3">
+                    ${Object.entries(brandViews).map(([b, v]) => `
+                      <div>
+                        <div class="flex justify-between text-xs font-bold mb-1"><span>${this.escapeHtml(b)}</span><span class="text-blue-900">${v} مشاهدة</span></div>
+                        <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                          <div class="bg-blue-900 h-full rounded-full" style="width:${Math.round((v / maxBViews) * 100)}%"></div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border">
+                  <h4 class="font-black text-sm text-slate-900 mb-3">👥 تقييم إنجازات فريق المبيعات</h4>
+                  <div class="space-y-2.5">
+                    ${Object.keys(staffMap).length === 0 ? '<p class="text-xs text-slate-400 py-6 text-center font-bold">لا توجد عمليات مؤكدة بعد.</p>' :
+                      Object.entries(staffMap).map(([stName, st]) => `
+                        <div class="bg-white p-3 rounded-xl border text-xs flex justify-between items-center">
+                          <div>
+                            <p class="font-black text-slate-900">👤 ${this.escapeHtml(stName)}</p>
+                            <p class="text-slate-500 mt-0.5">مبيعات: <b>${st.sales}</b> | حجوزات: <b>${st.res}</b> | معاينات: <b>${st.insp}</b> | استبدال: <b>${st.ti}</b></p>
+                          </div>
+                          <span class="bg-blue-100 text-blue-900 font-black px-2.5 py-1 rounded-lg">${st.sales + st.res + st.insp + st.ti} نقطة</span>
+                        </div>
+                      `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap justify-between items-center gap-2 pt-3 border-t">
+                <button onclick="App.openAdminWatchlistModal()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-black px-4 py-2.5 rounded-xl transition">⭐ فتح قائمة متابعتي الخاصة</button>
+                <button onclick="App.exportExecutiveReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow transition">📥 تحميل التقرير التنفيذي الشامل (.txt)</button>
+              </div>
+            </div>
+          `;
+        }
+
+        if (tab === 'reservations') {
+          tabBodyHtml = activeRes.length === 0
+            ? '<p class="text-slate-400 py-12 text-center text-xs font-bold">لا توجد طلبات حجز معلقة حالياً.</p>'
+            : `<div class="space-y-3">
+                ${activeRes.map(r => `
+                  <div class="bg-slate-50 p-4 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                    <div>
+                      <h4 class="font-black text-slate-900 text-sm">🚗 ${this.escapeHtml(r.carTitle)}</h4>
+                      <p class="text-blue-900 font-bold mt-1">العميل: ${this.escapeHtml(r.clientName)} | الهاتف: ${this.escapeHtml(r.clientPhone)}</p>
+                      <p class="text-slate-600 mt-0.5">المشرف المتابع: <b class="text-indigo-700">${this.escapeHtml(r.handledBy)}</b> | ${this.escapeHtml(r.requestedAt)}</p>
+                      <span class="inline-block mt-1 px-2.5 py-0.5 rounded-lg font-black ${r.status === 'confirmed_by_staff' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}">
+                        ${r.status === 'confirmed_by_staff' ? '✓ حجز مؤكد (السيارة محجوزة بالمعرض)' : '⏳ بانتظار تأكيد المشرف'}
+                      </span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <button onclick="App.whatsApp('${r.clientPhone}', 'مرحباً أستاذ ${this.escapeHtml(r.clientName)}، نتواصل معك من معرض النخبة بخصوص حجز سيارة ${this.escapeHtml(r.carTitle)}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-2 rounded-xl font-bold">💬 واتساب</button>
+                      ${r.status === 'pending_admin' ? `
+                        <button onclick="App.confirmReservation('${r.id}')" class="bg-purple-700 hover:bg-purple-600 text-white px-3.5 py-2 rounded-xl font-bold shadow">تأكيد الحجز</button>
+                        <button onclick="App.rejectReservation('${r.id}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-2 rounded-xl font-bold">رفض</button>
+                      ` : ''}
+                      ${role === 'SuperAdmin' && r.status === 'confirmed_by_staff' ? `
+                        <button onclick="App.approveSaleFromRes('${r.id}')" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-black shadow">🏷️ اعتماد البيع النهائي</button>
+                        <button onclick="App.rejectSaleFromRes('${r.id}')" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded-xl font-bold">إلغاء الحجز</button>
+                      ` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>`;
+        }
+
+        if (tab === 'inspections') {
+          tabBodyHtml = inspections.length === 0
+            ? '<p class="text-slate-400 py-12 text-center text-xs font-bold">لا توجد مواعيد معاينة مسجلة حالياً.</p>'
+            : `<div class="space-y-3">
+                ${inspections.map(item => `
+                  <div class="bg-slate-50 p-4 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                    <div>
+                      <h4 class="font-black text-slate-900 text-sm">🚗 ${this.escapeHtml(item.carTitle)}</h4>
+                      <p class="text-cyan-800 font-bold mt-1">${this.escapeHtml(item.type)} | التاريخ: <b>${this.escapeHtml(item.date)}</b></p>
+                      <p class="text-slate-700 mt-0.5">العميل: <b>${this.escapeHtml(item.clientName)}</b> (${this.escapeHtml(item.clientPhone)}) | المشرف: ${this.escapeHtml(item.handledBy)}</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <button onclick="App.whatsApp('${item.clientPhone}', 'مرحباً أستاذ ${this.escapeHtml(item.clientName)}، نؤكد معك موعد ${this.escapeHtml(item.type)} لسيارة ${this.escapeHtml(item.carTitle)} بتاريخ ${this.escapeHtml(item.date)}')" class="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-bold">💬 واتساب</button>
+                      ${item.status !== 'completed' ? `
+                        <button onclick="App.completeInspection('${item.id}')" class="bg-teal-600 hover:bg-teal-500 text-white px-3.5 py-2 rounded-xl font-bold shadow">✓ تأكيد الإتمام</button>
+                      ` : `<span class="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-black">مكتملة ✓</span>`}
+                      <button onclick="App.deleteInspection('${item.id}')" class="bg-rose-100 text-rose-700 px-2.5 py-1.5 rounded-xl font-bold">🗑️</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>`;
+        }
+
+        if (tab === 'tradein') {
+          tabBodyHtml = `
+            <div class="space-y-6">
+              <div>
+                <h4 class="font-black text-sm text-indigo-950 mb-3">📥 طلبات الاستبدال والتثمين الجديدة (${tradeIns.length})</h4>
+                ${tradeIns.length === 0 ? '<p class="text-xs text-slate-400 py-4 text-center bg-slate-50 rounded-xl border">لا توجد طلبات استبدال معلقة.</p>' : `
+                  <div class="space-y-2.5">
+                    ${tradeIns.map(item => `
+                      <div class="bg-slate-50 p-4 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                        <div>
+                          <h5 class="font-black text-slate-900 text-sm">🚗 ${this.escapeHtml(item.brand)} ${this.escapeHtml(item.model)} (${this.escapeHtml(item.year)}) - <span class="text-amber-700">${this.escapeHtml(item.type)}</span></h5>
+                          <p class="text-slate-700 mt-1">العداد: ${this.escapeHtml(item.km || '0')} كم | العميل: <b>${this.escapeHtml(item.clientName || 'عميل')}</b> (${this.escapeHtml(item.clientPhone)})</p>
+                          <p class="text-slate-500 mt-0.5">${this.escapeHtml(item.desc || '')}</p>
+                        </div>
+                        <div class="flex gap-2">
+                          <button onclick="App.whatsApp('${item.clientPhone}', 'مرحباً أستاذ ${this.escapeHtml(item.clientName || '')}، نتواصل معك من قسم التثمين بمعرض النخبة بخصوص سيارتك ${this.escapeHtml(item.brand)}')" class="bg-emerald-100 text-emerald-800 px-3 py-2 rounded-xl font-bold">💬 واتساب</button>
+                          <button onclick="App.archiveTradeIn('${item.id}')" class="bg-indigo-700 text-white px-3 py-2 rounded-xl font-bold">✓ أرشفة</button>
+                          <button onclick="App.deleteTradeIn('${item.id}', false)" class="bg-rose-100 text-rose-700 px-2.5 py-2 rounded-xl font-bold">🗑️</button>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+
+              <div class="pt-4 border-t">
+                <h4 class="font-black text-sm text-slate-700 mb-3">📂 أرشيف الاستبدال المكتمل (${archivedTi.length})</h4>
+                ${archivedTi.length === 0 ? '<p class="text-xs text-slate-400 py-4 text-center">الأرشيف فارغ.</p>' : `
+                  <div class="space-y-2">
+                    ${archivedTi.map(item => `
+                      <div class="bg-white p-3 rounded-xl border flex justify-between items-center text-xs">
+                        <div>
+                          <span class="font-black text-slate-900">${this.escapeHtml(item.brand)} ${this.escapeHtml(item.model)} (${this.escapeHtml(item.type)})</span>
+                          <span class="text-slate-500 mx-2">| العميل: ${this.escapeHtml(item.clientName || 'عميل')}</span>
+                          <span class="text-emerald-700 font-bold">✓ بواسطة: ${this.escapeHtml(item.archivedBy)}</span>
+                        </div>
+                        <button onclick="App.deleteTradeIn('${item.id}', true)" class="text-rose-600 font-bold hover:underline">حذف</button>
+                      </div>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+            </div>
+          `;
+        }
+
+        if (tab === 'sold') {
+          tabBodyHtml = soldCars.length === 0
+            ? '<p class="text-slate-400 py-12 text-center text-xs font-bold">لا توجد سيارات مباعة في الأرشيف بعد.</p>'
+            : `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                ${soldCars.map(c => `
+                  <div onclick="App.openSoldDetails('${c.id}')" class="bg-slate-50 p-3.5 rounded-2xl border border-emerald-200 flex gap-3 items-center cursor-pointer hover:bg-white transition">
+                    <img src="${this.escapeHtml(c.imageUrl)}" class="w-20 h-16 object-cover rounded-xl shrink-0" />
+                    <div class="text-xs flex-grow">
+                      <h4 class="font-black text-slate-900">${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)} (${c.year})</h4>
+                      <p class="text-blue-900 font-black">${c.formattedPrice}</p>
+                      <p class="text-emerald-700 font-bold text-[11px]">🏷️ ${this.escapeHtml(c.soldAt)} | بواسطة: ${this.escapeHtml(c.soldViaStaff || c.soldBy)}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>`;
+        }
+
+        if (tab === 'cloud') {
+          const savedCfg = FirebaseCloudService.getSavedConfig();
+          const admins = AuthService.getAdmins();
+          const currentUsername = AuthService.getUsername();
+
+          tabBodyHtml = `
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+              <div class="bg-slate-50 p-4 rounded-2xl border space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-black text-sm text-blue-950 flex items-center gap-1.5"><span>☁️</span> الربط السحابي (elite-showroom)</h4>
+                  <span class="px-2.5 py-0.5 rounded-full font-black text-[10px] ${FirebaseCloudService.isConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                    ${FirebaseCloudService.isConnected ? 'متصل الآن بـ Firestore ✓' : 'غير متصل'}
+                  </span>
+                </div>
+                <p class="text-slate-500 leading-relaxed">تم تثبيت إعدادات مشروعك <b>elite-showroom</b> بشكل افتراضي. يمكنك الضغط على مزامنة فورية لرفع أحدث التعديلات:</p>
+                <textarea id="firebase-config-input" dir="ltr" class="w-full border rounded-xl p-3 font-mono text-[11px] h-32 bg-white">${savedCfg ? JSON.stringify(savedCfg, null, 2) : ''}</textarea>
+                <div class="flex gap-2">
+                  <button onclick="App.saveFirebaseConfigFromUI()" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white font-black py-2.5 rounded-xl shadow transition">⚡ حفظ ومزامنة سحابية فورية</button>
+                  ${FirebaseCloudService.isConnected ? `<button onclick="FirebaseCloudService.disconnect(); App.openCommandCenter('cloud');" class="bg-rose-100 text-rose-700 font-bold px-3 py-2.5 rounded-xl">فصل مؤقت</button>` : ''}
+                </div>
+                <div class="pt-2 border-t flex justify-between items-center">
+                  <span class="text-slate-500 font-bold">نسخة احتياطية كاملة (JSON):</span>
+                  <button onclick="App.exportDatabaseJson()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-3 py-1.5 rounded-lg">💾 تحميل Backup JSON</button>
+                </div>
+              </div>
+
+              <div class="bg-slate-50 p-4 rounded-2xl border space-y-3">
+                <h4 class="font-black text-sm text-slate-900">👥 إدارة فريق المشرفين والصلاحيات</h4>
+                ${role !== 'SuperAdmin' ? '<p class="text-amber-800 bg-amber-50 p-3 rounded-xl font-bold">هذه اللوحة مخصصة للمدير العام فقط.</p>' : `
+                  <div class="space-y-2 max-h-40 overflow-y-auto custom-scroll">
+                    ${admins.map(a => `
+                      <div class="bg-white p-2.5 rounded-xl border flex justify-between items-center">
+                        <div>
+                          <span class="font-black text-slate-900">${this.escapeHtml(a.name)}</span>
+                          <span class="text-slate-400 mx-1">(@${this.escapeHtml(a.username)})</span>
+                          <span class="bg-blue-50 text-blue-900 px-2 py-0.5 rounded font-bold text-[10px]">${a.role === 'SuperAdmin' ? 'مدير عام' : 'مشرف'}</span>
+                        </div>
+                        ${a.username !== 'admin' && a.username !== currentUsername ? `<button onclick="App.deleteAdminUser('${this.escapeHtml(a.username)}')" class="text-rose-600 font-bold">حذف</button>` : '<span class="text-[10px] text-slate-400">أساسي</span>'}
+                      </div>
+                    `).join('')}
+                  </div>
+                  <form id="cmd-add-admin-form" class="space-y-2 pt-2 border-t">
+                    <input id="new-name" required placeholder="اسم المشرف الجديد" class="w-full border p-2 rounded-xl bg-white" />
+                    <div class="grid grid-cols-2 gap-2">
+                      <input id="new-user" required placeholder="Username" class="w-full border p-2 rounded-xl bg-white" />
+                      <input id="new-pass" required type="password" placeholder="كلمة المرور" class="w-full border p-2 rounded-xl bg-white" />
+                    </div>
+                    <select id="new-role" class="w-full border p-2 rounded-xl font-bold bg-white">
+                      <option value="Staff">مشرف مبيعات</option>
+                      <option value="SuperAdmin">مدير عام</option>
+                    </select>
+                    <button type="submit" class="w-full bg-slate-900 text-white font-black py-2 rounded-xl">➕ إضافة المشرف</button>
+                  </form>
+                `}
+              </div>
+            </div>
+          `;
+        }
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-5xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+              <div>
+                <h3 class="font-black text-lg sm:text-xl text-slate-900 flex items-center gap-2"><span>🎛️</span> مركز قيادة معرض النخبة</h3>
+                <p class="text-xs text-slate-500">تحكم مركزي كامل في المخزون، المبيعات، الفريق، والربط السحابي بمشروع elite-showroom</p>
+              </div>
+              <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-9 h-9 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            </div>
+
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 border-b custom-scroll">
+              ${tabs.map(t => `
+                <button onclick="App.openCommandCenter('${t.id}')" class="px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 ${this.activeCommandTab === t.id ? 'bg-blue-950 text-amber-400 shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+                  <span>${t.label}</span>
+                  ${t.count !== null ? `<span class="px-1.5 py-0.2 rounded-full text-[10px] ${this.activeCommandTab === t.id ? 'bg-amber-400 text-slate-950' : 'bg-slate-300 text-slate-800'}">${t.count}</span>` : ''}
+                </button>
+              `).join('')}
+            </div>
+
+            <div>${tabBodyHtml}</div>
+          </div>
+        `);
+
+        const addAdminForm = document.getElementById('cmd-add-admin-form');
+        if (addAdminForm) {
+          addAdminForm.onsubmit = (e) => {
+            e.preventDefault();
+            const newU = document.getElementById('new-user').value.trim();
+            const list = AuthService.getAdmins();
+            if (list.some(a => a.username.toLowerCase() === newU.toLowerCase())) {
+              this.showToast('⚠️ اسم المستخدم مسجل بالفعل!', 'warning');
+              return;
+            }
+            list.push({
+              name: document.getElementById('new-name').value.trim(),
+              username: newU,
+              pass: document.getElementById('new-pass').value.trim(),
+              role: document.getElementById('new-role').value
+            });
+            SafeStorage.set(AuthService.DB_KEY, list);
+            FirebaseCloudService.syncToCloud();
+            this.openCommandCenter('cloud');
+            this.showToast('✅ تم إضافة المشرف الجديد ومزامنته مع السحابة!', 'success');
+          };
+        }
+      },
+
+      async saveFirebaseConfigFromUI() {
+        const raw = (document.getElementById('firebase-config-input')?.value || '').trim();
+        if (!raw) {
+          await FirebaseCloudService.connect(FirebaseCloudService.DEFAULT_CONFIG, true);
+          await FirebaseCloudService.syncToCloud();
+          this.openCommandCenter('cloud');
+          return;
+        }
+        try {
+          const jsonCleaned = raw
+            .replace(/const\s+firebaseConfig\s*=\s*/g, '')
+            .replace(/;$/g, '')
+            .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":')
+            .replace(/'/g, '"');
+          const parsed = JSON.parse(jsonCleaned);
+          await FirebaseCloudService.connect(parsed, true);
+          await FirebaseCloudService.syncToCloud();
+          this.openCommandCenter('cloud');
+        } catch (e) {
+          this.showToast('❌ صيغة الإعدادات غير صحيحة.', 'error');
+        }
+      },
+
+      exportDatabaseJson() {
+        const dump = {
+          cars: SafeStorage.get(CarRepository.KEY, []),
+          soldCars: SafeStorage.get(CarRepository.SOLD_KEY, []),
+          reservations: SafeStorage.get(CarRepository.RESERVATIONS_KEY, []),
+          inspections: SafeStorage.get(CarRepository.INSPECTIONS_KEY, []),
+          tradeIns: SafeStorage.get(CarRepository.TRADEIN_KEY, []),
+          archivedTradeIns: SafeStorage.get(CarRepository.ARCHIVED_TRADEIN_KEY, [])
+        };
+        const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Elite_DB_Backup_${Date.now().toString().slice(-4)}.json`;
+        a.click();
+        this.showToast('💾 تم تحميل النسخة الاحتياطية لقاعدة البيانات!', 'success');
+      },
+
+      toggleFav(id) {
+        if (AuthService.isLogged()) {
+          const added = CarRepository.toggleAdminWatchlist(id, AuthService.getUsername(), AuthService.getName());
+          this.syncAll();
+          this.showToast(added ? '⭐ تمت الإضافة إلى قائمة متابعتك الإدارية' : '⭐ تمت الإزالة من قائمة متابعتك', 'info');
+        } else {
+          const added = CarRepository.toggleFavorite(id);
+          this.syncAll();
+          this.showToast(added ? '❤️ تمت إضافة السيارة إلى مفضلتك' : '🤍 تمت إزالة السيارة من مفضلتك', 'info');
+        }
+      },
+
+      toggleCompare(id) {
+        const isAdmin = AuthService.isLogged();
+        const res = CarRepository.toggleCompare(id, isAdmin);
+        if (!res.ok) {
+          this.showToast('⚠️ الحد الأقصى للمقارنة هو 3 سيارات في نفس الوقت.', 'warning');
+          return;
+        }
+        this.syncAll();
+        this.showToast(res.added ? '⚖️ تمت إضافة السيارة لجدول المقارنة' : '⚖️ تمت إزالة السيارة من المقارنة', 'info');
+      },
+
+      clearCompareAll() {
+        const isAdmin = AuthService.isLogged();
+        CarRepository.clearCompare(isAdmin);
+        this.syncAll();
+        this.openCompareModal();
+        this.showToast('🗑️ تم إفراغ جدول المقارنة.', 'info');
+      },
+
+      /**
+       * 8. نافذة التفاصيل الكاملة + حاسبة التقسيط التفاعلية + الفحص الهندسي (4 محاور)
+       */
+      openDetails(id) {
+        const found = CarRepository.findCarAnywhere(id);
+        if (!found.car) {
+          this.showToast('⚠️ هذه السيارة لم تعد متوفرة.', 'warning');
+          return;
+        }
+        if (found.isSold) {
+          this.openSoldDetails(id);
+          return;
+        }
+
+        CarRepository.incrementClientView(id);
+        const { car } = CarRepository.findCarAnywhere(id);
+        this.syncAll();
+
+        const isAdmin = AuthService.isLogged();
+        const role = AuthService.getRole();
+        const isReservedByMe = CarRepository.hasClientReservedCar(car.id);
+        const maxM = car.maxInstallmentMonths || 60;
+        const defaultDown = Math.round(car.price * 0.3);
+        const gallery = Array.isArray(car.images) && car.images.length ? car.images : [car.imageUrl];
+        const isCompared = CarRepository.getCompare(isAdmin).includes(String(car.id));
+
+        this.openModalHtml(`
+          <div id="printable-quote-area" class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+              <div class="flex items-center gap-2">
+                <span class="bg-blue-950 text-amber-400 w-8 h-8 rounded-xl flex items-center justify-center font-black">🚘</span>
+                <div>
+                  <h4 class="font-black text-sm text-slate-900">معرض النخبة للسيارات - وثيقة الفحص والتقسيط</h4>
+                  <p class="text-[10px] text-slate-500">كود السيارة المرجعي: ${this.escapeHtml(car.id)}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 no-print">
+                <button onclick="App.toggleCompare('${car.id}'); App.openDetails('${car.id}');" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl transition">
+                  ${isCompared ? '✓ بالمقارنة' : '⚖️ أضف للمقارنة'}
+                </button>
+                <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                  <span>🖨️</span> طباعة عرض سعر
+                </button>
+                <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center transition">✕</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div class="lg:col-span-7 space-y-3">
+                <div class="relative rounded-2xl overflow-hidden bg-slate-900 h-60 sm:h-72">
+                  <img id="main-gallery-image" src="${this.escapeHtml(gallery[0])}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-full h-full object-cover transition duration-300" />
+                  <div class="absolute bottom-3 right-3 bg-slate-900/90 text-amber-300 text-xs font-black px-3.5 py-1.5 rounded-xl border border-amber-400/30 shadow">
+                    ${car.inspectionBadge} (${car.inspectionScore}/10)
+                  </div>
+                  ${car.isReserved ? `<div class="absolute top-3 right-3 bg-purple-700 text-white text-xs font-black px-3.5 py-1.5 rounded-xl shadow">🔒 محجوزة حالياً</div>` : ''}
+                </div>
+
+                ${gallery.length > 1 ? `
+                  <div class="flex gap-2 overflow-x-auto pb-1 no-print">
+                    ${gallery.map((imgUrl) => `
+                      <img onclick="document.getElementById('main-gallery-image').src='${this.escapeHtml(imgUrl)}'" src="${this.escapeHtml(imgUrl)}" class="w-20 h-14 object-cover rounded-xl cursor-pointer border-2 border-transparent hover:border-blue-900 transition shrink-0" />
+                    `).join('')}
+                  </div>
+                ` : ''}
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <h4 class="font-black text-xs sm:text-sm text-slate-900 mb-3 flex items-center justify-between">
+                    <span>🛡️ شهادة الفحص الهندسي المعتمد (4 محاور)</span>
+                    <span class="text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-lg border border-teal-200 text-xs">الإجمالي: ${car.inspectionScore}/10</span>
+                  </h4>
+                  <div class="grid grid-cols-2 gap-3 text-xs">
+                    ${[
+                      { label: 'كفاءة المحرك والحرارة', score: car.engineScore },
+                      { label: 'ناقل الحركة (الفتيس)', score: car.gearScore },
+                      { label: 'الهيكل الخارجي والدهان', score: car.bodyScore },
+                      { label: 'العفشة والصالون الداخلي', score: car.interiorScore }
+                    ].map(item => `
+                      <div class="bg-white p-2.5 rounded-xl border">
+                        <div class="flex justify-between font-bold text-slate-700 mb-1">
+                          <span>${item.label}</span>
+                          <span class="text-blue-900 font-black">${item.score}/10</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                          <div class="bg-teal-600 h-full rounded-full" style="width: ${Math.min(100, item.score * 10)}%"></div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-black text-sm text-slate-900 mb-1">📋 الوصف التفصيلي والتجهيزات:</h4>
+                  <p class="text-xs sm:text-sm text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border">${this.escapeHtml(car.description)}</p>
+                </div>
+              </div>
+
+              <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
+                <div class="bg-blue-950 text-white p-5 rounded-2xl shadow-md">
+                  <span class="text-xs text-amber-300 font-bold">${this.escapeHtml(car.brand)}</span>
+                  <h3 class="text-xl sm:text-2xl font-black mt-0.5">${this.escapeHtml(car.model)}</h3>
+                  <div class="flex items-center gap-3 text-xs text-slate-300 mt-2 pb-3 border-b border-blue-800">
+                    <span>📅 موديل: <b class="text-white">${car.year}</b></span>
+                    <span>•</span>
+                    <span>🛣️ الممشى: <b class="text-white">${car.formattedMileage}</b></span>
+                    <span>•</span>
+                    <span>👁️ <b class="text-white">${car.viewsCount}</b></span>
+                  </div>
+                  <div class="mt-3 flex justify-between items-baseline">
+                    <span class="text-xs text-slate-300 font-bold">السعر النقدي:</span>
+                    <span class="text-2xl font-black text-amber-400">${car.formattedPrice}</span>
+                  </div>
+                </div>
+
+                <!-- حاسبة التقسيط التفاعلية الكاملة -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <h4 class="font-black text-sm text-slate-900 flex items-center justify-between">
+                    <span>🧮 حاسبة التقسيط التفاعلية</span>
+                    <span class="text-[11px] text-blue-900 bg-blue-100 px-2 py-0.5 rounded-lg">حتى ${maxM} شهراً</span>
+                  </h4>
+
+                  <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                      <label>الدفعة المقدمة (ج.م)</label>
+                      <span id="calc-down-label" class="text-blue-900 font-black">${defaultDown.toLocaleString('ar-EG')} ج.م</span>
+                    </div>
+                    <input id="calc-down-slider" type="range" min="${Math.round(car.price * 0.1)}" max="${Math.round(car.price * 0.9)}" step="10000" value="${defaultDown}" class="w-full cursor-pointer" />
+                    <input id="calc-down" type="number" min="0" max="${car.price}" value="${defaultDown}" class="w-full border rounded-xl px-3 py-1.5 text-xs font-bold mt-1 bg-white" />
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-600 mb-1">مدة التقسيط (شهور)</label>
+                      <input id="calc-months" type="number" min="6" max="${maxM}" value="${Math.min(36, maxM)}" class="w-full border rounded-xl px-3 py-1.5 text-xs font-black text-center bg-white" />
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-600 mb-1">الفائدة السنوية (%)</label>
+                      <input id="calc-interest" type="number" min="0" max="50" step="0.5" value="14.5" class="w-full border rounded-xl px-3 py-1.5 text-xs font-black text-center bg-white" />
+                    </div>
+                  </div>
+
+                  <div class="bg-white p-3 rounded-xl border border-blue-200 flex justify-between items-center">
+                    <div>
+                      <span class="block text-[10px] text-slate-500 font-bold">القسط الشهري المحسوب</span>
+                      <span id="calc-financed-note" class="text-[10px] text-slate-400 font-semibold">المبلغ الممول: 0 ج.م</span>
+                    </div>
+                    <span id="calc-result" class="text-base sm:text-lg font-black text-blue-900">0 ج.م</span>
+                  </div>
+                </div>
+
+                <div class="space-y-2 no-print">
+                  <div class="grid grid-cols-2 gap-2">
+                    <button onclick="App.sendSmartCarWhatsApp('${car.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
+                      <span>💬</span> واتساب بالعرض المحسوب
+                    </button>
+                    <button onclick="App.openInspectionBookingModal('${car.id}')" class="bg-teal-700 hover:bg-teal-600 text-white font-black py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
+                      <span>🚗</span> حجز معاينة / فيديو
+                    </button>
+                  </div>
+
+                  ${!car.isReserved && !isReservedByMe ? `
+                    <button onclick="App.openReserveModal('${car.id}')" class="w-full bg-purple-700 hover:bg-purple-600 text-white font-black py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
+                      <span>🔒</span> ${isAdmin ? 'تسجيل حجز مؤقت باسم عميل بالمعرض' : 'طلب حجز مؤقت للسيارة'}
+                    </button>
+                  ` : `
+                    <div class="w-full bg-purple-50 border border-purple-200 text-purple-900 font-black py-2.5 px-4 rounded-xl text-xs text-center">
+                      🔒 ${car.isReserved ? `السيارة محجوزة حالياً (${this.escapeHtml(car.reservedByClient || 'عميل المعرض')})` : 'طلب حجزك قيد المراجعة لدى الإدارة'}
+                    </div>
+                  `}
+
+                  ${isAdmin ? `
+                    <div class="pt-2 border-t flex flex-wrap gap-2">
+                      <button onclick="App.openCarFormModal('${car.id}')" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 px-3 rounded-xl text-xs transition">
+                        ✏️ تعديل البيانات
+                      </button>
+                      ${role === 'SuperAdmin' ? `
+                        <button onclick="App.directSellCar('${car.id}')" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white font-black py-2 px-3 rounded-xl text-xs transition">
+                          🏷️ بيع مباشر (كاش)
+                        </button>
+                      ` : ''}
+                      <button onclick="App.deleteCar('${car.id}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-black py-2 px-3 rounded-xl text-xs transition">
+                        🗑️ حذف
+                      </button>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `);
+
+        this.attachCalculatorEvents(car);
+      },
+
+      sendSmartCarWhatsApp(carId) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car) return;
+        const { down, months, monthly } = this.currentCalcState;
+        const msg = `مرحباً معرض النخبة، أستفسر عن سيارة: ${car.brand} ${car.model} (${car.year}) - كود [${car.id}]\n• السعر النقدي: ${car.formattedPrice}\n• خطة التقسيط المحسوبة: مقدم (${down.toLocaleString('ar-EG')} ج.م) وقسط شهري (${monthly.toLocaleString('ar-EG')} ج.م) لمدة ${months} شهر.`;
+        this.whatsApp(car.dealerPhone, msg);
+      },
+
+      attachCalculatorEvents(car) {
+        const slider = document.getElementById('calc-down-slider');
+        const downInput = document.getElementById('calc-down');
+        const downLabel = document.getElementById('calc-down-label');
+        const monthsInput = document.getElementById('calc-months');
+        const interestInput = document.getElementById('calc-interest');
+        const resEl = document.getElementById('calc-result');
+        const noteEl = document.getElementById('calc-financed-note');
+        const maxM = car.maxInstallmentMonths || 60;
+
+        const compute = (fromSlider = false) => {
+          let d = fromSlider ? Number(slider.value) : Number(downInput.value);
+          if (isNaN(d) || d < 0) d = 0;
+          if (d > car.price) d = car.price;
+          if (fromSlider) downInput.value = d;
+          else slider.value = Math.min(Math.max(d, Number(slider.min)), Number(slider.max));
+
+          downLabel.textContent = d.toLocaleString('ar-EG') + ' ج.م';
+
+          let m = Number(monthsInput.value);
+          if (isNaN(m) || m < 1) m = 12;
+          if (m > maxM) { m = maxM; monthsInput.value = maxM; }
+
+          let rate = Number(interestInput.value);
+          if (isNaN(rate) || rate < 0) { rate = 0; interestInput.value = 0; }
+
+          const financed = Math.max(0, car.price - d);
+          const totalWithInterest = financed + (financed * (rate / 100) * (m / 12));
+          const monthly = Math.round(totalWithInterest / m);
+
+          this.currentCalcState = { down: d, months: m, monthly };
+          noteEl.textContent = `المبلغ الممول: ${financed.toLocaleString('ar-EG')} ج.م`;
+          resEl.textContent = monthly.toLocaleString('ar-EG') + ' ج.م / شهر';
+        };
+
+        if (slider && downInput) {
+          slider.oninput = () => compute(true);
+          downInput.oninput = () => compute(false);
+          monthsInput.oninput = () => compute(false);
+          interestInput.oninput = () => compute(false);
+          compute(true);
+        }
+      },
+
+      openSoldDetails(id) {
+        const car = CarRepository.getSoldCars().find(c => c.id === id);
+        if (!car) return;
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <div class="bg-emerald-100 text-emerald-900 p-3.5 rounded-2xl mb-4 font-bold text-xs flex flex-wrap justify-between items-center gap-2 border border-emerald-200">
+              <span>🏷️ هذه السيارة مباعة ومدرجة في أرشيف المعرض</span>
+              <span>تاريخ البيع: ${this.escapeHtml(car.soldAt)} | اعتماد: ${this.escapeHtml(car.soldBy)}</span>
+            </div>
+            <img src="${this.escapeHtml(car.imageUrl)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-full h-60 object-cover rounded-2xl mb-4" />
+            <div class="flex justify-between items-center border-b pb-3">
+              <div>
+                <h3 class="text-xl font-black text-slate-900">${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)}</h3>
+                <p class="text-xs text-slate-500 mt-1">سنة الصنع: <b>${car.year}</b> | الممشى عند البيع: <b>${car.formattedMileage}</b></p>
+              </div>
+              <span class="text-xl font-black text-emerald-700">${car.formattedPrice}</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 mt-4 leading-relaxed">${this.escapeHtml(car.description)}</p>
+          </div>
+        `);
+      },
+
+      openCarFormModal(editCarId = null) {
+        if (!AuthService.isLogged()) return;
+        const existing = editCarId ? CarRepository.getAllCars().find(c => c.id === editCarId) : null;
+        const isEdit = Boolean(existing);
+        this.tempUploadedImages = isEdit && Array.isArray(existing.images) ? [...existing.images] : [];
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="font-black text-lg text-slate-900 mb-1">${isEdit ? '✏️ تعديل بيانات السيارة وألبوم الصور' : '➕ إضافة سيارة جديدة للمعرض'}</h3>
+            <p class="text-xs text-slate-500 mb-4">ارفع صور السيارة من جهازك أو أضف روابط صور ليتم حفظها سحابياً</p>
+
+            <form id="car-upsert-form" class="space-y-3 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">الماركة *</label>
+                  <input id="cf-brand" required value="${isEdit ? this.escapeHtml(existing.brand) : ''}" placeholder="مثال: مرسيدس بنز" class="w-full border p-2.5 rounded-xl" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">الموديل والفئة *</label>
+                  <input id="cf-model" required value="${isEdit ? this.escapeHtml(existing.model) : ''}" placeholder="مثال: C200 AMG" class="w-full border p-2.5 rounded-xl" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2.5">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">سنة الصنع *</label>
+                  <input id="cf-year" required type="number" min="1990" max="2027" value="${isEdit ? existing.year : 2025}" class="w-full border p-2.5 rounded-xl text-center font-bold" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">العداد (كم) *</label>
+                  <input id="cf-km" required type="number" min="0" value="${isEdit ? existing.mileageKm : 0}" class="w-full border p-2.5 rounded-xl text-center font-bold" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">أقصى شهور تقسيط</label>
+                  <input id="cf-months" required type="number" min="6" max="120" value="${isEdit ? existing.maxInstallmentMonths : 60}" class="w-full border p-2.5 rounded-xl text-center font-bold" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">السعر النقدي (ج.م) *</label>
+                  <input id="cf-price" required type="number" min="50000" value="${isEdit ? existing.price : ''}" placeholder="مثال: 2500000" class="w-full border p-2.5 rounded-xl font-black text-blue-900" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">رقم واتساب المسؤول</label>
+                  <input id="cf-phone" required value="${isEdit ? this.escapeHtml(existing.dealerPhone) : '201000000001'}" placeholder="201000000001" class="w-full border p-2.5 rounded-xl" />
+                </div>
+              </div>
+
+              <div class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-200 space-y-2">
+                <div class="flex justify-between items-center">
+                  <label class="font-black text-blue-950">📷 ألبوم صور السيارة (رفع من الجهاز أو رابط):</label>
+                  <span id="upload-status-text" class="text-[10px] font-bold text-blue-800"></span>
+                </div>
+                <input id="cf-file-input" type="file" accept="image/*" multiple onchange="App.handleCarFilesSelected(this.files)" class="w-full text-xs file:ml-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-900 file:text-white hover:file:bg-blue-800 cursor-pointer" />
+                <div id="upload-progress-bar-wrap" class="hidden w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                  <div id="upload-progress-bar" class="bg-emerald-600 h-full transition-all duration-300" style="width:0%"></div>
+                </div>
+                <input id="cf-img" type="url" value="${isEdit ? this.escapeHtml(existing.imageUrl) : ''}" placeholder="أو الصق رابط صورة مباشر (URL)..." class="w-full border p-2 rounded-xl bg-white" />
+                <div id="uploaded-thumbs-preview" class="flex gap-2 overflow-x-auto pt-1"></div>
+              </div>
+
+              <div class="bg-slate-50 p-3.5 rounded-2xl border space-y-2">
+                <label class="block font-black text-slate-800">🛡️ درجات تقرير الفحص الفني (من 10):</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div>
+                    <span class="block text-[10px] text-slate-500 font-bold mb-1">المحرك</span>
+                    <input id="cf-eng" type="number" step="0.1" min="1" max="10" value="${isEdit ? existing.engineScore : 9.8}" class="w-full border p-2 rounded-xl text-center font-bold bg-white" />
+                  </div>
+                  <div>
+                    <span class="block text-[10px] text-slate-500 font-bold mb-1">الفتيس</span>
+                    <input id="cf-gear" type="number" step="0.1" min="1" max="10" value="${isEdit ? existing.gearScore : 9.8}" class="w-full border p-2 rounded-xl text-center font-bold bg-white" />
+                  </div>
+                  <div>
+                    <span class="block text-[10px] text-slate-500 font-bold mb-1">الهيكل والدهان</span>
+                    <input id="cf-body" type="number" step="0.1" min="1" max="10" value="${isEdit ? existing.bodyScore : 9.5}" class="w-full border p-2 rounded-xl text-center font-bold bg-white" />
+                  </div>
+                  <div>
+                    <span class="block text-[10px] text-slate-500 font-bold mb-1">العفشة والصالون</span>
+                    <input id="cf-int" type="number" step="0.1" min="1" max="10" value="${isEdit ? existing.interiorScore : 9.5}" class="w-full border p-2 rounded-xl text-center font-bold bg-white" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">الوصف التفصيلي والكماليات *</label>
+                <textarea id="cf-desc" required class="w-full border p-2.5 rounded-xl h-20">${isEdit ? this.escapeHtml(existing.description) : ''}</textarea>
+              </div>
+
+              <button id="cf-submit-btn" type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-black py-3 rounded-xl shadow transition">
+                ${isEdit ? '💾 حفظ التعديلات ومزامنة السحابة' : '🚀 نشر السيارة في المعرض والسحابة'}
+              </button>
+            </form>
+          </div>
+        `);
+
+        this.renderTempThumbs();
+
+        document.getElementById('car-upsert-form').onsubmit = (e) => {
+          e.preventDefault();
+          const eng = Number(document.getElementById('cf-eng').value) || 9.5;
+          const gear = Number(document.getElementById('cf-gear').value) || 9.5;
+          const body = Number(document.getElementById('cf-body').value) || 9.5;
+          const intr = Number(document.getElementById('cf-int').value) || 9.5;
+          const avgScore = Number(((eng + gear + body + intr) / 4).toFixed(1));
+
+          const manualUrl = document.getElementById('cf-img').value.trim();
+          const finalImages = [...this.tempUploadedImages];
+          if (manualUrl && !finalImages.includes(manualUrl)) finalImages.unshift(manualUrl);
+
+          const carObj = new CarModel({
+            ...(isEdit ? existing.toMap() : {}),
+            brand: document.getElementById('cf-brand').value,
+            model: document.getElementById('cf-model').value,
+            year: document.getElementById('cf-year').value,
+            mileageKm: document.getElementById('cf-km').value,
+            maxInstallmentMonths: document.getElementById('cf-months').value,
+            price: document.getElementById('cf-price').value,
+            dealerPhone: document.getElementById('cf-phone').value,
+            imageUrl: finalImages[0] || manualUrl,
+            images: finalImages,
+            engineScore: eng,
+            gearScore: gear,
+            bodyScore: body,
+            interiorScore: intr,
+            inspectionScore: avgScore,
+            description: document.getElementById('cf-desc').value
+          });
+
+          if (isEdit) {
+            CarRepository.updateCar(carObj);
+            this.showToast('✅ تم تحديث بيانات السيارة ومزامنتها مع Firebase!', 'success');
+          } else {
+            CarRepository.addCar(carObj);
+            this.showToast('🎉 تمت إضافة السيارة وحفظها في قاعدة بيانات Firebase!', 'success');
+          }
+          this.closeModal();
+          this.syncAll();
+        };
+      },
+
+      async handleCarFilesSelected(fileList) {
+        if (!fileList || fileList.length === 0) return;
+        const wrap = document.getElementById('upload-progress-bar-wrap');
+        const bar = document.getElementById('upload-progress-bar');
+        const statusTxt = document.getElementById('upload-status-text');
+        const submitBtn = document.getElementById('cf-submit-btn');
+
+        if (wrap) wrap.classList.remove('hidden');
+        if (submitBtn) submitBtn.disabled = true;
+
+        for (let i = 0; i < fileList.length; i++) {
+          const file = fileList[i];
+          if (statusTxt) statusTxt.textContent = `جاري رفع ومعالجة الصورة (${i + 1}/${fileList.length})...`;
+          try {
+            const url = await FirebaseCloudService.uploadCarImage(file, (pct) => {
+              if (bar) bar.style.width = `${pct}%`;
+            });
+            this.tempUploadedImages.push(url);
+            const imgInput = document.getElementById('cf-img');
+            if (imgInput && !imgInput.value) {
+              imgInput.value = url;
+            }
+          } catch (e) {
+            console.error('Image Upload Error:', e);
+          }
+        }
+
+        if (statusTxt) statusTxt.textContent = `✓ تم تجهيز ${this.tempUploadedImages.length} صور بنجاح`;
+        if (submitBtn) submitBtn.disabled = false;
+        this.renderTempThumbs();
+      },
+
+      renderTempThumbs() {
+        const container = document.getElementById('uploaded-thumbs-preview');
+        if (!container) return;
+        container.innerHTML = this.tempUploadedImages.map((img, idx) => `
+          <div class="relative shrink-0">
+            <img src="${this.escapeHtml(img)}" class="w-16 h-12 object-cover rounded-lg border" />
+            <button type="button" onclick="App.tempUploadedImages.splice(${idx}, 1); App.renderTempThumbs();" class="absolute -top-1 -left-1 bg-rose-600 text-white w-4 h-4 rounded-full text-[9px] flex items-center justify-center">✕</button>
+          </div>
+        `).join('');
+      },
+
+      deleteCar(carId) {
+        if (!AuthService.isLogged()) return;
+        this.confirmAction(
+          'تأكيد حذف السيارة نهائياً',
+          'هل أنت متأكد من رغبتك في حذف هذه السيارة من المعرض وقاعدة البيانات السحابية؟',
+          'نعم، احذف السيارة',
+          'bg-rose-600 hover:bg-rose-500',
+          () => {
+            CarRepository.deleteCar(carId);
+            this.closeModal();
+            this.syncAll();
+            this.showToast('🗑️ تم حذف السيارة من المعرض والسحابة بنجاح.', 'error');
+          }
+        );
+      },
+
+      directSellCar(carId) {
+        if (AuthService.getRole() !== 'SuperAdmin') {
+          this.showToast('⚠️ صلاحية البيع النهائي المباشر للمدير العام فقط.', 'warning');
+          return;
+        }
+        this.confirmAction(
+          'اعتماد البيع المباشر (كاش)',
+          'سيتم نقل السيارة إلى أرشيف السيارات المباعة وإضافتها لإيرادات المعرض المحققة في السحابة.',
+          'تأكيد البيع النهائي',
+          'bg-emerald-700 hover:bg-emerald-600',
+          () => {
+            const adminName = AuthService.getName();
+            if (CarRepository.markAsSold(carId, adminName, adminName)) {
+              this.closeModal();
+              this.syncAll();
+              this.showToast('🏷️ مبروك! تم اعتماد البيع المباشر ومزامنته مع السحابة.', 'success');
+            }
+          }
+        );
+      },
+
+      openReserveModal(carId) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car || car.isReserved) {
+          this.showToast('⚠️ هذه السيارة محجوزة بالفعل حالياً.', 'warning');
+          return;
+        }
+        const isAdmin = AuthService.isLogged();
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="App.openDetails('${car.id}')" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="font-black text-lg mb-1 text-purple-900">🔒 طلب حجز مؤقت للسيارة</h3>
+            <p class="text-xs text-slate-500 mb-4">${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)} — ${car.formattedPrice}</p>
+            <form id="reserve-form" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">اسم العميل الثلاثي *</label>
+                <input id="res-name" required placeholder="أدخل الاسم بالكامل" class="w-full border p-2.5 rounded-xl" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">رقم الموبايل للتأكيد *</label>
+                <input id="res-phone" required type="tel" placeholder="010xxxxxxxx" class="w-full border p-2.5 rounded-xl" />
+              </div>
+              <button type="submit" class="w-full bg-purple-700 hover:bg-purple-600 text-white font-black py-3 rounded-xl shadow transition">
+                ${isAdmin ? 'تسجيل الحجز للعميل' : 'إرسال طلب الحجز للإدارة'}
+              </button>
+            </form>
+          </div>
+        `);
+
+        document.getElementById('reserve-form').onsubmit = (e) => {
+          e.preventDefault();
+          const clientName = document.getElementById('res-name').value.trim();
+          const clientPhone = document.getElementById('res-phone').value.trim();
+
+          const resObj = {
+            id: 'RES-' + Date.now().toString().slice(-5),
+            carId: car.id,
+            carTitle: `${car.brand} ${car.model} (${car.year})`,
+            clientName,
+            clientPhone,
+            handledBy: isAdmin ? AuthService.getName() : 'بانتظار مراجعة المشرف',
+            status: 'pending_admin',
+            requestedAt: new Date().toLocaleString('ar-EG')
+          };
+
+          const ok = CarRepository.addReservation(resObj, !isAdmin);
+          if (ok) {
+            this.showToast('✅ تم تسجيل طلب الحجز في السحابة بنجاح!', 'success');
+          } else {
+            this.showToast('⚠️ يوجد طلب حجز مسجل مسبقاً بنفس الرقم لهذه السيارة.', 'warning');
+          }
+          this.syncAll();
+          this.openDetails(car.id);
+        };
+      },
+
+      confirmReservation(resId) {
+        if (!AuthService.isLogged()) return;
+        let reservations = CarRepository.getReservations();
+        const target = reservations.find(r => r.id === resId);
+        if (!target) return;
+
+        const adminName = AuthService.getName();
+        reservations = reservations.map(r => {
+          if (r.id === resId) {
+            r.status = 'confirmed_by_staff';
+            r.handledBy = adminName;
+          }
+          return r;
+        });
+        CarRepository.updateReservations(reservations);
+
+        const cars = CarRepository.getAllCars().map(c => {
+          if (c.id === target.carId) {
+            c.isReserved = true;
+            c.reservedByClient = target.clientName;
+          }
+          return c;
+        });
+        CarRepository.saveAll(cars);
+
+        this.syncAll();
+        this.openCommandCenter('reservations');
+        this.showToast('✅ تم تأكيد الحجز للعميل وتحديث حالة السيارة إلى "محجوزة".', 'success');
+      },
+
+      rejectReservation(resId) {
+        if (!AuthService.isLogged()) return;
+        let reservations = CarRepository.getReservations();
+        const target = reservations.find(r => r.id === resId);
+        reservations = reservations.filter(r => r.id !== resId);
+        CarRepository.updateReservations(reservations);
+
+        if (target) {
+          const stillHasConfirmed = reservations.some(r => r.carId === target.carId && r.status === 'confirmed_by_staff');
+          if (!stillHasConfirmed) {
+            const cars = CarRepository.getAllCars().map(c => {
+              if (c.id === target.carId) { c.isReserved = false; c.reservedByClient = null; }
+              return c;
+            });
+            CarRepository.saveAll(cars);
+          }
+        }
+        this.syncAll();
+        this.openCommandCenter('reservations');
+        this.showToast('🗑️ تم رفض وحذف طلب الحجز.', 'warning');
+      },
+
+      approveSaleFromRes(resId) {
+        if (AuthService.getRole() !== 'SuperAdmin') return;
+        let reservations = CarRepository.getReservations();
+        const target = reservations.find(r => r.id === resId);
+        if (!target) return;
+
+        this.confirmAction(
+          'اعتماد البيع النهائي للعميل',
+          `هل تؤكد إتمام بيع سيارة (${target.carTitle}) للعميل (${target.clientName}) ونقلها لأرشيف المبيعات؟`,
+          'نعم، اعتماد البيع',
+          'bg-emerald-700 hover:bg-emerald-600',
+          () => {
+            reservations = reservations.map(r => {
+              if (r.id === resId) r.status = 'sold';
+              return r;
+            });
+            CarRepository.updateReservations(reservations);
+            CarRepository.markAsSold(target.carId, AuthService.getName(), target.handledBy);
+            this.syncAll();
+            this.openCommandCenter('reservations');
+            this.showToast('🏷️ مبروك! تم اعتماد البيع النهائي ونقل السيارة للأرشيف.', 'success');
+          }
+        );
+      },
+
+      rejectSaleFromRes(resId) {
+        if (AuthService.getRole() !== 'SuperAdmin') return;
+        this.rejectReservation(resId);
+      },
+
+      openInspectionBookingModal(carId) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car) return;
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="App.openDetails('${car.id}')" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="font-black text-lg mb-1 text-teal-800">🚗 حجز موعد معاينة أو مكالمة فيديو</h3>
+            <p class="text-xs text-slate-500 mb-4">${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)} — ${car.formattedPrice}</p>
+            <form id="insp-form" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">نوع المعاينة المطلوبة</label>
+                <select id="insp-type" class="w-full border p-2.5 rounded-xl font-bold bg-white">
+                  <option value="معاينة داخل المعرض">معاينة وفحص داخل المعرض</option>
+                  <option value="مكالمة فيديو مباشر (Video Call)">مكالمة فيديو مباشر (Video Call)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">اسم العميل *</label>
+                <input id="insp-name" required placeholder="الاسم الثلاثي" class="w-full border p-2.5 rounded-xl" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">رقم الموبايل *</label>
+                <input id="insp-phone" required type="tel" placeholder="010xxxxxxxx" class="w-full border p-2.5 rounded-xl" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">تاريخ الموعد المقترح *</label>
+                <input id="insp-date" required type="date" min="${todayStr}" value="${todayStr}" class="w-full border p-2.5 rounded-xl font-bold" />
+              </div>
+              <button type="submit" class="w-full bg-teal-700 hover:bg-teal-600 text-white font-black py-3 rounded-xl shadow transition">تأكيد موعد المعاينة</button>
+            </form>
+          </div>
+        `);
+
+        document.getElementById('insp-form').onsubmit = (e) => {
+          e.preventDefault();
+          const ok = CarRepository.addInspection({
+            id: 'INS-' + Date.now().toString().slice(-5),
+            carId: car.id,
+            carTitle: `${car.brand} ${car.model}`,
+            type: document.getElementById('insp-type').value,
+            clientName: document.getElementById('insp-name').value.trim(),
+            clientPhone: document.getElementById('insp-phone').value.trim(),
+            date: document.getElementById('insp-date').value,
+            handledBy: 'بانتظار المشرف',
+            status: 'pending',
+            requestedAt: new Date().toLocaleString('ar-EG')
+          });
+          if (ok) {
+            this.showToast('✅ تم تسجيل موعد المعاينة سحابياً وسنتواصل معك!', 'success');
+          } else {
+            this.showToast('⚠️ لديك طلب معاينة معلق بالفعل لهذه السيارة.', 'warning');
+          }
+          this.closeModal();
+          this.syncAll();
+        };
+      },
+
+      completeInspection(inspId) {
+        if (!AuthService.isLogged()) return;
+        const adminName = AuthService.getName();
+        const list = CarRepository.getInspections().map(i => {
+          if (i.id === inspId) { i.status = 'completed'; i.handledBy = adminName; }
+          return i;
+        });
+        CarRepository.updateInspections(list);
+        this.syncAll();
+        this.openCommandCenter('inspections');
+        this.showToast('✅ تم تأكيد إتمام المعاينة واحتسابها في تقييم الأداء!', 'success');
+      },
+
+      deleteInspection(inspId) {
+        if (!AuthService.isLogged()) return;
+        const list = CarRepository.getInspections().filter(i => i.id !== inspId);
+        CarRepository.updateInspections(list);
+        this.syncAll();
+        this.openCommandCenter('inspections');
+        this.showToast('🗑️ تم حذف سجل المعاينة.', 'warning');
+      },
+
+      /**
+       * 9. نافذة الاستبدال والبيع النقدي الكاملة
+       */
+      openTradeInModal() {
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="font-black text-lg mb-1 text-amber-700">🔄 استبدل سيارتك القديمة أو بعها نقداً</h3>
+            <p class="text-xs text-slate-500 mb-4">أدخل مواصفات سيارتك وسيقوم خبراء التثمين بالمعرض بالتواصل معك بأفضل عرض سعر.</p>
+            <form id="tradein-form" class="space-y-3 text-xs">
+              <div class="grid grid-cols-2 gap-3">
+                <input id="ti-brand" required placeholder="ماركة سيارتك (مثال: هيونداي)" class="w-full border p-2.5 rounded-xl" />
+                <input id="ti-model" required placeholder="الموديل والفئة" class="w-full border p-2.5 rounded-xl" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <input id="ti-year" required type="number" min="1990" max="2027" placeholder="سنة الصنع" class="w-full border p-2.5 rounded-xl" />
+                <input id="ti-km" required type="number" min="0" placeholder="عداد الكيلومترات (كم)" class="w-full border p-2.5 rounded-xl" />
+              </div>
+              <select id="ti-type" class="w-full border p-2.5 rounded-xl font-bold text-slate-700 bg-white">
+                <option value="استبدال">استبدال بسيارة أحدث من المعرض</option>
+                <option value="بيع">بيع نقدي مباشر للمعرض</option>
+              </select>
+              <textarea id="ti-desc" required placeholder="حالة الدهان، الصيانات، أو السيارة التي ترغب في الاستبدال بها..." class="w-full border p-2.5 rounded-xl h-20"></textarea>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input id="ti-name" required placeholder="اسمك الثلاثي *" class="w-full border p-2.5 rounded-xl" />
+                <input id="ti-phone" required type="tel" placeholder="رقم الموبايل *" class="w-full border p-2.5 rounded-xl" />
+              </div>
+              <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl shadow transition">إرسال طلب التثمين والاستبدال</button>
+            </form>
+          </div>
+        `);
+
+        document.getElementById('tradein-form').onsubmit = (e) => {
+          e.preventDefault();
+          CarRepository.addTradeIn({
+            id: 'TI-' + Date.now().toString().slice(-5),
+            brand: document.getElementById('ti-brand').value.trim(),
+            model: document.getElementById('ti-model').value.trim(),
+            year: document.getElementById('ti-year').value.trim(),
+            km: Number(document.getElementById('ti-km').value).toLocaleString('ar-EG'),
+            type: document.getElementById('ti-type').value,
+            desc: document.getElementById('ti-desc').value.trim(),
+            clientName: document.getElementById('ti-name').value.trim(),
+            clientPhone: document.getElementById('ti-phone').value.trim(),
+            requestedAt: new Date().toLocaleString('ar-EG')
+          });
+          this.closeModal();
+          this.syncAll();
+          this.showToast('✅ تم إرسال طلب التثمين لإدارة المعرض بنجاح!', 'success');
+        };
+      },
+
+      archiveTradeIn(id) {
+        if (!AuthService.isLogged()) return;
+        CarRepository.archiveTradeIn(id, AuthService.getName());
+        this.syncAll();
+        this.openCommandCenter('tradein');
+        this.showToast('📂 تمت أرشفة الطلب واحتسابه في تقييم الأداء!', 'success');
+      },
+
+      deleteTradeIn(id, isArchived) {
+        if (!AuthService.isLogged()) return;
+        if (isArchived) {
+          CarRepository.updateArchivedTradeIns(CarRepository.getArchivedTradeIns().filter(i => i.id !== id));
+        } else {
+          CarRepository.updateTradeIns(CarRepository.getTradeIns().filter(i => i.id !== id));
+        }
+        this.syncAll();
+        this.openCommandCenter('tradein');
+        this.showToast('🗑️ تم حذف الطلب بنجاح.', 'warning');
+      },
+
+      openClientFavModal() {
+        const favIds = CarRepository.getFavorites();
+        const allCars = [...CarRepository.getAllCars(), ...CarRepository.getSoldCars()];
+        const favCars = allCars.filter(c => favIds.includes(c.id));
+        const isAdmin = AuthService.isLogged();
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="font-black text-lg mb-1 text-rose-700">❤️ ${isAdmin ? 'سجل اهتمامات ومفضلة العملاء' : 'قائمة سياراتي المفضلة'}</h3>
+            <p class="text-xs text-slate-500 mb-4">${isAdmin ? 'اطلاع إداري على السيارات الأكثر تفضيلاً لدى زوار المعرض.' : 'السيارات التي قمت بحفظها للرجوع إليها بسهولة.'}</p>
+
+            ${favCars.length === 0 ? '<p class="text-slate-400 py-10 text-center text-xs font-bold">لا توجد سيارات مضافة في المفضلة حالياً.</p>' : `
+              <div class="space-y-3">
+                ${favCars.map(c => `
+                  <div class="bg-slate-50 p-3 rounded-2xl border flex justify-between items-center gap-3 text-xs">
+                    <div onclick="App.openDetails('${c.id}')" class="flex gap-3 items-center cursor-pointer flex-grow">
+                      <img src="${this.escapeHtml(c.imageUrl)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-16 h-12 object-cover rounded-xl shrink-0" />
+                      <div>
+                        <h4 class="font-black text-slate-900">${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)} ${c.soldAt ? '<span class="text-rose-600 text-[10px]">(مباعة)</span>' : ''}</h4>
+                        <p class="text-blue-900 font-bold">${c.formattedPrice}</p>
+                      </div>
+                    </div>
+                    ${!isAdmin ? `<button onclick="App.toggleFav('${c.id}'); App.openClientFavModal();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-1.5 rounded-xl font-bold">إزالة</button>` : `<span class="text-slate-400 font-bold">❤️ ${c.favoritesCount}</span>`}
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        `);
+      },
+
+      openAdminWatchlistModal() {
+        if (!AuthService.isLogged()) return;
+        const username = AuthService.getUsername();
+        const wl = CarRepository.getAdminWatchlist(username);
+        const cars = CarRepository.getAllCars().filter(c => wl.some(w => w.id === c.id));
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="font-black text-lg mb-1 text-amber-700">⭐ قائمة متابعتي الخاصة (${this.escapeHtml(AuthService.getName())})</h3>
+            <p class="text-xs text-slate-500 mb-4">قائمة خاصة بك لمتابعة السيارات المهمة لعملائك.</p>
+
+            ${cars.length === 0 ? '<p class="text-slate-400 py-10 text-center text-xs font-bold">لم تقم بإضافة سيارات لقائمة متابعتك بعد.</p>' : `
+              <div class="space-y-3">
+                ${cars.map(c => `
+                  <div class="bg-slate-50 p-3 rounded-2xl border flex justify-between items-center gap-3 text-xs">
+                    <div onclick="App.openDetails('${c.id}')" class="flex gap-3 items-center cursor-pointer flex-grow">
+                      <img src="${this.escapeHtml(c.imageUrl)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-16 h-12 object-cover rounded-xl" />
+                      <div>
+                        <h4 class="font-black text-slate-900">${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)}</h4>
+                        <p class="text-blue-900 font-bold">${c.formattedPrice}</p>
+                      </div>
+                    </div>
+                    <button onclick="App.toggleFav('${c.id}'); App.openAdminWatchlistModal();" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-1.5 rounded-xl font-bold">إزالة</button>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        `);
+      },
+
+      /**
+       * 10. جدول المقارنة الفنية الشاملة (يعمل للعميل والمدير بكفاءة 100%)
+       */
+      openCompareModal() {
+        const isAdmin = AuthService.isLogged();
+        const compIds = CarRepository.getCompare(isAdmin);
+        const compCars = CarRepository.getAllCars().filter(c => compIds.includes(String(c.id)));
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+              <div>
+                <h3 class="font-black text-xl text-blue-950">⚖️ جدول المقارنة الفنية الشاملة (${compCars.length}/3)</h3>
+                <p class="text-xs text-slate-500">مقارنة دقيقة للمواصفات، الأسعار، ونتائج الفحص الهندسي جنباً إلى جنب</p>
+              </div>
+              <div class="flex items-center gap-2">
+                ${compCars.length > 0 ? `<button onclick="App.clearCompareAll()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold px-3 py-1.5 rounded-xl">🗑️ مسح الكل</button>` : ''}
+                <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+              </div>
+            </div>
+
+            ${compCars.length === 0 ? `
+              <div class="py-12 text-center space-y-3">
+                <div class="text-4xl">⚖️</div>
+                <p class="text-slate-500 text-sm font-bold">لم تقم بإضافة سيارات للمقارنة بعد.</p>
+                <p class="text-slate-400 text-xs">اضغط على زر <b>"⚖️ قارن"</b> الموجود أعلى صورة أي سيارة لإضافتها هنا (حتى 3 سيارات).</p>
+              </div>
+            ` : `
+              <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs border-collapse border rounded-2xl overflow-hidden">
+                  <thead>
+                    <tr class="bg-slate-900 text-white">
+                      <th class="p-3 border border-slate-700">وجه المقارنة</th>
+                      ${compCars.map(c => `<th class="p-3 border border-slate-700 text-amber-300 font-black">${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)}</th>`).join('')}
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y">
+                    <tr><td class="p-3 border font-bold bg-slate-50">الصورة</td>${compCars.map(c => `<td class="p-3 border text-center"><img src="${this.escapeHtml(c.imageUrl)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-32 h-20 object-cover rounded-xl mx-auto cursor-pointer" onclick="App.openDetails('${c.id}')" /></td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">السعر النقدي</td>${compCars.map(c => `<td class="p-3 border font-black text-sm text-blue-900">${c.formattedPrice}</td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">سنة الصنع والعداد</td>${compCars.map(c => `<td class="p-3 border font-bold">${c.year} | <span class="text-amber-700">${c.formattedMileage}</span></td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">التقييم الهندسي العام</td>${compCars.map(c => `<td class="p-3 border font-black text-teal-700">${c.inspectionScore}/10 (${c.inspectionBadge})</td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">تفاصيل الفحص (محرك/فتيس/هيكل/صالون)</td>${compCars.map(c => `<td class="p-3 border text-[11px] font-semibold">محرك: ${c.engineScore} | فتيس: ${c.gearScore} | هيكل: ${c.bodyScore} | صالون: ${c.interiorScore}</td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">أقصى فترة تقسيط</td>${compCars.map(c => `<td class="p-3 border font-bold">${c.maxInstallmentMonths} شهراً</td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">إجراءات</td>${compCars.map(c => `<td class="p-3 border text-center space-x-1 space-x-reverse"><button onclick="App.openDetails('${c.id}')" class="bg-blue-900 text-white px-3 py-1.5 rounded-lg font-bold">التفاصيل والتقسيط</button><button onclick="App.toggleCompare('${c.id}'); App.openCompareModal();" class="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg font-bold">إزالة</button></td>`).join('')}</tr>
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        `);
+      },
+
+      deleteAdminUser(username) {
+        if (AuthService.getRole() !== 'SuperAdmin' || username === 'admin') return;
+        const list = AuthService.getAdmins().filter(a => a.username !== username);
+        SafeStorage.set(AuthService.DB_KEY, list);
+        FirebaseCloudService.syncToCloud();
+        this.openCommandCenter('cloud');
+        this.showToast('🗑️ تم حذف حساب المشرف.', 'warning');
+      },
+
+      handleAuthClick() {
+        if (AuthService.isLogged()) {
+          AuthService.logout();
+          this.syncAll();
+          this.showToast('🔒 تم تسجيل الخروج بنجاح.', 'info');
+        } else {
+          this.openLoginModal();
+        }
+      },
+
+      openLoginModal() {
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="text-lg font-black mb-1 text-slate-900">🔐 بوابة دخول إدارة المعرض</h3>
+            <p class="text-xs text-slate-500 mb-4">سجل دخولك للوصول إلى مركز القيادة والربط السحابي بـ Firebase</p>
+            <form id="sec-login" class="space-y-3 text-xs">
+              <input id="l-user" required placeholder="اسم المستخدم (admin أو yasser)" class="w-full border p-3 rounded-xl font-bold" />
+              <input id="l-pass" required type="password" placeholder="كلمة المرور" class="w-full border p-3 rounded-xl font-bold" />
+              <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 space-y-1">
+                <p class="font-black">💡 دخول سريع للتجربة (اضغط للتعبئة التلقائية):</p>
+                <div class="flex gap-2 pt-1">
+                  <button type="button" onclick="document.getElementById('l-user').value='admin'; document.getElementById('l-pass').value='Elite@2026#Secure';" class="bg-amber-200/70 hover:bg-amber-300 px-2.5 py-1 rounded-lg font-black transition">👑 حساب المدير العام</button>
+                  <button type="button" onclick="document.getElementById('l-user').value='yasser'; document.getElementById('l-pass').value='Yasser*99';" class="bg-blue-100 hover:bg-blue-200 text-blue-900 px-2.5 py-1 rounded-lg font-black transition">👤 حساب المشرف (يسري)</button>
+                </div>
+              </div>
+              <button type="submit" class="w-full bg-blue-950 hover:bg-blue-900 text-amber-400 font-black py-3 rounded-xl shadow">تسجيل الدخول لمركز القيادة</button>
+            </form>
+          </div>
+        `);
+
+        document.getElementById('sec-login').onsubmit = (e) => {
+          e.preventDefault();
+          const u = document.getElementById('l-user').value.trim();
+          const p = document.getElementById('l-pass').value.trim();
+          if (AuthService.login(u, p)) {
+            this.closeModal();
+            this.syncAll();
+            this.showToast(`🎉 مرحباً بك في مركز القيادة يا ${AuthService.getName()}!`, 'success');
+          } else {
+            this.showToast('❌ اسم المستخدم أو كلمة المرور غير صحيحة!', 'error');
+          }
+        };
+      },
+
+      exportExecutiveReport() {
+        const cars = CarRepository.getAllCars();
+        const soldCars = CarRepository.getSoldCars();
+        const inspections = CarRepository.getInspections();
+        const archivedTi = CarRepository.getArchivedTradeIns();
+
+        const reportContent = [
+          '====================================================',
+          '   التقرير التنفيذي الرسمي - معرض النخبة للسيارات',
+          '====================================================',
+          `المسؤول المصدر للتقرير: ${AuthService.getName()} (${AuthService.getRole()})`,
+          `تاريخ الإصدار: ${new Date().toLocaleString('ar-EG')}`,
+          '',
+          '1. الملخص الإحصائي العام:',
+          `- السيارات المتاحة حالياً بالمعرض: ${cars.length} سيارة`,
+          `- إجمالي السيارات المباعة: ${soldCars.length} سيارة`,
+          `- إجمالي مواعيد المعاينات: ${inspections.length} موعد`,
+          `- طلبات الاستبدال المؤرشفة: ${archivedTi.length} طلب`,
+          '',
+          '2. بيان السيارات المتاحة حالياً:',
+          ...(cars.length ? cars.map((c, i) => `  [${i + 1}] ${c.brand} ${c.model} (${c.year}) | السعر: ${c.formattedPrice} | الفحص: ${c.inspectionScore}/10 | المشاهدات: ${c.viewsCount}`) : ['  لا توجد سيارات متاحة حالياً.']),
+          '',
+          '3. بيان السيارات المباعة:',
+          ...(soldCars.length ? soldCars.map((c, i) => `  [${i + 1}] ${c.brand} ${c.model} (${c.year}) | السعر: ${c.formattedPrice} | تاريخ البيع: ${c.soldAt} | بواسطة: ${c.soldViaStaff || c.soldBy}`) : ['  لا توجد سيارات مباعة بعد.']),
+          '===================================================='
+        ].join('\n');
+
+        try {
+          const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Elite_Showroom_Report_${Date.now().toString().slice(-4)}.txt`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          this.showToast('📥 تم تحميل ملف التقرير التنفيذي بنجاح!', 'success');
+        } catch (e) {
+          this.showToast('⚠️ تم عرض التقرير.', 'info');
+        }
+      },
+
+      toggleChat(forceState) {
+        const modal = document.getElementById('chat-modal');
+        if (!modal) return;
+        if (typeof forceState === 'boolean') {
+          modal.classList.toggle('hidden', !forceState);
+          modal.classList.toggle('flex', forceState);
+        } else {
+          const isHidden = modal.classList.contains('hidden');
+          modal.classList.toggle('hidden', !isHidden);
+          modal.classList.toggle('flex', isHidden);
+        }
+      },
+
+      quickChat(action) {
+        const messages = document.getElementById('chat-messages');
+        if (!messages) return;
+        const cars = CarRepository.getAllCars();
+
+        const labels = {
+          matchmaker: '✨ رشح لي أفضل سيارة حسب ميزانيتي',
+          prices: '💰 قائمة الأسعار الحالية',
+          installment: '💳 نظام التقسيط والتمويل',
+          howto: '🚗 خطوات الشراء والحجز',
+          human: '👨‍💻 التواصل مع مشرف المبيعات'
+        };
+
+        const userDiv = document.createElement('div');
+        userDiv.className = 'bg-blue-900 text-white p-2.5 rounded-2xl rounded-tl-none max-w-[85%] self-end shadow-xs leading-relaxed';
+        userDiv.textContent = labels[action] || '';
+        messages.appendChild(userDiv);
+
+        setTimeout(() => {
+          let replyHtml = '';
+          if (action === 'prices') {
+            replyHtml = cars.length === 0
+              ? 'جميع السيارات المتاحة تم بيعها حالياً، ترقبوا الدفعة الجديدة قريباً!'
+              : cars.map(c => `• <b>${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)}</b>: ${c.formattedPrice}`).join('<br>');
+          } else if (action === 'matchmaker') {
+            const currentFilterBudget = document.getElementById('filter-max-price')?.value || '';
+            replyHtml = `
+              <div class="space-y-2">
+                <p class="font-bold text-blue-950">🎯 حدد ميزانيتك وسأقوم بتحليل المعرض وترشيح الأفضل لك فوراً (كاش أو تقسيط):</p>
+                <div class="flex gap-1.5">
+                  <input id="chat-budget-input" type="number" min="50000" step="50000" value="${currentFilterBudget}" placeholder="اكتب ميزانيتك (مثال: 2000000)" class="w-full border border-blue-300 rounded-xl px-2.5 py-1.5 text-xs font-bold bg-white text-slate-900 focus:outline-none" />
+                  <button onclick="App.runSmartMatchmaker()" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-1.5 rounded-xl font-black text-xs shrink-0">تحليل ←</button>
+                </div>
+                <div class="flex flex-wrap gap-1 pt-1">
+                  <button onclick="document.getElementById('chat-budget-input').value='600000'; App.runSmartMatchmaker();" class="bg-white border border-blue-200 text-blue-900 px-2 py-0.5 rounded-lg text-[10px] font-bold hover:bg-blue-50">600 ألف (مقدم)</button>
+                  <button onclick="document.getElementById('chat-budget-input').value='1500000'; App.runSmartMatchmaker();" class="bg-white border border-blue-200 text-blue-900 px-2 py-0.5 rounded-lg text-[10px] font-bold hover:bg-blue-50">1.5 مليون</button>
+                  <button onclick="document.getElementById('chat-budget-input').value='2500000'; App.runSmartMatchmaker();" class="bg-white border border-blue-200 text-blue-900 px-2 py-0.5 rounded-lg text-[10px] font-bold hover:bg-blue-50">2.5 مليون</button>
+                  <button onclick="document.getElementById('chat-budget-input').value='4000000'; App.runSmartMatchmaker();" class="bg-white border border-blue-200 text-blue-900 px-2 py-0.5 rounded-lg text-[10px] font-bold hover:bg-blue-50">4 مليون</button>
+                </div>
+              </div>`;
+          } else if (action === 'installment') {
+            replyHtml = '💳 نوفر تقسيطاً مباشراً وبنكياً بمقدم يبدأ من 10% وفترة سداد تصل إلى 72 شهراً. افتح أي سيارة وجرب <b>حاسبة التقسيط التفاعلية</b>!';
+          } else if (action === 'howto') {
+            replyHtml = '🚗 يمكنك الضغط على أي سيارة لمراجعة تقرير الفحص الـ 4 نقاط، ثم طلب <b>حجز مؤقت</b> أو <b>موعد معاينة وفيديو كول</b> بضغطة زر.';
+          } else if (action === 'human') {
+            replyHtml = `👨‍💻 فريق المبيعات جاهز لخدمتك فوراً.<br><button onclick="App.whatsApp('201000000001', 'مرحباً معرض النخبة، أرغب في التحدث مع مشرف المبيعات')" class="mt-2 bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">💬 فتح واتساب المشرف</button>`;
+          }
+
+          const aiDiv = document.createElement('div');
+          aiDiv.className = 'bg-blue-100 text-blue-950 p-3 rounded-2xl rounded-tr-none max-w-[92%] self-start shadow-xs leading-relaxed';
+          aiDiv.innerHTML = replyHtml;
+          messages.appendChild(aiDiv);
+
+          while (messages.children.length > 14) messages.removeChild(messages.firstChild);
+          messages.scrollTop = messages.scrollHeight;
+        }, 150);
+      },
+
+      runSmartMatchmaker() {
+        const messages = document.getElementById('chat-messages');
+        const inputEl = document.getElementById('chat-budget-input');
+        const budget = Number(inputEl?.value) || 0;
+        const cars = CarRepository.getAllCars().filter(c => !c.isReserved);
+
+        if (budget <= 0) {
+          this.showToast('⚠️ يرجى كتابة مبلغ الميزانية أولاً.', 'warning');
+          return;
+        }
+
+        const cashMatches = cars.filter(c => c.price <= budget).sort((a, b) => b.inspectionScore - a.inspectionScore);
+        let resultHtml = '';
+
+        if (cashMatches.length > 0) {
+          const topCar = cashMatches[0];
+          const saving = budget - topCar.price;
+          const maxPriceEl = document.getElementById('filter-max-price');
+          if (maxPriceEl) maxPriceEl.value = budget;
+          this.applyFilters();
+
+          resultHtml = `
+            ✅ <b>وجدنا ${cashMatches.length} سيارة تناسب ميزانيتك النقدية (${budget.toLocaleString('ar-EG')} ج.م)!</b><br>
+            🏆 <b>أفضل ترشيح لك:</b> ${this.escapeHtml(topCar.brand)} ${this.escapeHtml(topCar.model)} (${topCar.year})<br>
+            • السعر: <b>${topCar.formattedPrice}</b> ${saving > 0 ? `(ستوفر ${saving.toLocaleString('ar-EG')} ج.م)` : ''}<br>
+            • حالة الفحص: <b>${topCar.inspectionScore}/10</b><br>
+            <button onclick="App.openDetails('${topCar.id}')" class="mt-2 bg-blue-900 text-white px-3 py-1.5 rounded-xl font-bold text-[11px] w-full">🔍 عرض تفاصيل السيارة المرشحة</button>
+          `;
+        } else {
+          const installmentMatches = cars.filter(c => budget >= c.price * 0.2).sort((a, b) => a.price - b.price);
+          if (installmentMatches.length > 0) {
+            const instCar = installmentMatches[0];
+            const financed = instCar.price - budget;
+            const months = instCar.maxInstallmentMonths || 60;
+            const monthly = Math.round((financed + (financed * 0.145 * (months / 12))) / months);
+
+            resultHtml = `
+              💡 ميزانيتك (<b>${budget.toLocaleString('ar-EG')} ج.م</b>) أقل من أسعار الكاش الحالية، ولكنها <b>ممتازة كمقدم تقسيط!</b><br>
+              🌟 <b>نرشح لك بالتقسيط:</b> ${this.escapeHtml(instCar.brand)} ${this.escapeHtml(instCar.model)}<br>
+              • السعر الإجمالي: ${instCar.formattedPrice}<br>
+              • بمقدم <b>${budget.toLocaleString('ar-EG')} ج.م</b> وقسط شهري نحو <b>${monthly.toLocaleString('ar-EG')} ج.م</b> على ${months} شهراً.<br>
+              <button onclick="App.openDetails('${instCar.id}')" class="mt-2 bg-amber-500 text-slate-950 px-3 py-1.5 rounded-xl font-black text-[11px] w-full">🧮 افتح حاسبة التقسيط للسيارة</button>
+            `;
+          } else {
+            resultHtml = `⚠️ عذراً، المبلغ المدخل (${budget.toLocaleString('ar-EG')} ج.م) أقل من الحد الأدنى لمقدم التقسيط (20%) للسيارات المتاحة حالياً.`;
+          }
+        }
+
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'bg-amber-50 border border-amber-300 text-slate-900 p-3 rounded-2xl rounded-tr-none max-w-[92%] self-start shadow-xs leading-relaxed';
+        aiDiv.innerHTML = resultHtml;
+        messages.appendChild(aiDiv);
+        messages.scrollTop = messages.scrollHeight;
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+</body>
+</html>
