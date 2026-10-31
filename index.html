@@ -962,7 +962,7 @@
       },
 
       whatsApp(phone, customText = '') {
-        const cleanPhone = String(phone || '201000000001').replace(/[^0-9]/g, '');
+        const cleanPhone = String(phone || '201066980075').replace(/[^0-9]/g, '');
         const url = `https://wa.me/${cleanPhone}${customText ? '?text=' + encodeURIComponent(customText) : ''}`;
         this.showToast('💬 جاري فتح محادثة واتساب الرسمية...', 'success');
         window.open(url, '_blank');
