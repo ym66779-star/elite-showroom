@@ -1,22 +1,32 @@
-const CACHE_NAME = 'elite-showroom-v1';
-const assetsToCache = [
+const CACHE_NAME = 'elite-showroom-pwa-v2';
+const LOCAL_ASSETS = [
+  './',
   './index.html',
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(assetsToCache);
+      return cache.addAll(LOCAL_ASSETS);
     })
   );
 });
 
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
