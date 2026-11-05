@@ -158,22 +158,27 @@
     <div id="cars-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </main>
 
-  <!-- شريط التنقل السفلي الذكي للموبايل (Bottom App Bar) -->
+<!-- شريط التنقل السفلي الذكي للموبايل (Bottom App Bar) -->
   <nav class="fixed bottom-8 inset-x-3 sm:hidden bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-2 z-40 border border-slate-700 flex justify-around items-center text-[11px] no-print">
     <button onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center gap-0.5 text-amber-400 font-bold p-1">
-      <span class="text-base">🏠</span> الرئيسية
+      <span class="text-base">🏠</span>
+      <span>الرئيسية</span>
     </button>
     <button onclick="App.openCompareModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
-      <span class="text-base">⚖️</span> المقارنة (<span id="m-compare-count" class="text-amber-400 font-black">0</span>)
+      <span class="text-base">⚖️</span>
+      <span class="whitespace-nowrap">المقارنة (<span id="m-compare-count" class="text-amber-400 font-black">0</span>)</span>
     </button>
     <button onclick="App.openClientFavModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
-      <span class="text-base">❤️</span> المفضلة (<span id="m-fav-count" class="text-rose-400 font-black">0</span>)
+      <span class="text-base">❤️</span>
+      <span class="whitespace-nowrap">المفضلة (<span id="m-fav-count" class="text-rose-400 font-black">0</span>)</span>
     </button>
     <button onclick="App.openTradeInModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
-      <span class="text-base">🔄</span> استبدل
+      <span class="text-base">🔄</span>
+      <span>استبدل</span>
     </button>
     <button onclick="App.toggleChat()" class="flex flex-col items-center gap-0.5 text-amber-300 font-bold p-1">
-      <span class="text-base">🤖</span> المستشار
+      <span class="text-base">🤖</span>
+      <span>المستشار</span>
     </button>
   </nav>
 
