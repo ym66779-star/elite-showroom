@@ -883,6 +883,7 @@
       currentCalcState: { down: 0, months: 36, monthly: 0 },
 
       init() {
+        
         AuthService.initDB();
         CarRepository.getAllCars();
         if (SafeStorage.get('elite_dark_mode_v1', false)) {
@@ -912,7 +913,10 @@
             }
           }
         });
-      },
+      const sharedCarId = new URLSearchParams(window.location.search).get('car');
+        if (sharedCarId) {
+          setTimeout(() => this.openDetails(sharedCarId), 600);
+        }},
 
       toggleDarkMode() {
         const isDark = document.body.classList.toggle('dark-mode');
@@ -1040,15 +1044,80 @@
       shareCarNative(carId) {
         const { car } = CarRepository.findCarAnywhere(carId);
         if (!car) return;
-        const shareText = `شاهد سيارة ${car.brand} ${car.model} موديل ${car.year} بسعر ${car.formattedPrice} (فحص ${car.inspectionScore}/10) في معرض النخبة للسيارات. كود: ${car.id}`;
-        if (navigator.share) {
+
+        const baseUrl = window.location.origin + window.location.pathname;
+        const carUrl = `${baseUrl}?car=${encodeURIComponent(car.id)}`;
+        const shareText = `🚘 ${car.brand} ${car.model} (موديل ${car.year})\n💰 السعر: ${car.formattedPrice}\n🛡️ حالة الفحص: ${car.inspectionScore}/10\n🛣️ العداد: ${car.formattedMileage}\n📍 معرض النخبة للسيارات (كود: ${car.id})`;
+        const fullSharePayload = `${shareText}\n🔗 رابط السيارة المباشر:\n${carUrl}`;
+
+        const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isMobileDevice && navigator.share) {
           navigator.share({
             title: `معرض النخبة - ${car.brand} ${car.model}`,
             text: shareText,
-            url: window.location.href
-          }).catch(() => {});
+            url: carUrl
+          }).catch(() => {
+            this.openShareModal(car, fullSharePayload, carUrl);
+          });
         } else {
-          this.whatsApp(car.dealerPhone, shareText);
+          this.openShareModal(car, fullSharePayload, carUrl);
+        }
+      },
+
+      openShareModal(car, fullSharePayload, carUrl) {
+        this._tempSharePayload = fullSharePayload;
+        const waShareUrl = `https://wa.me/?text=${encodeURIComponent(fullSharePayload)}`;
+        const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(carUrl)}&text=${encodeURIComponent(fullSharePayload)}`;
+        const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(carUrl)}`;
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-xs space-y-4">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <div class="flex items-center gap-3 border-b pb-3">
+              <img src="${this.escapeHtml(car.imageUrl)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-16 h-12 object-cover rounded-xl shrink-0" />
+              <div>
+                <h3 class="font-black text-sm text-slate-900">📤 مشاركة بيانات السيارة</h3>
+                <p class="text-blue-900 font-bold mt-0.5">${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)} (${car.year})</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-2xl border text-[11px] text-slate-700 whitespace-pre-line leading-relaxed select-all">${this.escapeHtml(fullSharePayload)}</div>
+
+            <div class="grid grid-cols-1 gap-2">
+              <button type="button" onclick="App.copySharePayload()" class="w-full bg-blue-950 hover:bg-blue-900 text-amber-400 font-black py-3 rounded-xl shadow flex items-center justify-center gap-2 transition">
+                <span>📋</span> نسخ تفاصيل ورابط السيارة
+              </button>
+              <div class="grid grid-cols-2 gap-2">
+                <a href="${waShareUrl}" target="_blank" rel="noopener noreferrer" onclick="App.showToast('💬 جاري فتح واتساب للمشاركة...', 'success')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow transition">
+                  <span>💬</span> مشاركة واتساب
+                </a>
+                <a href="${tgShareUrl}" target="_blank" rel="noopener noreferrer" class="bg-sky-600 hover:bg-sky-500 text-white font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow transition">
+                  <span>✈️</span> تيليجرام
+                </a>
+              </div>
+              <a href="${fbShareUrl}" target="_blank" rel="noopener noreferrer" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition">
+                <span>📘</span> مشاركة على فيسبوك
+              </a>
+            </div>
+          </div>
+        `);
+      },
+
+      async copySharePayload() {
+        const text = this._tempSharePayload || '';
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+          this.showToast('✅ تم نسخ تفاصيل ورابط السيارة بنجاح!', 'success');
+        } catch (err) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          this.showToast('✅ تم نسخ تفاصيل ورابط السيارة بنجاح!', 'success');
         }
       },
 
