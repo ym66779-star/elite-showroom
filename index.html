@@ -42,8 +42,6 @@
       .no-print { display: none !important; }
     }
   </style>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#090d16">
 </head>
 <body class="min-h-screen flex flex-col pb-24 sm:pb-14">
 
@@ -158,7 +156,7 @@
     <div id="cars-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </main>
 
-<!-- شريط التنقل السفلي الذكي للموبايل (Bottom App Bar) -->
+  <!-- شريط التنقل السفلي الذكي للموبايل (Bottom App Bar) -->
   <nav class="fixed bottom-8 inset-x-3 sm:hidden bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-2 z-40 border border-slate-700 flex justify-around items-center text-[11px] no-print">
     <button onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center gap-0.5 text-amber-400 font-bold p-1">
       <span class="text-base">🏠</span>
@@ -381,6 +379,7 @@
           } else {
             this.applyCloudDataToLocal(snap.data());
             App.syncAll(false);
+            App.checkPendingSharedCar();
           }
         } catch (e) {
           this.isCloudHydrated = true;
@@ -416,6 +415,7 @@
             this.isCloudHydrated = true;
             this.applyCloudDataToLocal(doc.data());
             App.syncAll(false);
+            App.checkPendingSharedCar();
           }
         }, (err) => {
           console.warn('Realtime listener error:', err);
@@ -880,10 +880,10 @@
       activeCommandTab: 'overview',
       tempUploadedImages: [],
       activeGalleryList: [],
+      pendingSharedCarId: null,
       currentCalcState: { down: 0, months: 36, monthly: 0 },
 
       init() {
-        
         AuthService.initDB();
         CarRepository.getAllCars();
         if (SafeStorage.get('elite_dark_mode_v1', false)) {
@@ -891,8 +891,15 @@
           const dmIcon = document.getElementById('dark-mode-icon');
           if (dmIcon) dmIcon.textContent = '☀️';
         }
+
+        const sharedCarParam = new URLSearchParams(window.location.search).get('car');
+        if (sharedCarParam) {
+          this.pendingSharedCarId = sharedCarParam.trim();
+        }
+
         this.populateFilterDropdowns();
         this.syncAll(false);
+        this.checkPendingSharedCar();
         FirebaseCloudService.init();
 
         const backdrop = document.getElementById('modal-backdrop');
@@ -913,10 +920,20 @@
             }
           }
         });
-      const sharedCarId = new URLSearchParams(window.location.search).get('car');
-        if (sharedCarId) {
-          setTimeout(() => this.openDetails(sharedCarId), 600);
-        }},
+      },
+
+      checkPendingSharedCar() {
+        if (!this.pendingSharedCarId) return;
+        const found = CarRepository.findCarAnywhere(this.pendingSharedCarId);
+        if (found && found.car) {
+          const targetId = this.pendingSharedCarId;
+          this.pendingSharedCarId = null;
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          setTimeout(() => this.openDetails(targetId), 150);
+        }
+      },
 
       toggleDarkMode() {
         const isDark = document.body.classList.toggle('dark-mode');
@@ -1011,9 +1028,12 @@
         let cleanPhone = String(phone || DEFAULT_DEALER_PHONE).replace(/[^0-9]/g, '');
         if (!cleanPhone || cleanPhone === '201000000001') cleanPhone = DEFAULT_DEALER_PHONE;
         if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
-        const url = `https://wa.me/${cleanPhone}${customText ? '?text=' + encodeURIComponent(customText) : ''}`;
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const url = isMobile
+          ? `https://wa.me/${cleanPhone}${customText ? '?text=' + encodeURIComponent(customText) : ''}`
+          : `https://web.whatsapp.com/send?phone=${cleanPhone}${customText ? '&text=' + encodeURIComponent(customText) : ''}`;
         this.showToast('💬 جاري فتح محادثة واتساب الرسمية...', 'success');
-        window.open(url, '_blank');
+        window.open(url, '_blank', 'noopener,noreferrer');
       },
 
       whatsAppRes(resId) {
@@ -1041,33 +1061,69 @@
         }
       },
 
-      shareCarNative(carId) {
+      async copyTextSilent(text) {
+        if (!text) return false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+        } catch (err) {}
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return ok;
+        } catch (e) {
+          return false;
+        }
+      },
+
+      async shareCarNative(carId) {
         const { car } = CarRepository.findCarAnywhere(carId);
         if (!car) return;
 
-        const baseUrl = window.location.origin + window.location.pathname;
+        const cleanPath = window.location.pathname.replace(/index\.html$/i, '');
+        const baseUrl = window.location.origin + cleanPath;
         const carUrl = `${baseUrl}?car=${encodeURIComponent(car.id)}`;
         const shareText = `🚘 ${car.brand} ${car.model} (موديل ${car.year})\n💰 السعر: ${car.formattedPrice}\n🛡️ حالة الفحص: ${car.inspectionScore}/10\n🛣️ العداد: ${car.formattedMileage}\n📍 معرض النخبة للسيارات (كود: ${car.id})`;
         const fullSharePayload = `${shareText}\n🔗 رابط السيارة المباشر:\n${carUrl}`;
 
+        this._tempSharePayload = fullSharePayload;
+        this._tempShareUrlOnly = carUrl;
+
         const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
         if (isMobileDevice && navigator.share) {
-          navigator.share({
-            title: `معرض النخبة - ${car.brand} ${car.model}`,
-            text: shareText,
-            url: carUrl
-          }).catch(() => {
-            this.openShareModal(car, fullSharePayload, carUrl);
-          });
-        } else {
-          this.openShareModal(car, fullSharePayload, carUrl);
+          try {
+            await navigator.share({
+              title: `معرض النخبة - ${car.brand} ${car.model}`,
+              text: shareText,
+              url: carUrl
+            });
+            return;
+          } catch (err) {
+            if (err && err.name === 'AbortError') return;
+          }
         }
+
+        await this.copyTextSilent(fullSharePayload);
+        this.openShareModal(car, fullSharePayload, carUrl);
+        this.showToast('📋 تم نسخ تفاصيل ورابط السيارة تلقائياً وجاهز للمشاركة!', 'success');
       },
 
       openShareModal(car, fullSharePayload, carUrl) {
         this._tempSharePayload = fullSharePayload;
-        const waShareUrl = `https://wa.me/?text=${encodeURIComponent(fullSharePayload)}`;
+        this._tempShareUrlOnly = carUrl;
+
+        const waWebUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(fullSharePayload)}`;
+        const waAppUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(fullSharePayload)}`;
         const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(carUrl)}&text=${encodeURIComponent(fullSharePayload)}`;
         const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(carUrl)}`;
 
@@ -1082,20 +1138,36 @@
               </div>
             </div>
 
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 px-3 py-2 rounded-xl font-bold text-[11px] flex items-center gap-1.5">
+              <span>✅</span>
+              <span>تم نسخ تفاصيل ورابط السيارة تلقائياً إلى الحافظة (يمكنك عمل لصق Ctrl+V مباشرة).</span>
+            </div>
+
             <div class="bg-slate-50 p-3 rounded-2xl border text-[11px] text-slate-700 whitespace-pre-line leading-relaxed select-all">${this.escapeHtml(fullSharePayload)}</div>
 
             <div class="grid grid-cols-1 gap-2">
-              <button type="button" onclick="App.copySharePayload()" class="w-full bg-blue-950 hover:bg-blue-900 text-amber-400 font-black py-3 rounded-xl shadow flex items-center justify-center gap-2 transition">
-                <span>📋</span> نسخ تفاصيل ورابط السيارة
-              </button>
               <div class="grid grid-cols-2 gap-2">
-                <a href="${waShareUrl}" target="_blank" rel="noopener noreferrer" onclick="App.showToast('💬 جاري فتح واتساب للمشاركة...', 'success')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow transition">
-                  <span>💬</span> مشاركة واتساب
+                <button id="copy-full-share-btn" type="button" onclick="App.copySharePayload(false)" class="bg-blue-950 hover:bg-blue-900 text-amber-400 font-black py-2.5 px-3 rounded-xl shadow flex items-center justify-center gap-1.5 transition">
+                  <span>📋</span> نسخ النص والرابط
+                </button>
+                <button id="copy-url-share-btn" type="button" onclick="App.copySharePayload(true)" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-black py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition">
+                  <span>🔗</span> نسخ الرابط فقط
+                </button>
+              </div>
+
+              <a href="${waWebUrl}" target="_blank" rel="noopener noreferrer" onclick="App.showToast('💻 جاري فتح واتساب ويب للمشاركة...', 'success')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 shadow transition">
+                <span>💻</span> مشاركة عبر واتساب ويب (للكمبيوتر واللابتوب)
+              </a>
+
+              <div class="grid grid-cols-2 gap-2">
+                <a href="${waAppUrl}" target="_blank" rel="noopener noreferrer" class="bg-emerald-700/90 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition">
+                  <span>📱</span> تطبيق واتساب
                 </a>
                 <a href="${tgShareUrl}" target="_blank" rel="noopener noreferrer" class="bg-sky-600 hover:bg-sky-500 text-white font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow transition">
                   <span>✈️</span> تيليجرام
                 </a>
               </div>
+
               <a href="${fbShareUrl}" target="_blank" rel="noopener noreferrer" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition">
                 <span>📘</span> مشاركة على فيسبوك
               </a>
@@ -1104,20 +1176,12 @@
         `);
       },
 
-      async copySharePayload() {
-        const text = this._tempSharePayload || '';
+      async copySharePayload(onlyUrl = false) {
+        const text = onlyUrl ? (this._tempShareUrlOnly || '') : (this._tempSharePayload || '');
         if (!text) return;
-        try {
-          await navigator.clipboard.writeText(text);
-          this.showToast('✅ تم نسخ تفاصيل ورابط السيارة بنجاح!', 'success');
-        } catch (err) {
-          const ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-          this.showToast('✅ تم نسخ تفاصيل ورابط السيارة بنجاح!', 'success');
+        const ok = await this.copyTextSilent(text);
+        if (ok) {
+          this.showToast(onlyUrl ? '🔗 تم نسخ الرابط المباشر للسيارة بنجاح!' : '✅ تم نسخ تفاصيل ورابط السيارة بنجاح!', 'success');
         }
       },
 
@@ -1841,7 +1905,7 @@
 
         this.openModalHtml(`
           <div id="printable-quote-area" class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
+            <div class="flex justify-between items-center border-b pb-3 mb-4 flex-wrap gap-2">
               <div class="flex items-center gap-2">
                 <span class="bg-blue-950 text-amber-400 w-8 h-8 rounded-xl flex items-center justify-center font-black">🚘</span>
                 <div>
@@ -1849,7 +1913,10 @@
                   <p class="text-[10px] text-slate-500">كود السيارة المرجعي: ${this.escapeHtml(car.id)}</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2 no-print">
+              <div class="flex items-center gap-1.5 sm:gap-2 no-print flex-wrap">
+                <button onclick="App.shareCarNative('${this.escapeHtml(car.id)}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm">
+                  <span>📤</span> مشاركة السيارة
+                </button>
                 <button onclick="App.toggleCompare('${this.escapeHtml(car.id)}'); App.openDetails('${this.escapeHtml(car.id)}');" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl transition">
                   ${isCompared ? '✓ بالمقارنة' : '⚖️ أضف للمقارنة'}
                 </button>
@@ -2952,15 +3019,26 @@
 
     document.addEventListener('DOMContentLoaded', () => App.init());
   </script>
-<script>
+
+  <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('PWA Service Worker Registered:', reg.scope))
-          .catch((err) => console.warn('PWA Service Worker Error:', err));
+      window.addEventListener('load', async () => {
+        try {
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            for (const key of keys) {
+              if (key === 'elite-showroom-v1') {
+                await caches.delete(key);
+              }
+            }
+          }
+          const reg = await navigator.serviceWorker.register('./sw.js?v=3');
+          if (reg && reg.update) reg.update();
+        } catch (err) {
+          console.warn('PWA Service Worker Warning:', err);
+        }
       });
     }
   </script>
-  
 </body>
 </html>
