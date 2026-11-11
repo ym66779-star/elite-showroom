@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚘</text></svg>" />
   <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#090d16" />
- <script>
+  <script>
     (function() {
       const origWarn = console.warn;
       console.warn = function(...args) {
@@ -119,7 +119,9 @@
           <span class="text-xs font-black text-slate-500 ml-1">⚡ فئات سريعة:</span>
           <button onclick="App.setQuickFilter('ALL')" data-chip="ALL" class="chip-btn bg-blue-900 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition shadow-sm">الكل</button>
           <button onclick="App.setQuickFilter('AVAILABLE')" data-chip="AVAILABLE" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">متاحة فوراً</button>
+          <button onclick="App.setQuickFilter('FABRIKA')" data-chip="FABRIKA" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">🛡️ فابريكة بالكامل</button>
           <button onclick="App.setQuickFilter('TOP_SCORE')" data-chip="TOP_SCORE" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">⭐ فحص زيرو (+9.5)</button>
+          <button onclick="App.setQuickFilter('DISCOUNT')" data-chip="DISCOUNT" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">🔥 عروض وخصومات</button>
           <button onclick="App.setQuickFilter('UNDER_2M')" data-chip="UNDER_2M" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">💰 أقل من 2 مليون</button>
         </div>
 
@@ -157,7 +159,7 @@
     <div class="flex items-center justify-between mb-5">
       <div>
         <h2 class="text-xl sm:text-2xl font-black text-slate-900">السيارات المعتمدة المتاحة بالمعرض</h2>
-        <p class="text-xs text-slate-500">جميع السيارات مفحوصة فنياً في 4 محاور أساسية ومعتمدة بضمان معرض النخبة</p>
+        <p class="text-xs text-slate-500">جميع السيارات مفحوصة فنياً في 4 محاور أساسية مع بيان حالة الفابريكة وبضمان معرض النخبة</p>
       </div>
       <span id="cars-count-badge" class="bg-blue-950 text-amber-400 text-xs sm:text-sm font-black px-4 py-1.5 rounded-xl shadow-sm border border-blue-800">0 سيارات</span>
     </div>
@@ -212,7 +214,7 @@
     <div class="p-2.5 bg-slate-100 border-t grid grid-cols-2 gap-1.5">
       <button onclick="App.quickChat('matchmaker')" class="col-span-2 bg-amber-500 hover:bg-amber-400 text-slate-950 p-2 rounded-xl text-xs font-black transition shadow-sm">✨ رشح لي أفضل سيارة حسب ميزانيتي</button>
       <button onclick="App.quickChat('prices')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">💰 قائمة الأسعار</button>
-      <button onclick="App.quickChat('installment')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">💳 نظام التقسيط</button>
+      <button onclick="App.quickChat('installment')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">💳 أنظمة التقسيط</button>
       <button onclick="App.quickChat('howto')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">🚗 خطوات الشراء</button>
       <button onclick="App.quickChat('human')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">👨‍💻 تواصل مع مشرف</button>
     </div>
@@ -492,7 +494,7 @@
     }
 
     /**
-     * 3. نموذج بيانات السيارة المطور مع دعم ألبوم صور متعدد (CarModel)
+     * 3. نموذج بيانات السيارة المطور مع دعم حالة الفابريكة والسعر قبل الخصم (CarModel)
      */
     class CarModel {
       constructor(data = {}) {
@@ -501,12 +503,19 @@
         this.model = String(data.model || '').trim();
         this.year = Number(data.year) || 2025;
         this.price = Math.max(0, Number(data.price) || 0);
+        this.oldPrice = Math.max(0, Number(data.oldPrice) || 0);
         this.mileageKm = Math.max(0, Number(data.mileageKm) || 0);
         this.inspectionScore = Math.min(10, Math.max(1, Number(data.inspectionScore) || 9.5));
         this.engineScore = Number(data.engineScore) || this.inspectionScore;
         this.gearScore = Number(data.gearScore) || this.inspectionScore;
         this.bodyScore = Number(data.bodyScore) || this.inspectionScore;
         this.interiorScore = Number(data.interiorScore) || this.inspectionScore;
+
+        // حالة الفابريكة والدهان التفصيلية
+        this.paintStatus = String(data.paintStatus || '').trim() || (this.bodyScore >= 9.2 ? 'فابريكة بالكامل' : 'فابريكة دواخل - رشة حزام نظافة');
+        this.paintDetails = String(data.paintDetails || '').trim() || (this.paintStatus === 'فابريكة بالكامل'
+          ? 'الدواخل والأساسيات والسقف والكبوت والشنطة والجانبين بدهان المصنع بالكامل'
+          : 'الدواخل والشاسيه والأساسيات والسقف فابريكة 100% بدون أي ملاحظات');
 
         const defaultImg = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80';
         const fixBrokenUrl = (u) => String(u || '').trim().replace('photo-1618843479319-56172926f442', 'photo-1617788138017-80ad40651399');
@@ -530,11 +539,28 @@
 
       toMap() { return { ...this }; }
       get formattedPrice() { return this.price.toLocaleString('ar-EG') + ' ج.م'; }
+      get formattedOldPrice() { return this.oldPrice.toLocaleString('ar-EG') + ' ج.م'; }
+      get hasDiscount() { return this.oldPrice > this.price; }
+      get discountAmount() { return this.hasDiscount ? (this.oldPrice - this.price) : 0; }
+      get formattedDiscount() { return this.discountAmount.toLocaleString('ar-EG') + ' ج.م'; }
       get formattedMileage() { return this.mileageKm.toLocaleString('ar-EG') + ' كم'; }
       get inspectionBadge() {
         if (this.inspectionScore >= 9.5) return '⭐ فحص ممتاز (بحالة الزيرو)';
         if (this.inspectionScore >= 8.5) return '💎 استعمال راقٍ جداً';
         return '🚗 حالة فنية جيدة جداً';
+      }
+      get bodyZones() {
+        const isFullFab = this.paintStatus === 'فابريكة بالكامل';
+        const isBumpers = this.paintStatus.includes('إكصدامات');
+        const isCleanBelt = this.paintStatus.includes('حزام');
+        return [
+          { part: 'الدواخل والشاسيه', state: 'فابريكة 100%', ok: true },
+          { part: 'السقف والقوائم', state: 'فابريكة 100%', ok: true },
+          { part: 'الكبوت الأمامي', state: isFullFab || isBumpers || isCleanBelt ? 'فابريكة' : 'رش تجميلي', ok: isFullFab || isBumpers || isCleanBelt },
+          { part: 'الشنطة الخلفية', state: isFullFab || isBumpers || isCleanBelt ? 'فابريكة' : 'رش تجميلي', ok: isFullFab || isBumpers || isCleanBelt },
+          { part: 'الجانبان والأبواب', state: isFullFab || isBumpers ? 'فابريكة' : 'رش نظافة خارجي', ok: isFullFab || isBumpers },
+          { part: 'الإكصدامات', state: isFullFab ? 'فابريكة' : 'تجميلي نظافة', ok: isFullFab }
+        ];
       }
     }
 
@@ -557,19 +583,22 @@
       static getDefaultCarsList() {
         return [
           new CarModel({
-            id: 'CAR-1001', brand: 'مرسيدس بنز', model: 'C200 AMG Night Package', year: 2025, price: 3650000, mileageKm: 8000,
+            id: 'CAR-1001', brand: 'مرسيدس بنز', model: 'C200 AMG Night Package', year: 2025, price: 3650000, oldPrice: 3750000, mileageKm: 8000,
             inspectionScore: 9.8, engineScore: 10, gearScore: 10, bodyScore: 9.8, interiorScore: 9.6,
-            imageUrl: 'https://images.unsplash.com/photo-1618843479319-56172926f442?auto=format&fit=crop&w=900&q=80',
+            paintStatus: 'فابريكة بالكامل',
+            paintDetails: 'فابريكة بالكامل من الإكصدام للإكصدام بدون خربوش - عليها أفلام حماية TPU كاملة.',
+            imageUrl: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=900&q=80',
             images: [
-              'https://images.unsplash.com/photo-1618843479319-56172926f442?auto=format&fit=crop&w=900&q=80',
               'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=900&q=80',
               'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=900&q=80'
             ],
             description: 'بحالة الزيرو تماماً، باقة AMG الرياضية الكاملة، سقف بانوراما، كاميرات 360 درجة، صيانات توكيل.', maxInstallmentMonths: 60, viewsCount: 25, dealerPhone: DEFAULT_DEALER_PHONE
           }),
           new CarModel({
-            id: 'CAR-1002', brand: 'بي إم دبليو', model: 'X5 M-Sport xDrive40i', year: 2024, price: 5900000, mileageKm: 19000,
+            id: 'CAR-1002', brand: 'بي إم دبليو', model: 'X5 M-Sport xDrive40i', year: 2024, price: 5900000, oldPrice: 0, mileageKm: 19000,
             inspectionScore: 9.4, engineScore: 9.6, gearScore: 9.5, bodyScore: 9.2, interiorScore: 9.4,
+            paintStatus: 'فابريكة بالكامل',
+            paintDetails: 'دهان المصنع الأصلي بالكامل داخلياً وخارجياً بضمان الفحص المعتمد.',
             imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=80',
             images: [
               'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=80',
@@ -578,8 +607,10 @@
             description: 'دفع رباعي xDrive، فرش جلد طبيعي جملي، نظام صوتي Harman Kardon، فبريكا بالكامل بدون خدوش.', maxInstallmentMonths: 72, viewsCount: 19, dealerPhone: DEFAULT_DEALER_PHONE
           }),
           new CarModel({
-            id: 'CAR-1003', brand: 'تويوتا', model: 'كورولا فئة أولى Comfort', year: 2024, price: 1350000, mileageKm: 32000,
+            id: 'CAR-1003', brand: 'تويوتا', model: 'كورولا فئة أولى Comfort', year: 2024, price: 1350000, oldPrice: 1410000, mileageKm: 32000,
             inspectionScore: 9.0, engineScore: 9.5, gearScore: 9.2, bodyScore: 8.8, interiorScore: 8.7,
+            paintStatus: 'فابريكة بالكامل',
+            paintDetails: 'فابريكة دواخل وخوارج بالكامل من الإكصدام للإكصدام.',
             imageUrl: 'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=900&q=80',
             images: [
               'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=900&q=80'
@@ -587,8 +618,10 @@
             description: 'اعتمادية فائقة، استعمال راقٍ جداً، فبريكا بالكامل من الإكصدام للإكصدام، استهلاك اقتصادي للوقود.', maxInstallmentMonths: 60, viewsCount: 41, dealerPhone: DEFAULT_DEALER_PHONE
           }),
           new CarModel({
-            id: 'CAR-1004', brand: 'كيا', model: 'سبورتاج GT-Line Turbo', year: 2025, price: 1950000, mileageKm: 5000,
+            id: 'CAR-1004', brand: 'كيا', model: 'سبورتاج GT-Line Turbo', year: 2025, price: 1950000, oldPrice: 2020000, mileageKm: 5000,
             inspectionScore: 9.7, engineScore: 9.9, gearScore: 9.8, bodyScore: 9.7, interiorScore: 9.5,
+            paintStatus: 'فابريكة بالكامل',
+            paintDetails: 'بحالة الزيرو دهان المصنع بالكامل بدون أي ملاحظات.',
             imageUrl: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=900&q=80',
             images: [
               'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=900&q=80'
@@ -892,7 +925,29 @@
       tempUploadedImages: [],
       activeGalleryList: [],
       pendingSharedCarId: null,
-      currentCalcState: { down: 0, months: 36, monthly: 0 },
+      activeCalcCarPrice: 0,
+      currentCalcState: { down: 0, months: 36, monthly: 0, programName: 'النظام القياسي (30% مقدم)' },
+
+      INSTALLMENT_PROGRAMS: {
+        ID_ONLY: {
+          name: '⚡ بصورة البطاقة فقط (موافقة فورية)',
+          downPct: 0.40,
+          interest: 16.5,
+          docs: '📄 الأوراق المطلوبة: صورة البطاقة الشخصية سارية فقط + إيصال مرافق حديث (موافقة واستلام خلال 24 ساعة بدون إثبات دخل).'
+        },
+        BANK_EMP: {
+          name: '🏦 تمويل بنكي (موظفين / معاشات)',
+          downPct: 0.20,
+          interest: 13.5,
+          docs: '📄 الأوراق المطلوبة: مفردات مرتب حديثة (أو كشف حساب بنكي لآخر 6 أشهر) + صورة البطاقة الشخصية.'
+        },
+        BUSINESS: {
+          name: '🏢 أصحاب الأعمال والسجل التجاري',
+          downPct: 0.30,
+          interest: 14.5,
+          docs: '📄 الأوراق المطلوبة: مستخرج سجل تجاري حديث + بطاقة ضريبية سارية + صورة البطاقة الشخصية.'
+        }
+      },
 
       init() {
         AuthService.initDB();
@@ -931,6 +986,12 @@
             }
           }
         });
+      },
+
+      getDirectCarUrl(carId) {
+        const cleanPath = window.location.pathname.replace(/index\.html$/i, '');
+        const baseUrl = window.location.origin + cleanPath;
+        return `${baseUrl}?car=${encodeURIComponent(carId)}`;
       },
 
       checkPendingSharedCar() {
@@ -1100,10 +1161,8 @@
         const { car } = CarRepository.findCarAnywhere(carId);
         if (!car) return;
 
-        const cleanPath = window.location.pathname.replace(/index\.html$/i, '');
-        const baseUrl = window.location.origin + cleanPath;
-        const carUrl = `${baseUrl}?car=${encodeURIComponent(car.id)}`;
-        const shareText = `🚘 ${car.brand} ${car.model} (موديل ${car.year})\n💰 السعر: ${car.formattedPrice}\n🛡️ حالة الفحص: ${car.inspectionScore}/10\n🛣️ العداد: ${car.formattedMileage}\n📍 معرض النخبة للسيارات (كود: ${car.id})`;
+        const carUrl = this.getDirectCarUrl(car.id);
+        const shareText = `🚘 ${car.brand} ${car.model} (موديل ${car.year})\n💰 السعر: ${car.formattedPrice}${car.hasDiscount ? ` (بدلاً من ${car.formattedOldPrice})` : ''}\n🛡️ الحالة: ${car.paintStatus} | فحص ${car.inspectionScore}/10\n🛣️ العداد: ${car.formattedMileage}\n📍 معرض النخبة للسيارات (كود: ${car.id})`;
         const fullSharePayload = `${shareText}\n🔗 رابط السيارة المباشر:\n${carUrl}`;
 
         this._tempSharePayload = fullSharePayload;
@@ -1196,6 +1255,108 @@
         }
       },
 
+      /**
+       * ميزة ملصق الزجاج الذكي بالـ QR Code (Showroom Window Sticker A4)
+       */
+      openWindowStickerModal(carId) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car) return;
+
+        const carUrl = this.getDirectCarUrl(car.id);
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=6&data=${encodeURIComponent(carUrl)}`;
+        const minDown = Math.round(car.price * 0.20);
+        const maxM = car.maxInstallmentMonths || 60;
+        const financed = car.price - minDown;
+        const estMonthly = Math.round((financed + (financed * 0.135 * (maxM / 12))) / maxM);
+
+        this.openModalHtml(`
+          <div id="printable-quote-area" class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll border-4 border-slate-900">
+            <div class="flex justify-between items-center pb-4 mb-5 border-b-2 border-slate-900 no-print">
+              <button onclick="App.openDetails('${this.escapeHtml(car.id)}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black px-3.5 py-2 rounded-xl flex items-center gap-1 transition">
+                <span>←</span> العودة لصفحة السيارة
+              </button>
+              <div class="flex items-center gap-2">
+                <button onclick="window.print()" class="bg-blue-950 hover:bg-blue-900 text-amber-400 text-xs font-black px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition">
+                  <span>🖨️</span> طباعة ملصق الزجاج (A4)
+                </button>
+                <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+              </div>
+            </div>
+
+            <!-- ترويسة الملصق المطبوع -->
+            <div class="bg-slate-950 text-white p-5 rounded-2xl flex justify-between items-center mb-5">
+              <div class="flex items-center gap-3">
+                <div class="bg-amber-400 text-slate-950 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-black">🚘</div>
+                <div>
+                  <h2 class="text-lg sm:text-xl font-black tracking-wide">معرض النخبة للسيارات</h2>
+                  <p class="text-xs text-amber-400 font-bold">بطاقة المواصفات والفحص الهندسي المعتمد</p>
+                </div>
+              </div>
+              <div class="text-left">
+                <span class="block text-[10px] text-slate-400 font-bold">كود السيارة بالمعرض</span>
+                <span class="font-mono font-black text-sm sm:text-base text-amber-400 bg-slate-900 px-3 py-1 rounded-xl border border-slate-700 inline-block mt-0.5">${this.escapeHtml(car.id)}</span>
+              </div>
+            </div>
+
+            <!-- اسم السيارة والسعر الرئيسي -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 mb-5">
+              <div class="sm:col-span-7 space-y-1">
+                <span class="bg-blue-900 text-white text-[11px] font-black px-3 py-0.5 rounded-lg inline-block">${this.escapeHtml(car.brand)} — موديل ${car.year}</span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-950">${this.escapeHtml(car.model)}</h1>
+                <div class="flex flex-wrap items-center gap-2 pt-1 text-xs font-bold text-slate-700">
+                  <span>🛣️ الممشى: <b>${car.formattedMileage}</b></span>
+                  <span>•</span>
+                  <span class="text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-lg font-black">🛡️ ${this.escapeHtml(car.paintStatus)}</span>
+                </div>
+              </div>
+              <div class="sm:col-span-5 text-right sm:text-left border-t sm:border-t-0 sm:border-r-2 border-slate-200 pt-3 sm:pt-0 sm:pr-4">
+                <span class="block text-xs text-slate-500 font-bold">السعر النقدي المعتمد</span>
+                ${car.hasDiscount ? `<span class="text-xs text-rose-600 line-through font-bold block">${car.formattedOldPrice}</span>` : ''}
+                <span class="text-2xl sm:text-3xl font-black text-blue-950">${car.formattedPrice}</span>
+                <span class="block text-[11px] text-emerald-700 font-black mt-1">💳 أو بقسط يبدأ من ${estMonthly.toLocaleString('ar-EG')} ج.م/شهر</span>
+              </div>
+            </div>
+
+            <!-- شبكة الفحص والـ QR Code -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+              <div class="sm:col-span-7 space-y-3">
+                <div class="bg-white p-4 rounded-2xl border-2 border-slate-200">
+                  <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                    <span class="font-black text-xs text-slate-900">🛡️ تقييم الفحص الهندسي (4 محاور)</span>
+                    <span class="bg-emerald-700 text-white text-xs font-black px-3 py-0.5 rounded-lg">${car.inspectionScore} / 10</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2.5 text-xs">
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between font-bold"><span>كفاءة المحرك:</span><b class="text-blue-950">${car.engineScore}/10</b></div>
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between font-bold"><span>ناقل الحركة:</span><b class="text-blue-950">${car.gearScore}/10</b></div>
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between font-bold"><span>الهيكل والدهان:</span><b class="text-blue-950">${car.bodyScore}/10</b></div>
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between font-bold"><span>العفشة والصالون:</span><b class="text-blue-950">${car.interiorScore}/10</b></div>
+                  </div>
+                  <p class="text-[11px] text-slate-600 font-bold mt-3 bg-slate-50 p-2.5 rounded-xl border">✨ ${this.escapeHtml(car.paintDetails)}</p>
+                </div>
+
+                <div class="bg-slate-50 p-3.5 rounded-2xl border text-xs leading-relaxed text-slate-700">
+                  <b class="text-slate-900 block mb-1">📋 أبرز التجهيزات والكماليات:</b>
+                  ${this.escapeHtml(car.description)}
+                </div>
+              </div>
+
+              <!-- صندوق الـ QR Code التفاعلي للزوار -->
+              <div class="sm:col-span-5 bg-slate-900 text-white p-5 rounded-3xl text-center flex flex-col items-center justify-center space-y-3 border-2 border-amber-400 shadow-xl">
+                <span class="bg-amber-400 text-slate-950 text-[11px] font-black px-3 py-1 rounded-full">📱 امسح الكود بكاميرا هاتفك</span>
+                <div class="bg-white p-3 rounded-2xl shadow-inner">
+                  <img src="${qrApiUrl}" alt="QR Code" class="w-40 h-40 object-contain mx-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                  <div style="display:none" class="w-40 h-40 items-center justify-center text-slate-900 font-black text-xs p-2 text-center">كود السيارة المباشر:<br>${this.escapeHtml(car.id)}</div>
+                </div>
+                <p class="text-[11px] text-slate-200 font-bold leading-relaxed">
+                  افتح ملف السيارة على هاتفك لحساب القسط الشهري المناسب لك أو طلب الحجز الفوري
+                </p>
+                <div class="text-[10px] text-amber-300 font-mono dir-ltr break-all opacity-80">${this.escapeHtml(car.dealerPhone)}</div>
+              </div>
+            </div>
+          </div>
+        `);
+      },
+
       syncAll() {
         this.populateFilterDropdowns();
         this.applyFilters();
@@ -1265,7 +1426,7 @@
         const sortBy = document.getElementById('sort-by-select')?.value || 'NEWEST';
 
         let filtered = cars.filter(c => {
-          const matchesText = !q || c.brand.toLowerCase().includes(q) || c.model.toLowerCase().includes(q) || c.description.toLowerCase().includes(q);
+          const matchesText = !q || c.brand.toLowerCase().includes(q) || c.model.toLowerCase().includes(q) || c.description.toLowerCase().includes(q) || c.paintStatus.toLowerCase().includes(q);
           const matchesBrand = (b === 'ALL' || c.brand === b);
           const matchesYear = (y === 'ALL' || c.year === Number(y));
           const matchesPrice = (c.price <= maxP);
@@ -1273,7 +1434,9 @@
 
           let matchesQuick = true;
           if (this.quickFilter === 'AVAILABLE') matchesQuick = !c.isReserved;
+          if (this.quickFilter === 'FABRIKA') matchesQuick = c.paintStatus === 'فابريكة بالكامل';
           if (this.quickFilter === 'TOP_SCORE') matchesQuick = c.inspectionScore >= 9.5;
+          if (this.quickFilter === 'DISCOUNT') matchesQuick = c.hasDiscount;
           if (this.quickFilter === 'UNDER_2M') matchesQuick = c.price <= 2000000;
 
           return matchesText && matchesBrand && matchesYear && matchesPrice && matchesKm && matchesQuick;
@@ -1324,22 +1487,24 @@
           const isCompared = compares.includes(String(c.id));
           const isFav = favs.includes(c.id);
           const photosCount = Array.isArray(c.images) ? c.images.length : 1;
+          const isFullFabrika = c.paintStatus === 'فابريكة بالكامل';
           return `
             <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 transition duration-300 hover:shadow-xl flex flex-col justify-between group">
               <div>
                 <div class="relative h-52 overflow-hidden bg-slate-900 cursor-pointer" onclick="App.openDetails('${this.escapeHtml(c.id)}')">
                   <img src="${this.escapeHtml(c.imageUrl)}" alt="${this.escapeHtml(c.brand)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-slate-950/30"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30"></div>
 
                   <div class="absolute top-3 inset-x-3 flex justify-between items-start gap-2 z-10">
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 flex-wrap">
                       ${c.isReserved
                         ? `<span class="bg-purple-700 text-white text-[11px] font-black px-3 py-1 rounded-xl shadow-md flex items-center gap-1">🔒 محجوزة</span>`
                         : `<span class="bg-emerald-600/95 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow-md">✓ متاحة</span>`
                       }
+                      ${c.hasDiscount ? `<span class="bg-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow-md animate-pulse">🔥 وفر ${c.formattedDiscount}</span>` : ''}
                       ${photosCount > 1 ? `<span class="bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-xl">📷 ${photosCount}</span>` : ''}
                     </div>
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 shrink-0">
                       <button type="button" onclick="event.stopPropagation(); App.toggleCompare('${this.escapeHtml(c.id)}')" class="px-2.5 py-1.5 rounded-xl shadow text-[11px] font-black transition ${isCompared ? 'bg-amber-500 text-slate-950 ring-2 ring-white' : 'bg-slate-900/85 text-white hover:bg-slate-900'}">
                         ${isCompared ? '✓ بالمقارنة' : '⚖️ قارن'}
                       </button>
@@ -1350,9 +1515,14 @@
                   </div>
 
                   <div class="absolute bottom-3 inset-x-3 flex justify-between items-center text-white z-10">
-                    <span class="bg-slate-900/85 backdrop-blur-sm text-amber-300 text-[11px] font-black px-2.5 py-1 rounded-lg border border-amber-400/30">
-                      فحص ${c.inspectionScore}/10
-                    </span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="bg-slate-900/90 backdrop-blur-sm text-amber-300 text-[11px] font-black px-2.5 py-1 rounded-lg border border-amber-400/30">
+                        فحص ${c.inspectionScore}/10
+                      </span>
+                      <span class="${isFullFabrika ? 'bg-teal-900/90 text-teal-200 border-teal-400/30' : 'bg-blue-950/90 text-blue-200 border-blue-400/30'} backdrop-blur-sm text-[10px] font-black px-2 py-1 rounded-lg border">
+                        🛡️ ${this.escapeHtml(c.paintStatus)}
+                      </span>
+                    </div>
                     <div class="flex items-center gap-1.5">
                       <button type="button" onclick="event.stopPropagation(); App.shareCarNative('${this.escapeHtml(c.id)}')" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-lg transition">📤 مشاركة</button>
                       <span class="text-[11px] font-bold bg-black/50 px-2 py-0.5 rounded-lg">👁️ ${c.viewsCount}</span>
@@ -1373,9 +1543,11 @@
               <div class="px-4 pb-4 pt-3 border-t border-slate-100 flex justify-between items-center">
                 <div>
                   <span class="block text-[10px] text-slate-400 font-bold">السعر النقدي</span>
+                  ${c.hasDiscount ? `<span class="text-[11px] text-rose-500 line-through font-bold block">${c.formattedOldPrice}</span>` : ''}
                   <span class="font-black text-base text-blue-900">${c.formattedPrice}</span>
                 </div>
                 <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="event.stopPropagation(); App.openWindowStickerModal('${this.escapeHtml(c.id)}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-2 rounded-xl transition" title="ملصق الزجاج QR Code">🏷️</button>
                   ${isAdmin ? `
                     <button type="button" onclick="event.stopPropagation(); App.openCarFormModal('${this.escapeHtml(c.id)}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-2 rounded-xl transition" title="تعديل السيارة">✏️</button>
                   ` : ''}
@@ -1888,7 +2060,7 @@
       },
 
       /**
-       * 8. نافذة التفاصيل الكاملة + حاسبة التقسيط التفاعلية + الفحص الهندسي (4 محاور)
+       * 8. نافذة التفاصيل الكاملة + الفابريكة + برامج التقسيط الذكية + ملصق QR + السيارات المشابهة
        */
       openDetails(id) {
         const found = CarRepository.findCarAnywhere(id);
@@ -1912,7 +2084,14 @@
         const defaultDown = Math.round(car.price * 0.3);
         const gallery = Array.isArray(car.images) && car.images.length ? car.images : [car.imageUrl];
         this.activeGalleryList = gallery;
+        this.activeCalcCarPrice = car.price;
         const isCompared = CarRepository.getCompare(isAdmin).includes(String(car.id));
+
+        // ترشيح السيارات المشابهة والبديلة (أقرب 3 سيارات في السعر أو الماركة)
+        const similarCars = CarRepository.getAllCars()
+          .filter(c => c.id !== car.id && !c.isReserved)
+          .sort((a, b) => Math.abs(a.price - car.price) - Math.abs(b.price - car.price))
+          .slice(0, 3);
 
         this.openModalHtml(`
           <div id="printable-quote-area" class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
@@ -1926,10 +2105,13 @@
               </div>
               <div class="flex items-center gap-1.5 sm:gap-2 no-print flex-wrap">
                 <button onclick="App.shareCarNative('${this.escapeHtml(car.id)}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm">
-                  <span>📤</span> مشاركة السيارة
+                  <span>📤</span> مشاركة
+                </button>
+                <button onclick="App.openWindowStickerModal('${this.escapeHtml(car.id)}')" class="bg-blue-950 hover:bg-blue-900 text-amber-400 text-xs font-black px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm">
+                  <span>🏷️</span> ملصق الزجاج (QR)
                 </button>
                 <button onclick="App.toggleCompare('${this.escapeHtml(car.id)}'); App.openDetails('${this.escapeHtml(car.id)}');" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl transition">
-                  ${isCompared ? '✓ بالمقارنة' : '⚖️ أضف للمقارنة'}
+                  ${isCompared ? '✓ بالمقارنة' : '⚖️ قارن'}
                 </button>
                 <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
                   <span>🖨️</span> طباعة عرض سعر
@@ -1939,12 +2121,13 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div class="lg:col-span-7 space-y-3">
+              <div class="lg:col-span-7 space-y-3.5">
                 <div class="relative rounded-2xl overflow-hidden bg-slate-900 h-60 sm:h-72">
                   <img id="main-gallery-image" src="${this.escapeHtml(gallery[0])}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-full h-full object-cover transition duration-300" />
                   <div class="absolute bottom-3 right-3 bg-slate-900/90 text-amber-300 text-xs font-black px-3.5 py-1.5 rounded-xl border border-amber-400/30 shadow">
                     ${car.inspectionBadge} (${car.inspectionScore}/10)
                   </div>
+                  ${car.hasDiscount ? `<div class="absolute top-3 left-3 bg-rose-600 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-lg">🔥 خصم نقدي ${car.formattedDiscount}</div>` : ''}
                   ${car.isReserved ? `<div class="absolute top-3 right-3 bg-purple-700 text-white text-xs font-black px-3.5 py-1.5 rounded-xl shadow">🔒 محجوزة حالياً</div>` : ''}
                 </div>
 
@@ -1956,9 +2139,31 @@
                   </div>
                 ` : ''}
 
+                <!-- خريطة حالة الفابريكة والدهان التفصيلية -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h4 class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-1.5">
+                      <span>🛡️</span> خريطة حالة الفابريكة والدهان (6 مناطق)
+                    </h4>
+                    <span class="bg-emerald-100 text-emerald-900 border border-emerald-300 px-3 py-0.5 rounded-xl text-xs font-black">
+                      ${this.escapeHtml(car.paintStatus)}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-600 font-bold bg-white p-2.5 rounded-xl border">${this.escapeHtml(car.paintDetails)}</p>
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                    ${car.bodyZones.map(z => `
+                      <div class="bg-white p-2 rounded-xl border flex items-center justify-between">
+                        <span class="font-bold text-slate-600">${z.part}:</span>
+                        <span class="font-black ${z.ok ? 'text-emerald-700' : 'text-amber-700'}">${z.ok ? '✓ ' : ''}${z.state}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- شهادة الفحص الهندسي (4 محاور) -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                   <h4 class="font-black text-xs sm:text-sm text-slate-900 mb-3 flex items-center justify-between">
-                    <span>🛡️ شهادة الفحص الهندسي المعتمد (4 محاور)</span>
+                    <span>⚙️ شهادة الفحص الهندسي المعتمد (4 محاور)</span>
                     <span class="text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-lg border border-teal-200 text-xs">الإجمالي: ${car.inspectionScore}/10</span>
                   </h4>
                   <div class="grid grid-cols-2 gap-3 text-xs">
@@ -1989,7 +2194,10 @@
 
               <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
                 <div class="bg-blue-950 text-white p-5 rounded-2xl shadow-md">
-                  <span class="text-xs text-amber-300 font-bold">${this.escapeHtml(car.brand)}</span>
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs text-amber-300 font-bold">${this.escapeHtml(car.brand)}</span>
+                    ${car.hasDiscount ? `<span class="bg-rose-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-lg">وفر ${car.formattedDiscount}</span>` : ''}
+                  </div>
                   <h3 class="text-xl sm:text-2xl font-black mt-0.5">${this.escapeHtml(car.model)}</h3>
                   <div class="flex items-center gap-3 text-xs text-slate-300 mt-2 pb-3 border-b border-blue-800">
                     <span>📅 موديل: <b class="text-white">${car.year}</b></span>
@@ -2000,16 +2208,38 @@
                   </div>
                   <div class="mt-3 flex justify-between items-baseline">
                     <span class="text-xs text-slate-300 font-bold">السعر النقدي:</span>
-                    <span class="text-2xl font-black text-amber-400">${car.formattedPrice}</span>
+                    <div class="text-left">
+                      ${car.hasDiscount ? `<span class="text-xs text-rose-300 line-through block">${car.formattedOldPrice}</span>` : ''}
+                      <span class="text-2xl font-black text-amber-400">${car.formattedPrice}</span>
+                    </div>
                   </div>
                 </div>
 
-                <!-- حاسبة التقسيط التفاعلية الكاملة -->
+                <!-- حاسبة التقسيط التفاعلية المطورة ببرامج التمويل الـ 3 -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                   <h4 class="font-black text-sm text-slate-900 flex items-center justify-between">
-                    <span>🧮 حاسبة التقسيط التفاعلية</span>
+                    <span>🧮 حاسبة وبرامج التقسيط الذكية</span>
                     <span class="text-[11px] text-blue-900 bg-blue-100 px-2 py-0.5 rounded-lg">حتى ${maxM} شهراً</span>
                   </h4>
+
+                  <!-- أزرار أنظمة التقسيط الجاهزة حسب فئة العميل -->
+                  <div class="space-y-1.5 no-print">
+                    <span class="block text-[11px] font-bold text-slate-600">اختر نظام التمويل المناسب لأوراقك:</span>
+                    <div class="grid grid-cols-3 gap-1.5 text-[10px]">
+                      <button type="button" onclick="App.applyInstallmentPreset('ID_ONLY')" data-preset="ID_ONLY" class="preset-tier-btn bg-white hover:bg-blue-50 border border-slate-300 text-slate-800 font-black py-2 px-1.5 rounded-xl transition text-center">
+                        ⚡ بصورة البطاقة<br><span class="text-[9px] text-slate-500 font-bold">مقدم 40%</span>
+                      </button>
+                      <button type="button" onclick="App.applyInstallmentPreset('BANK_EMP')" data-preset="BANK_EMP" class="preset-tier-btn bg-white hover:bg-blue-50 border border-slate-300 text-slate-800 font-black py-2 px-1.5 rounded-xl transition text-center">
+                        🏦 تمويل بنكي<br><span class="text-[9px] text-slate-500 font-bold">مقدم 20%</span>
+                      </button>
+                      <button type="button" onclick="App.applyInstallmentPreset('BUSINESS')" data-preset="BUSINESS" class="preset-tier-btn bg-blue-950 text-amber-400 border border-blue-900 font-black py-2 px-1.5 rounded-xl transition text-center shadow-sm">
+                        🏢 سجل تجاري<br><span class="text-[9px] text-amber-200 font-bold">مقدم 30%</span>
+                      </button>
+                    </div>
+                    <div id="calc-docs-box" class="bg-amber-50/90 border border-amber-200 text-amber-950 p-2.5 rounded-xl text-[11px] font-bold leading-relaxed">
+                      📄 الأوراق المطلوبة: مستخرج سجل تجاري حديث + بطاقة ضريبية سارية + صورة البطاقة الشخصية.
+                    </div>
+                  </div>
 
                   <div>
                     <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
@@ -2078,17 +2308,68 @@
                 </div>
               </div>
             </div>
+
+            <!-- قسم ترشيح السيارات المشابهة والبديلة في نفس الفئة -->
+            ${similarCars.length > 0 ? `
+              <div class="mt-6 pt-5 border-t border-slate-200 no-print">
+                <h4 class="font-black text-sm text-slate-900 mb-3 flex items-center gap-1.5">
+                  <span>🔄</span> سيارات مشابهة وبدائل مقترحة لك من المعرض
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  ${similarCars.map(sc => `
+                    <div onclick="App.openDetails('${this.escapeHtml(sc.id)}')" class="bg-slate-50 hover:bg-blue-50/50 p-3 rounded-2xl border border-slate-200 flex items-center gap-3 cursor-pointer transition group">
+                      <img src="${this.escapeHtml(sc.imageUrl)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-16 h-12 object-cover rounded-xl shrink-0 group-hover:scale-105 transition" />
+                      <div class="text-xs overflow-hidden">
+                        <h5 class="font-black text-slate-900 truncate">${this.escapeHtml(sc.brand)} ${this.escapeHtml(sc.model)}</h5>
+                        <p class="text-blue-900 font-black">${sc.formattedPrice}</p>
+                        <span class="text-[10px] text-slate-500 font-bold">${sc.year} • فحص ${sc.inspectionScore}/10</span>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
         `);
 
         this.attachCalculatorEvents(car);
       },
 
+      applyInstallmentPreset(presetKey) {
+        const preset = this.INSTALLMENT_PROGRAMS[presetKey];
+        if (!preset || !this.activeCalcCarPrice) return;
+
+        const downInput = document.getElementById('calc-down');
+        const slider = document.getElementById('calc-down-slider');
+        const interestInput = document.getElementById('calc-interest');
+        const docsBox = document.getElementById('calc-docs-box');
+
+        const newDown = Math.round(this.activeCalcCarPrice * preset.downPct);
+        if (downInput) downInput.value = newDown;
+        if (slider) slider.value = Math.min(Math.max(newDown, Number(slider.min)), Number(slider.max));
+        if (interestInput) interestInput.value = preset.interest;
+        if (docsBox) docsBox.textContent = preset.docs;
+
+        this.currentCalcState.programName = preset.name;
+
+        document.querySelectorAll('.preset-tier-btn').forEach(btn => {
+          if (btn.getAttribute('data-preset') === presetKey) {
+            btn.className = 'preset-tier-btn bg-blue-950 text-amber-400 border border-blue-900 font-black py-2 px-1.5 rounded-xl transition text-center shadow-sm';
+          } else {
+            btn.className = 'preset-tier-btn bg-white hover:bg-blue-50 border border-slate-300 text-slate-800 font-black py-2 px-1.5 rounded-xl transition text-center';
+          }
+        });
+
+        if (downInput && typeof downInput.oninput === 'function') {
+          downInput.oninput();
+        }
+      },
+
       sendSmartCarWhatsApp(carId) {
         const { car } = CarRepository.findCarAnywhere(carId);
         if (!car) return;
-        const { down, months, monthly } = this.currentCalcState;
-        const msg = `مرحباً معرض النخبة، أستفسر عن سيارة: ${car.brand} ${car.model} (${car.year}) - كود [${car.id}]\n• السعر النقدي: ${car.formattedPrice}\n• خطة التقسيط المحسوبة: مقدم (${down.toLocaleString('ar-EG')} ج.م) وقسط شهري (${monthly.toLocaleString('ar-EG')} ج.م) لمدة ${months} شهر.`;
+        const { down, months, monthly, programName } = this.currentCalcState;
+        const msg = `مرحباً معرض النخبة، أستفسر عن سيارة: ${car.brand} ${car.model} (${car.year}) - كود [${car.id}]\n• السعر النقدي: ${car.formattedPrice}\n• نظام التقسيط المختار: ${programName || 'تقسيط المعرض'}\n• خطة السداد: مقدم (${down.toLocaleString('ar-EG')} ج.م) وقسط شهري (${monthly.toLocaleString('ar-EG')} ج.م) لمدة ${months} شهر.`;
         this.whatsApp(car.dealerPhone, msg);
       },
 
@@ -2101,6 +2382,8 @@
         const resEl = document.getElementById('calc-result');
         const noteEl = document.getElementById('calc-financed-note');
         const maxM = car.maxInstallmentMonths || 60;
+
+        this.currentCalcState.programName = this.INSTALLMENT_PROGRAMS.BUSINESS.name;
 
         const compute = (fromSlider = false) => {
           let d = fromSlider ? Number(slider.value) : Number(downInput.value);
@@ -2122,7 +2405,12 @@
           const totalWithInterest = financed + (financed * (rate / 100) * (m / 12));
           const monthly = Math.round(totalWithInterest / m);
 
-          this.currentCalcState = { down: d, months: m, monthly };
+          this.currentCalcState = {
+            ...this.currentCalcState,
+            down: d,
+            months: m,
+            monthly
+          };
           noteEl.textContent = `المبلغ الممول: ${financed.toLocaleString('ar-EG')} ج.م`;
           resEl.textContent = monthly.toLocaleString('ar-EG') + ' ج.م / شهر';
         };
@@ -2176,7 +2464,7 @@
           <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
             <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
             <h3 class="font-black text-lg text-slate-900 mb-1">${isEdit ? '✏️ تعديل بيانات السيارة وألبوم الصور' : '➕ إضافة سيارة جديدة للمعرض'}</h3>
-            <p class="text-xs text-slate-500 mb-4">ارفع صور السيارة من جهازك أو أضف روابط صور ليتم حفظها سحابياً</p>
+            <p class="text-xs text-slate-500 mb-4">أضف المواصفات، السعر، حالة الفابريكة، وألبوم الصور ليتم حفظها سحابياً</p>
 
             <form id="car-upsert-form" class="space-y-3 text-xs">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2205,14 +2493,32 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label class="block font-bold text-slate-700 mb-1">السعر النقدي (ج.م) *</label>
+                  <label class="block font-bold text-slate-700 mb-1">السعر النقدي الحالي (ج.م) *</label>
                   <input id="cf-price" required type="number" min="50000" value="${isEdit ? existing.price : ''}" placeholder="مثال: 2500000" class="w-full border p-2.5 rounded-xl font-black text-blue-900" />
+                </div>
+                <div>
+                  <label class="block font-bold text-rose-700 mb-1">السعر السابق قبل الخصم (اختياري)</label>
+                  <input id="cf-old-price" type="number" min="0" value="${isEdit && existing.oldPrice ? existing.oldPrice : ''}" placeholder="لإظهار شارة خصم 🔥" class="w-full border p-2.5 rounded-xl font-bold text-rose-700" />
                 </div>
                 <div>
                   <label class="block font-bold text-slate-700 mb-1">رقم واتساب المسؤول</label>
                   <input id="cf-phone" required value="${isEdit ? this.escapeHtml(existing.dealerPhone) : DEFAULT_DEALER_PHONE}" placeholder="${DEFAULT_DEALER_PHONE}" class="w-full border p-2.5 rounded-xl" />
+                </div>
+              </div>
+
+              <!-- حالة الفابريكة والدهان -->
+              <div class="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200 space-y-2">
+                <label class="block font-black text-emerald-950">🛡️ حالة الفابريكة والدهان التفصيلية:</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <select id="cf-paint-status" class="w-full border p-2 rounded-xl font-black bg-white text-slate-800">
+                    <option value="فابريكة بالكامل" ${isEdit && existing.paintStatus === 'فابريكة بالكامل' ? 'selected' : ''}>🛡️ فابريكة بالكامل (من الإكصدام للإكصدام)</option>
+                    <option value="فابريكة دواخل - رشة إكصدامات فقط" ${isEdit && existing.paintStatus === 'فابريكة دواخل - رشة إكصدامات فقط' ? 'selected' : ''}>✨ فابريكة بالكامل عدا الإكصدامات (تجميلي)</option>
+                    <option value="فابريكة دواخل - رشة حزام نظافة" ${isEdit && existing.paintStatus === 'فابريكة دواخل - رشة حزام نظافة' ? 'selected' : ''}>🚗 فابريكة دواخل وسقف - رشة حزام نظافة</option>
+                    <option value="فابريكة دواخل - رشة أجزاء خارجية" ${isEdit && existing.paintStatus === 'فابريكة دواخل - رشة أجزاء خارجية' ? 'selected' : ''}>🔧 فابريكة دواخل - رشة أجزاء خارجية</option>
+                  </select>
+                  <input id="cf-paint-details" value="${isEdit ? this.escapeHtml(existing.paintDetails) : ''}" placeholder="تفصيل الدهان (مثال: فابريكة بالكامل بدون ملاحظات)" class="w-full border p-2 rounded-xl bg-white" />
                 </div>
               </div>
 
@@ -2230,7 +2536,7 @@
               </div>
 
               <div class="bg-slate-50 p-3.5 rounded-2xl border space-y-2">
-                <label class="block font-black text-slate-800">🛡️ درجات تقرير الفحص الفني (من 10):</label>
+                <label class="block font-black text-slate-800">⚙️ درجات تقرير الفحص الفني (من 10):</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <div>
                     <span class="block text-[10px] text-slate-500 font-bold mb-1">المحرك</span>
@@ -2285,6 +2591,9 @@
             mileageKm: document.getElementById('cf-km').value,
             maxInstallmentMonths: document.getElementById('cf-months').value,
             price: document.getElementById('cf-price').value,
+            oldPrice: document.getElementById('cf-old-price').value,
+            paintStatus: document.getElementById('cf-paint-status').value,
+            paintDetails: document.getElementById('cf-paint-details').value,
             dealerPhone: document.getElementById('cf-phone').value,
             imageUrl: finalImages[0] || manualUrl,
             images: finalImages,
@@ -2753,7 +3062,7 @@
       },
 
       /**
-       * 10. جدول المقارنة الفنية الشاملة (يعمل للعميل والمدير بكفاءة 100%)
+       * 10. جدول المقارنة الفنية الشاملة (مضافاً إليه مقارنة حالة الفابريكة)
        */
       openCompareModal() {
         const isAdmin = AuthService.isLogged();
@@ -2765,7 +3074,7 @@
             <div class="flex justify-between items-center border-b pb-3 mb-4">
               <div>
                 <h3 class="font-black text-xl text-blue-950">⚖️ جدول المقارنة الفنية الشاملة (${compCars.length}/3)</h3>
-                <p class="text-xs text-slate-500">مقارنة دقيقة للمواصفات، الأسعار، ونتائج الفحص الهندسي جنباً إلى جنب</p>
+                <p class="text-xs text-slate-500">مقارنة دقيقة للمواصفات، الأسعار، حالة الفابريكة، ونتائج الفحص الهندسي جنباً إلى جنب</p>
               </div>
               <div class="flex items-center gap-2">
                 ${compCars.length > 0 ? `<button onclick="App.clearCompareAll()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold px-3 py-1.5 rounded-xl">🗑️ مسح الكل</button>` : ''}
@@ -2790,7 +3099,8 @@
                   </thead>
                   <tbody class="divide-y">
                     <tr><td class="p-3 border font-bold bg-slate-50">الصورة</td>${compCars.map(c => `<td class="p-3 border text-center"><img src="${this.escapeHtml(c.imageUrl)}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80'" class="w-32 h-20 object-cover rounded-xl mx-auto cursor-pointer" onclick="App.openDetails('${this.escapeHtml(c.id)}')" /></td>`).join('')}</tr>
-                    <tr><td class="p-3 border font-bold bg-slate-50">السعر النقدي</td>${compCars.map(c => `<td class="p-3 border font-black text-sm text-blue-900">${c.formattedPrice}</td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">السعر النقدي</td>${compCars.map(c => `<td class="p-3 border font-black text-sm text-blue-900">${c.formattedPrice}${c.hasDiscount ? `<br><span class="text-[10px] text-rose-500 line-through">${c.formattedOldPrice}</span>` : ''}</td>`).join('')}</tr>
+                    <tr><td class="p-3 border font-bold bg-slate-50">حالة الفابريكة والدهان</td>${compCars.map(c => `<td class="p-3 border font-black text-emerald-700">🛡️ ${this.escapeHtml(c.paintStatus)}</td>`).join('')}</tr>
                     <tr><td class="p-3 border font-bold bg-slate-50">سنة الصنع والعداد</td>${compCars.map(c => `<td class="p-3 border font-bold">${c.year} | <span class="text-amber-700">${c.formattedMileage}</span></td>`).join('')}</tr>
                     <tr><td class="p-3 border font-bold bg-slate-50">التقييم الهندسي العام</td>${compCars.map(c => `<td class="p-3 border font-black text-teal-700">${c.inspectionScore}/10 (${c.inspectionBadge})</td>`).join('')}</tr>
                     <tr><td class="p-3 border font-bold bg-slate-50">تفاصيل الفحص (محرك/فتيس/هيكل/صالون)</td>${compCars.map(c => `<td class="p-3 border text-[11px] font-semibold">محرك: ${c.engineScore} | فتيس: ${c.gearScore} | هيكل: ${c.bodyScore} | صالون: ${c.interiorScore}</td>`).join('')}</tr>
@@ -2878,7 +3188,7 @@
           `- طلبات الاستبدال المؤرشفة: ${archivedTi.length} طلب`,
           '',
           '2. بيان السيارات المتاحة حالياً:',
-          ...(cars.length ? cars.map((c, i) => `  [${i + 1}] ${c.brand} ${c.model} (${c.year}) | السعر: ${c.formattedPrice} | الفحص: ${c.inspectionScore}/10 | المشاهدات: ${c.viewsCount}`) : ['  لا توجد سيارات متاحة حالياً.']),
+          ...(cars.length ? cars.map((c, i) => `  [${i + 1}] ${c.brand} ${c.model} (${c.year}) | السعر: ${c.formattedPrice} | الحالة: ${c.paintStatus} | الفحص: ${c.inspectionScore}/10 | المشاهدات: ${c.viewsCount}`) : ['  لا توجد سيارات متاحة حالياً.']),
           '',
           '3. بيان السيارات المباعة:',
           ...(soldCars.length ? soldCars.map((c, i) => `  [${i + 1}] ${c.brand} ${c.model} (${c.year}) | السعر: ${c.formattedPrice} | تاريخ البيع: ${c.soldAt} | بواسطة: ${c.soldViaStaff || c.soldBy}`) : ['  لا توجد سيارات مباعة بعد.']),
@@ -2922,7 +3232,7 @@
         const labels = {
           matchmaker: '✨ رشح لي أفضل سيارة حسب ميزانيتي',
           prices: '💰 قائمة الأسعار الحالية',
-          installment: '💳 نظام التقسيط والتمويل',
+          installment: '💳 أنظمة التقسيط والأوراق المطلوبة',
           howto: '🚗 خطوات الشراء والحجز',
           human: '👨‍💻 التواصل مع مشرف المبيعات'
         };
@@ -2937,7 +3247,7 @@
           if (action === 'prices') {
             replyHtml = cars.length === 0
               ? 'جميع السيارات المتاحة تم بيعها حالياً، ترقبوا الدفعة الجديدة قريباً!'
-              : cars.map(c => `• <b>${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)}</b>: ${c.formattedPrice}`).join('<br>');
+              : cars.map(c => `• <b>${this.escapeHtml(c.brand)} ${this.escapeHtml(c.model)}</b>: ${c.formattedPrice} (${this.escapeHtml(c.paintStatus)})`).join('<br>');
           } else if (action === 'matchmaker') {
             const currentFilterBudget = document.getElementById('filter-max-price')?.value || '';
             replyHtml = `
@@ -2955,9 +3265,9 @@
                 </div>
               </div>`;
           } else if (action === 'installment') {
-            replyHtml = '💳 نوفر تقسيطاً مباشراً وبنكياً بمقدم يبدأ من 10% وفترة سداد تصل إلى 72 شهراً. افتح أي سيارة وجرب <b>حاسبة التقسيط التفاعلية</b>!';
+            replyHtml = '💳 <b>برامج التمويل المتاحة بالمعرض:</b><br>1. <b>بصورة البطاقة فقط:</b> بمقدم 40% وموافقة خلال 24 ساعة.<br>2. <b>تمويل بنكي:</b> بمقدم يبدأ من 20% للموظفين.<br>3. <b>سجل تجاري:</b> بمقدم 30% لأصحاب الأعمال.<br>افتح أي سيارة وجرب الأزرار الثلاثة داخل الحاسبة!';
           } else if (action === 'howto') {
-            replyHtml = '🚗 يمكنك الضغط على أي سيارة لمراجعة تقرير الفحص الـ 4 نقاط، ثم طلب <b>حجز مؤقت</b> أو <b>موعد معاينة وفيديو كول</b> بضغطة زر.';
+            replyHtml = '🚗 يمكنك الضغط على أي سيارة لمراجعة خريطة الفابريكة وتقرير الفحص الـ 4 محاور، أو طباعة ملصق الـ QR Code، أو طلب <b>حجز مؤقت</b> بضغطة زر.';
           } else if (action === 'human') {
             replyHtml = `👨‍💻 فريق المبيعات جاهز لخدمتك فوراً.<br><button onclick="App.whatsApp('${DEFAULT_DEALER_PHONE}', 'مرحباً معرض النخبة، أرغب في التحدث مع مشرف المبيعات')" class="mt-2 bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">💬 فتح واتساب المشرف</button>`;
           }
@@ -2997,7 +3307,7 @@
             ✅ <b>وجدنا ${cashMatches.length} سيارة تناسب ميزانيتك النقدية (${budget.toLocaleString('ar-EG')} ج.م)!</b><br>
             🏆 <b>أفضل ترشيح لك:</b> ${this.escapeHtml(topCar.brand)} ${this.escapeHtml(topCar.model)} (${topCar.year})<br>
             • السعر: <b>${topCar.formattedPrice}</b> ${saving > 0 ? `(ستوفر ${saving.toLocaleString('ar-EG')} ج.م)` : ''}<br>
-            • حالة الفحص: <b>${topCar.inspectionScore}/10</b><br>
+            • الحالة: <b>${this.escapeHtml(topCar.paintStatus)} (${topCar.inspectionScore}/10)</b><br>
             <button onclick="App.openDetails('${this.escapeHtml(topCar.id)}')" class="mt-2 bg-blue-900 text-white px-3 py-1.5 rounded-xl font-bold text-[11px] w-full">🔍 عرض تفاصيل السيارة المرشحة</button>
           `;
         } else {
@@ -3035,15 +3345,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          if ('caches' in window) {
-            const keys = await caches.keys();
-            for (const key of keys) {
-              if (key === 'elite-showroom-v1') {
-                await caches.delete(key);
-              }
-            }
-          }
-          const reg = await navigator.serviceWorker.register('./sw.js?v=3');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=5');
           if (reg && reg.update) reg.update();
         } catch (err) {
           console.warn('PWA Service Worker Warning:', err);
