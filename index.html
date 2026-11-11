@@ -7,6 +7,15 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚘</text></svg>" />
   <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#090d16" />
+ <script>
+    (function() {
+      const origWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+        origWarn.apply(console, args);
+      };
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <!-- مكتبات Firebase الرسمية (App + Firestore + Storage) -->
@@ -500,8 +509,9 @@
         this.interiorScore = Number(data.interiorScore) || this.inspectionScore;
 
         const defaultImg = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80';
-        const validImages = Array.isArray(data.images) ? data.images.filter(Boolean) : [];
-        this.imageUrl = String(data.imageUrl || '').trim() || validImages[0] || defaultImg;
+        const fixBrokenUrl = (u) => String(u || '').trim().replace('photo-1618843479319-56172926f442', 'photo-1617788138017-80ad40651399');
+        const validImages = Array.isArray(data.images) ? data.images.map(fixBrokenUrl).filter(Boolean) : [];
+        this.imageUrl = fixBrokenUrl(data.imageUrl) || validImages[0] || defaultImg;
         this.images = validImages.length > 0 ? validImages : [this.imageUrl];
 
         this.description = String(data.description || '').trim();
