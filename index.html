@@ -1357,6 +1357,215 @@
         `);
       },
 
+      /**
+       * === محرك مميزات الجيل الثاني (الاستبدال + الترخيص والتأمين + الإعلانات + العقود) ===
+       */
+      toggleInlineTradeInBox() {
+        const box = document.getElementById('inline-tradein-box');
+        if (!box) return;
+        box.classList.toggle('hidden');
+      },
+
+      calculateInlineTradeIn(newCarId) {
+        const { car } = CarRepository.findCarAnywhere(newCarId);
+        if (!car) return;
+
+        const oldCarTitle = (document.getElementById('iti-car-name')?.value || '').trim();
+        const expectedVal = Number(document.getElementById('iti-expected-val')?.value) || 0;
+        const condition = document.getElementById('iti-condition')?.value || 'CLEAN_BELT';
+        const resBox = document.getElementById('iti-result-box');
+
+        if (!oldCarTitle || expectedVal < 50000) {
+          this.showToast('⚠️ يرجى كتابة نوع سيارتك وقيمتها التقديرية بشكل صحيح.', 'warning');
+          return;
+        }
+
+        const ranges = {
+          FULL_FABRIKA: { minPct: 0.85, maxPct: 0.92, label: 'فابريكة بالكامل' },
+          CLEAN_BELT: { minPct: 0.78, maxPct: 0.85, label: 'فابريكة دواخل - رشة خارجي' },
+          NEEDS_CARE: { minPct: 0.70, maxPct: 0.78, label: 'تحتاج بعض المصاريف' }
+        };
+
+        const r = ranges[condition] || ranges.CLEAN_BELT;
+        const minVal = Math.round((expectedVal * r.minPct) / 5000) * 5000;
+        const maxVal = Math.round((expectedVal * r.maxPct) / 5000) * 5000;
+        const safeAvgDown = Math.min(Math.round((minVal + maxVal) / 2), Math.round(car.price * 0.85));
+
+        const minCashDiff = Math.max(0, car.price - maxVal);
+        const maxCashDiff = Math.max(0, car.price - minVal);
+
+        const downInput = document.getElementById('calc-down');
+        const slider = document.getElementById('calc-down-slider');
+        if (downInput) downInput.value = safeAvgDown;
+        if (slider) slider.value = Math.min(Math.max(safeAvgDown, Number(slider.min)), Number(slider.max));
+        this.currentCalcState.programName = `استبدال (${oldCarTitle})`;
+        if (downInput && typeof downInput.oninput === 'function') downInput.oninput();
+
+        this._lastInlineTradeIn = { oldCarTitle, conditionLabel: r.label, minVal, maxVal, safeAvgDown, minCashDiff, maxCashDiff };
+
+        if (resBox) {
+          resBox.classList.remove('hidden');
+          resBox.innerHTML = `
+            <div class="bg-white p-3 rounded-xl border border-amber-300 space-y-2 text-[11px]">
+              <div class="flex justify-between items-center border-b pb-1.5">
+                <span class="font-bold text-slate-600">📊 نطاق التثمين المبدئي لسيارتك:</span>
+                <span class="font-black text-emerald-700">من ${minVal.toLocaleString('ar-EG')} إلى ${maxVal.toLocaleString('ar-EG')} ج.م</span>
+              </div>
+              <div class="flex justify-between items-center border-b pb-1.5">
+                <span class="font-bold text-slate-600">💵 فرق الكاش المتبقي تقريباً:</span>
+                <span class="font-black text-blue-900">من ${minCashDiff.toLocaleString('ar-EG')} إلى ${maxCashDiff.toLocaleString('ar-EG')} ج.م</span>
+              </div>
+              <p class="text-[10px] text-amber-900 bg-amber-50 p-2 rounded-lg font-bold leading-relaxed border border-amber-200">
+                ⚠️ <b>تأكيد هام:</b> هذا النطاق السعري (من - إلى) استرشادي فقط، ويتم تحديد السعر الفعلي والنهائي لسيارتك داخل المعرض بعد المعاينة والفحص الفني على الطبيعة.
+              </p>
+              <button type="button" onclick="App.sendInlineTradeInWhatsApp('${this.escapeHtml(car.id)}')" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5">
+                <span>💬</span> إرسال طلب الاستبدال وحجز موعد معاينة بالمعرض
+              </button>
+            </div>
+          `;
+        }
+        this.showToast('✅ تم حساب نطاق الاستبدال وتحديث المقدم والقسط الشهري!', 'success');
+      },
+
+      sendInlineTradeInWhatsApp(newCarId) {
+        const { car } = CarRepository.findCarAnywhere(newCarId);
+        const ti = this._lastInlineTradeIn;
+        if (!car || !ti) return;
+
+        CarRepository.addTradeIn({
+          id: 'TI-' + Date.now().toString().slice(-5),
+          brand: ti.oldCarTitle,
+          model: `للاستبدال بـ (${car.brand} ${car.model})`,
+          year: new Date().getFullYear(),
+          km: 'يحدد بالمعاينة',
+          type: 'استبدال مباشر',
+          desc: `الحالة: ${ti.conditionLabel} | النطاق الاسترشادي: من ${ti.minVal.toLocaleString('ar-EG')} إلى ${ti.maxVal.toLocaleString('ar-EG')} ج.م (مشروط بالمعاينة بالمعرض)`,
+          clientName: 'عميل استبدال أونلاين',
+          clientPhone: 'عبر واتساب',
+          requestedAt: new Date().toLocaleString('ar-EG')
+        });
+
+        const { months, monthly } = this.currentCalcState;
+        const msg = `مرحباً معرض النخبة، أرغب في استبدال سيارتي بسيارة من المعرض:\n` +
+          `🚘 السيارة المطلوبة: ${car.brand} ${car.model} (${car.year}) - السعر: ${car.formattedPrice}\n` +
+          `🔄 سيارتي الحالية: ${ti.oldCarTitle} (${ti.conditionLabel})\n` +
+          `📊 نطاق التثمين الاسترشادي: من ${ti.minVal.toLocaleString('ar-EG')} إلى ${ti.maxVal.toLocaleString('ar-EG')} ج.م\n` +
+          `💳 القسط المتبقي التقريبي: ${monthly.toLocaleString('ar-EG')} ج.م × ${months} شهر\n` +
+          `⚠️ (مع علمي بأن السعر الفعلي والنهائي لسيارتي يتحدد داخل المعرض بعد المعاينة والفحص الفني).`;
+
+        this.whatsApp(car.dealerPhone, msg);
+      },
+
+      toggleOwnershipCostsBox() {
+        const box = document.getElementById('ownership-costs-box');
+        if (!box) return;
+        box.classList.toggle('hidden');
+      },
+
+      openSocialAdStudio(carId) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car) return;
+        const carUrl = this.getDirectCarUrl(car.id);
+        const minDown = Math.round(car.price * 0.20);
+        const maxM = car.maxInstallmentMonths || 60;
+        const estMonthly = Math.round(((car.price - minDown) * (1 + 0.135 * (maxM / 12))) / maxM);
+
+        const adText = `🔥 وحش جديد ينضم لأسطول #معرض_النخبة_للسيارات 🔥\n\n` +
+          `🚘 الماركة والموديل: ${car.brand} ${car.model} (موديل ${car.year})\n` +
+          `🛡️ حالة الدهان: ${car.paintStatus} (${car.paintDetails})\n` +
+          `⚙️ تقييم الفحص الهندسي المعتمد: ${car.inspectionScore}/10\n` +
+          `🛣️ العداد: ${car.formattedMileage}\n` +
+          `✨ أبرز التجهيزات: ${car.description}\n\n` +
+          `💰 السعر النقدي: ${car.formattedPrice}${car.hasDiscount ? ` (بدلاً من ${car.formattedOldPrice} - وفر ${car.formattedDiscount}!)` : ''}\n` +
+          `💳 متاح التقسيط (بنكي / بصورة البطاقة / سجل تجاري) بمقدم يبدأ من ${minDown.toLocaleString('ar-EG')} ج.م وقسط شهري يبدأ من ${estMonthly.toLocaleString('ar-EG')} ج.م!\n` +
+          `🔄 متاح استبدال سيارتك القديمة وتقسيط الفرق فوراً.\n\n` +
+          `🔗 فحص السيارة وحساب قسطك أونلاين:\n${carUrl}\n\n` +
+          `📞 للتواصل والحجز: ${car.dealerPhone}\n` +
+          `#سيارات_مصر #معرض_النخبة #تقسيط_سيارات #استبدال_سيارات #${car.brand.replace(/\s+/g, '_')}`;
+
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative text-xs space-y-4">
+            <button onclick="App.openDetails('${this.escapeHtml(car.id)}')" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <h3 class="font-black text-base text-slate-900">📢 استوديو إعلانات السوشيال ميديا (فيسبوك / انستجرام)</h3>
+            <p class="text-slate-500">تم توليد إعلان تسويقي جاهز للنشر شامل تفاصيل الفحص والقسط والهاشتاجات:</p>
+            <textarea id="social-ad-textarea" class="w-full h-64 p-3.5 rounded-2xl border bg-slate-50 font-semibold leading-relaxed text-slate-800">${this.escapeHtml(adText)}</textarea>
+            <button onclick="App.copyTextSilent(document.getElementById('social-ad-textarea').value); App.showToast('✅ تم نسخ نص الإعلان التسويقي جاهزاً للنشر!', 'success');" class="w-full bg-blue-950 hover:bg-blue-900 text-amber-400 font-black py-3 rounded-xl shadow flex items-center justify-center gap-2">
+              <span>📋</span> نسخ الإعلان بالكامل للنشر
+            </button>
+          </div>
+        `);
+      },
+
+      openPrintableContract(type, recordId) {
+        if (!AuthService.isLogged()) return;
+        let car = null, clientName = '........................................', clientPhone = '....................';
+        if (type === 'RESERVATION') {
+          const r = CarRepository.getReservations().find(x => x.id === recordId);
+          if (!r) return;
+          car = CarRepository.findCarAnywhere(r.carId).car;
+          clientName = r.clientName;
+          clientPhone = r.clientPhone;
+        } else {
+          car = CarRepository.findCarAnywhere(recordId).car;
+        }
+        if (!car) return;
+
+        const docTitle = type === 'RESERVATION' ? 'وثيقة حجز سيارة وإيصال استلام عربون' : 'عقد بيع ابتدائي لسيارة معتمدة';
+        const today = new Date().toLocaleDateString('ar-EG');
+
+        this.openModalHtml(`
+          <div id="printable-quote-area" class="bg-white rounded-3xl max-w-3xl w-full p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll border-4 border-slate-900 text-xs leading-relaxed">
+            <div class="flex justify-between items-center pb-4 mb-6 border-b-2 border-slate-900 no-print">
+              <button onclick="App.openCommandCenter('${type === 'RESERVATION' ? 'reservations' : 'sold'}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-black px-3.5 py-2 rounded-xl">← عودة لمركز القيادة</button>
+              <button onclick="window.print()" class="bg-blue-950 text-amber-400 font-black px-5 py-2 rounded-xl shadow">🖨️ طباعة الوثيقة الرسمية (A4)</button>
+            </div>
+
+            <div class="flex justify-between items-center border-b-2 border-slate-800 pb-4 mb-6">
+              <div>
+                <h2 class="text-xl font-black text-slate-950">معرض النخبة للسيارات</h2>
+                <p class="text-slate-600 font-bold">الإدارة المالية والقانونية — تحريراً في: ${today}</p>
+              </div>
+              <div class="text-left">
+                <span class="bg-slate-900 text-amber-400 font-black px-4 py-1.5 rounded-xl text-sm inline-block">${docTitle}</span>
+              </div>
+            </div>
+
+            <div class="space-y-4 text-slate-900">
+              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-300 grid grid-cols-2 gap-3">
+                <div><b>الطرف الأول (البائع):</b> معرض النخبة للسيارات</div>
+                <div><b>يمثله قانوناً:</b> ${this.escapeHtml(AuthService.getName())}</div>
+                <div><b>الطرف الثاني (المشتري):</b> ${this.escapeHtml(clientName)}</div>
+                <div><b>رقم الهاتف:</b> ${this.escapeHtml(clientPhone)} | <b>الرقم القومي:</b> ..............................</div>
+              </div>
+
+              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-300 space-y-2">
+                <h4 class="font-black text-sm border-b pb-1.5">بيانات السيارة محل التعاقد والفحص الفني:</h4>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div><b>كود السيارة:</b> ${this.escapeHtml(car.id)}</div>
+                  <div><b>الماركة والموديل:</b> ${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)}</div>
+                  <div><b>سنة الصنع:</b> ${car.year}</div>
+                  <div><b>قراءة العداد:</b> ${car.formattedMileage}</div>
+                  <div><b>حالة الدهان:</b> ${this.escapeHtml(car.paintStatus)}</div>
+                  <div><b>درجة الفحص:</b> ${car.inspectionScore}/10</div>
+                </div>
+                <p class="pt-1"><b>إجمالي ثمن السيارة المتفق عليه:</b> <span class="font-black text-blue-950 text-sm">${car.formattedPrice}</span></p>
+                <p><b>المبلغ المدفوع عند التوقيع:</b> .............................. ج.م | <b>المبلغ المتبقي:</b> .............................. ج.م</p>
+              </div>
+
+              <div class="p-3 rounded-xl border border-slate-300 text-[11px] space-y-1">
+                <p>• يقر الطرف الثاني بمعاينته للسيارة المعاينة التامة النافية للجهالة واطلاعه على تقرير الفحص الهندسي المعتمد وحالة الدهان.</p>
+                <p>• يضمن معرض النخبة خلو السيارة من أي موانع قانونية لنقل الملكية أو حوادث جوهرية تؤثر على الشاسيه والدواخل.</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-8 pt-8 text-center font-black">
+                <div class="border-t-2 border-slate-400 pt-3">توقيع وختم معرض النخبة (الطرف الأول)</div>
+                <div class="border-t-2 border-slate-400 pt-3">توقيع المشتري (الطرف الثاني)</div>
+              </div>
+            </div>
+          </div>
+        `);
+      },
+
       syncAll() {
         this.populateFilterDropdowns();
         this.applyFilters();
@@ -1777,7 +1986,8 @@
                       </span>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                      <button onclick="App.whatsAppRes('${this.escapeHtml(r.id)}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-2 rounded-xl font-bold">💬 واتساب</button>
+                     <button onclick="App.whatsAppRes('${this.escapeHtml(r.id)}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-2 rounded-xl font-bold">💬 واتساب</button>
+                      <button onclick="App.openPrintableContract('RESERVATION', '${this.escapeHtml(r.id)}')" class="bg-slate-900 hover:bg-slate-800 text-amber-400 px-3 py-2 rounded-xl font-black shadow">📄 إيصال عربون (A4)</button>
                       ${r.status === 'pending_admin' ? `
                         <button onclick="App.confirmReservation('${this.escapeHtml(r.id)}')" class="bg-purple-700 hover:bg-purple-600 text-white px-3.5 py-2 rounded-xl font-bold shadow">تأكيد الحجز</button>
                         <button onclick="App.rejectReservation('${this.escapeHtml(r.id)}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-2 rounded-xl font-bold">رفض</button>
@@ -2215,6 +2425,26 @@
                   </div>
                 </div>
 
+                <!-- مؤشر الإقبال اللحظي للعميل + أدوات الإعلانات والعقود للإدارة -->
+                <div class="bg-rose-50 border border-rose-200 text-rose-950 px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-sm no-print">
+                  <div class="flex items-center gap-2">
+                    <span class="text-base animate-pulse">🔥</span>
+                    <span>إقبال مرتفع: شاهدها <b>${car.viewsCount} عميل</b> ${car.favoritesCount > 0 ? `• وفي مفضلة <b>${car.favoritesCount} عملاء</b>` : '• جاهزة للمعاينة الفورية'}</span>
+                  </div>
+                  <span class="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shrink-0">مطلوبة</span>
+                </div>
+
+                ${isAdmin ? `
+                  <div class="grid grid-cols-2 gap-2 bg-slate-900 p-2.5 rounded-2xl border border-amber-400/40 no-print">
+                    <button type="button" onclick="App.openSocialAdStudio('${this.escapeHtml(car.id)}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
+                      <span>📢</span> بوست إعلاني جاهز
+                    </button>
+                    <button type="button" onclick="App.openPrintableContract('SALE', '${this.escapeHtml(car.id)}')" class="bg-white/10 hover:bg-white/20 text-white font-black py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                      <span>📜</span> عقد بيع ابتدائي (A4)
+                    </button>
+                  </div>
+                ` : ''}
+
                 <!-- حاسبة التقسيط التفاعلية المطورة ببرامج التمويل الـ 3 -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                   <h4 class="font-black text-sm text-slate-900 flex items-center justify-between">
@@ -2267,6 +2497,57 @@
                       <span id="calc-financed-note" class="text-[10px] text-slate-400 font-semibold">المبلغ الممول: 0 ج.م</span>
                     </div>
                     <span id="calc-result" class="text-base sm:text-lg font-black text-blue-900">0 ج.م</span>
+                  </div>
+                </div>
+
+                <!-- حاسبة فرق الاستبدال (من - إلى) + حاسبة مصروفات الترخيص والتأمين -->
+                <div class="space-y-2 no-print">
+                  <!-- 1. زر وصندوق حساب فرق الاستبدال بنظام (من - إلى) -->
+                  <div class="bg-amber-50/60 rounded-2xl border border-amber-300/80 p-2.5">
+                    <button type="button" onclick="App.toggleInlineTradeInBox()" class="w-full text-amber-950 font-black py-1 px-2 rounded-xl text-xs flex items-center justify-between transition">
+                      <span>🔄 لديك سيارة قديمة؟ احسب فرق الاستبدال كمقدم</span>
+                      <span class="bg-amber-400/40 px-2 py-0.5 rounded-lg text-[10px]">من - إلى ▾</span>
+                    </button>
+                    <div id="inline-tradein-box" class="hidden mt-2.5 pt-2.5 border-t border-amber-200 space-y-2 text-xs">
+                      <input id="iti-car-name" placeholder="نوع سيارتك وموديلها (مثال: إلنترا 2019)" class="w-full border p-2 rounded-xl bg-white font-bold" />
+                      <div class="grid grid-cols-2 gap-2">
+                        <input id="iti-expected-val" type="number" min="50000" step="10000" placeholder="سعرك التقديري (ج.م)" class="w-full border p-2 rounded-xl bg-white font-bold" />
+                        <select id="iti-condition" class="w-full border p-2 rounded-xl bg-white font-bold">
+                          <option value="FULL_FABRIKA">فابريكة بالكامل</option>
+                          <option value="CLEAN_BELT" selected>فابريكة دواخل - رشة خارجي</option>
+                          <option value="NEEDS_CARE">تحتاج بعض المصاريف</option>
+                        </select>
+                      </div>
+                      <button type="button" onclick="App.calculateInlineTradeIn('${this.escapeHtml(car.id)}')" class="w-full bg-slate-900 hover:bg-slate-800 text-amber-400 font-black py-2 rounded-xl transition shadow-sm">
+                        🧮 احسب نطاق التثمين (من - إلى) والقسط المتبقي
+                      </button>
+                      <div id="iti-result-box" class="hidden"></div>
+                    </div>
+                  </div>
+
+                  <!-- 2. زر وصندوق حاسبة مصروفات نقل الملكية والترخيص والتأمين -->
+                  <div class="bg-slate-100/80 rounded-2xl border border-slate-200 p-2.5">
+                    <button type="button" onclick="App.toggleOwnershipCostsBox()" class="w-full text-slate-800 font-black py-1 px-2 rounded-xl text-xs flex items-center justify-between transition">
+                      <span>📑 التكلفة التقديرية لنقل الملكية والترخيص والتأمين</span>
+                      <span class="bg-slate-200 px-2 py-0.5 rounded-lg text-[10px]">شفافية كاملة ▾</span>
+                    </button>
+                    <div id="ownership-costs-box" class="hidden mt-2.5 pt-2.5 border-t border-slate-200 space-y-1.5 text-[11px]">
+                      <div class="bg-white p-2 rounded-xl border flex justify-between items-center">
+                        <span class="text-slate-600 font-bold">📜 رسوم العقد المسجل والشهر العقاري (تقديري):</span>
+                        <span class="font-black text-blue-950">${(Math.round((Math.min(car.price * 0.008, 12000) + 2500) / 100) * 100).toLocaleString('ar-EG')} ج.م</span>
+                      </div>
+                      <div class="bg-white p-2 rounded-xl border flex justify-between items-center">
+                        <span class="text-slate-600 font-bold">🏷️ مصروفات الترخيص السنوي والملصق والفحص:</span>
+                        <span class="font-black text-blue-950">3,800 ج.م</span>
+                      </div>
+                      <div class="bg-white p-2 rounded-xl border flex justify-between items-center">
+                        <span class="text-slate-600 font-bold">🛡️ وثيقة التأمين الشامل السنوي (اختياري ~2.5%):</span>
+                        <span class="font-black text-emerald-700">${(Math.round((car.price * 0.025) / 500) * 500).toLocaleString('ar-EG')} ج.م / سنة</span>
+                      </div>
+                      <p class="text-[10px] text-slate-500 font-semibold px-1">
+                        * الأرقام استرشادية وفق متوسط الرسوم المعمول بها في وحدات المرور والشهر العقاري.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
