@@ -1,47 +1,26 @@
-const CACHE_NAME = 'elite-showroom-pwa-v5';
-const LOCAL_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json'
-];
-
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(LOCAL_ASSETS))
-  );
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  if (event.request.url.endsWith('/favicon.ico')) {
-    event.respondWith(new Response('', { status: 204, statusText: 'No Content' }));
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request, { cache: 'no-cache' })
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return networkResponse;
-      })
-      .catch(async () => {
-        const cached = await caches.match(event.request);
-        return cached || new Response('', { status: 404, statusText: 'Offline' });
-      })
-  );
-});
+{
+  "id": "/elite-showroom/",
+  "name": "معرض النخبة للسيارات",
+  "short_name": "النخبة للسيارات",
+  "description": "نظام المبيعات والفحص الهندسي المعتمد - معرض النخبة للسيارات",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=192&h=192&fm=png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=512&h=512&fm=png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
