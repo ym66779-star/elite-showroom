@@ -1568,77 +1568,344 @@
         `);
       },
 
-      openPrintableContract(type, recordId) {
+     openPrintableContract(type, recordId) {
         if (!AuthService.isLogged()) return;
-        let car = null, clientName = '........................................', clientPhone = '....................';
-        if (type === 'RESERVATION') {
-          const r = CarRepository.getReservations().find(x => x.id === recordId);
-          if (r) {
-            car = CarRepository.findCarAnywhere(r.carId).car;
-            clientName = r.clientName;
-            clientPhone = r.clientPhone;
-          } else {
-            car = CarRepository.findCarAnywhere(recordId).car;
-          }
+        let car = null, clientName = '', clientPhone = '';
+        const r = CarRepository.getReservations().find(x => x.id === recordId);
+        if (r) {
+          car = CarRepository.findCarAnywhere(r.carId).car;
+          clientName = r.clientName || '';
+          clientPhone = r.clientPhone || '';
         } else {
           car = CarRepository.findCarAnywhere(recordId).car;
         }
         if (!car) return;
 
-        const docTitle = type === 'RESERVATION' ? 'وثيقة حجز سيارة وإيصال استلام عربون' : 'عقد بيع ابتدائي لسيارة معتمدة';
+        const isRes = (type === 'RESERVATION');
+        const docTitle = isRes ? 'وثيقة حجز سيارة وإيصال استلام عربون' : 'عقد بيع ابتدائي لسيارة معتمدة';
+        const docCode = (isRes ? 'REC-' : 'CNT-') + Date.now().toString().slice(-5);
         const today = new Date().toLocaleDateString('ar-EG');
+        const currentTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        const defaultDeposit = Math.round(car.price * 0.05);
+
+        this._activeDocContext = { type, car, docTitle, docCode, today, currentTime };
 
         this.openModalHtml(`
-          <div id="printable-quote-area" class="bg-white rounded-3xl max-w-3xl w-full p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll border-4 border-slate-900 text-xs leading-relaxed">
-            <div class="flex justify-between items-center pb-4 mb-6 border-b-2 border-slate-900 no-print">
-              <button onclick="App.openCommandCenter('${type === 'RESERVATION' ? 'reservations' : 'sold'}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-black px-3.5 py-2 rounded-xl">← عودة لمركز القيادة</button>
-              <button onclick="window.print()" class="bg-blue-950 text-amber-400 font-black px-5 py-2 rounded-xl shadow">🖨️ طباعة الوثيقة الرسمية (A4)</button>
+          <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll border-2 border-slate-900 text-xs leading-relaxed">
+            <div class="flex flex-wrap justify-between items-center gap-2 pb-4 mb-4 border-b-2 border-slate-900">
+              <div class="flex items-center gap-2">
+                <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+                <span class="font-black text-sm text-slate-900">${isRes ? '📄 تجهيز إيصال العربون' : '📜 تجهيز عقد البيع الابتدائي'}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="App.openPrintableContract('${isRes ? 'SALE' : 'RESERVATION'}', '${this.escapeHtml(recordId)}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-2 rounded-xl transition">
+                  🔄 تبديل إلى ${isRes ? 'عقد بيع ابتدائي' : 'إيصال عربون'}
+                </button>
+                <button onclick="App.printCleanA4Document()" class="bg-blue-950 hover:bg-blue-900 text-amber-400 font-black px-5 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition">
+                  <span>🖨️</span> طباعة الوثيقة (A4 كامل)
+                </button>
+              </div>
             </div>
 
-            <div class="flex justify-between items-center border-b-2 border-slate-800 pb-4 mb-6">
-              <div>
-                <h2 class="text-xl font-black text-slate-950">معرض النخبة للسيارات</h2>
-                <p class="text-slate-600 font-bold">الإدارة المالية والقانونية — تحريراً في: ${today}</p>
+            <div class="bg-amber-50/80 border border-amber-300 p-3.5 rounded-2xl mb-5 space-y-2.5">
+              <p class="font-black text-amber-950 text-[11px]">✍️ بيانات سريعة تُطبع داخل الوثيقة (اترك أي خانة فارغة لتظهر مكانها نقاط للتعبئة اليدوية بالقلم):</p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input id="doc-client-name" value="${this.escapeHtml(clientName)}" placeholder="اسم المشتري بالكامل" class="border p-2 rounded-xl bg-white font-bold" />
+                <input id="doc-client-phone" value="${this.escapeHtml(clientPhone)}" placeholder="رقم الموبايل" class="border p-2 rounded-xl bg-white font-bold" />
+                <input id="doc-client-nid" placeholder="الرقم القومي (14 رقم)" class="border p-2 rounded-xl bg-white font-bold" />
               </div>
-              <div class="text-left">
-                <span class="bg-slate-900 text-amber-400 font-black px-4 py-1.5 rounded-xl text-sm inline-block">${docTitle}</span>
-              </div>
-            </div>
-
-            <div class="space-y-4 text-slate-900">
-              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-300 grid grid-cols-2 gap-3">
-                <div><b>الطرف الأول (البائع):</b> معرض النخبة للسيارات</div>
-                <div><b>يمثله قانوناً:</b> ${this.escapeHtml(AuthService.getName())}</div>
-                <div><b>الطرف الثاني (المشتري):</b> ${this.escapeHtml(clientName)}</div>
-                <div><b>رقم الهاتف:</b> ${this.escapeHtml(clientPhone)} | <b>الرقم القومي:</b> ..............................</div>
-              </div>
-
-              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-300 space-y-2">
-                <h4 class="font-black text-sm border-b pb-1.5">بيانات السيارة محل التعاقد والفحص الفني:</h4>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  <div><b>كود السيارة:</b> ${this.escapeHtml(car.id)}</div>
-                  <div><b>الماركة والموديل:</b> ${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)}</div>
-                  <div><b>سنة الصنع:</b> ${car.year}</div>
-                  <div><b>قراءة العداد:</b> ${car.formattedMileage}</div>
-                  <div><b>حالة الدهان:</b> ${this.escapeHtml(car.paintStatus)}</div>
-                  <div><b>درجة الفحص:</b> ${car.inspectionScore}/10</div>
+              ${isRes ? `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input id="doc-paid-amount" type="number" value="${defaultDeposit}" placeholder="مبلغ العربون المستلم (ج.م)" class="border p-2 rounded-xl bg-white font-black text-emerald-800" />
+                  <select id="doc-pay-method" class="border p-2 rounded-xl bg-white font-bold">
+                    <option value="نقداً بخزينة المعرض">نقداً بخزينة المعرض</option>
+                    <option value="تحويل بنكي / إنستاباي">تحويل بنكي / إنستاباي</option>
+                    <option value="شيك بنكي">شيك بنكي</option>
+                  </select>
+                  <input id="doc-hold-days" value="7 أيام من تاريخه" placeholder="مهلة الحجز (مثال: 7 أيام)" class="border p-2 rounded-xl bg-white font-bold" />
                 </div>
-                <p class="pt-1"><b>إجمالي ثمن السيارة المتفق عليه:</b> <span class="font-black text-blue-950 text-sm">${car.formattedPrice}</span></p>
-                <p><b>المبلغ المدفوع عند التوقيع:</b> .............................. ج.م | <b>المبلغ المتبقي:</b> .............................. ج.م</p>
-              </div>
-
-              <div class="p-3 rounded-xl border border-slate-300 text-[11px] space-y-1">
-                <p>• يقر الطرف الثاني بمعاينته للسيارة المعاينة التامة النافية للجهالة واطلاعه على تقرير الفحص الهندسي المعتمد وحالة الدهان.</p>
-                <p>• يضمن معرض النخبة خلو السيارة من أي موانع قانونية لنقل الملكية أو حوادث جوهرية تؤثر على الشاسيه والدواخل.</p>
-              </div>
-
-              <div class="grid grid-cols-2 gap-8 pt-8 text-center font-black">
-                <div class="border-t-2 border-slate-400 pt-3">توقيع وختم معرض النخبة (الطرف الأول)</div>
-                <div class="border-t-2 border-slate-400 pt-3">توقيع المشتري (الطرف الثاني)</div>
-              </div>
+              ` : `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input id="doc-paid-amount" type="number" value="${car.price}" placeholder="المبلغ المسدد عند التعاقد (ج.م)" class="border p-2 rounded-xl bg-white font-black text-blue-900" />
+                  <input id="doc-chassis" placeholder="رقم الشاسيه (أو يترك فارغاً)" class="border p-2 rounded-xl bg-white font-bold" />
+                  <input id="doc-engine" placeholder="رقم الموتور (أو يترك فارغاً)" class="border p-2 rounded-xl bg-white font-bold" />
+                </div>
+              `}
+              <button type="button" onclick="App.refreshDocPreview()" class="bg-slate-900 text-amber-400 font-black px-4 py-1.5 rounded-xl text-[11px]">🔄 تحديث المعاينة بالبيانات المدخلة</button>
             </div>
+
+            <div id="a4-preview-box" class="bg-white p-5 rounded-2xl border-2 border-slate-300 text-slate-900"></div>
           </div>
         `);
+
+        this.refreshDocPreview();
+      },
+
+      refreshDocPreview() {
+        const ctx = this._activeDocContext;
+        if (!ctx) return;
+        const { type, car, docTitle, docCode, today, currentTime } = ctx;
+        const isRes = (type === 'RESERVATION');
+
+        const cName = (document.getElementById('doc-client-name')?.value || '').trim() || '............................................................';
+        const cPhone = (document.getElementById('doc-client-phone')?.value || '').trim() || '..............................';
+        const cNid = (document.getElementById('doc-client-nid')?.value || '').trim() || '..........................................';
+        const paidRaw = Number(document.getElementById('doc-paid-amount')?.value) || 0;
+        const paidFormatted = paidRaw > 0 ? (paidRaw.toLocaleString('ar-EG') + ' ج.م') : '.............................. ج.م';
+        const remainRaw = Math.max(0, car.price - paidRaw);
+        const remainFormatted = paidRaw > 0 ? (remainRaw.toLocaleString('ar-EG') + ' ج.م') : '.............................. ج.م';
+        const payMethod = document.getElementById('doc-pay-method')?.value || 'نقداً بخزينة المعرض';
+        const holdDays = (document.getElementById('doc-hold-days')?.value || '').trim() || '7 أيام';
+        const chassis = (document.getElementById('doc-chassis')?.value || '').trim() || '....................................';
+        const engine = (document.getElementById('doc-engine')?.value || '').trim() || '....................................';
+
+        const previewBox = document.getElementById('a4-preview-box');
+        if (!previewBox) return;
+
+        if (isRes) {
+          previewBox.innerHTML = `
+            <div class="doc-header">
+              <div>
+                <h1 class="doc-main-title">معرض النخبة للسيارات</h1>
+                <p class="doc-sub">قسم المبيعات والتعاقدات — تحريراً في: ${today}</p>
+              </div>
+              <div class="doc-badge-wrap">
+                <div class="doc-badge">${docTitle}</div>
+                <div class="doc-code">رقم الإيصال: ${docCode}</div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">أولاً: بيانات العميل الحاجز ومستلم العربون</div>
+              <div class="doc-grid-2">
+                <div><b>استلمنا نحن:</b> معرض النخبة للسيارات (يمثله: ${this.escapeHtml(AuthService.getName())})</div>
+                <div><b>من السيد /</b> ${this.escapeHtml(cName)}</div>
+                <div><b>رقم الهاتف:</b> ${this.escapeHtml(cPhone)}</div>
+                <div><b>الرقم القومي:</b> ${this.escapeHtml(cNid)}</div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">ثانياً: بيان مبلغ العربون والسيارة المحجوزة</div>
+              <div class="doc-highlight-box">
+                <div><b>مبلغ العربون المستلم:</b> ${paidFormatted} (${this.escapeHtml(payMethod)})</div>
+                <div><b>مهلة الحجز المتفق عليها:</b> ${this.escapeHtml(holdDays)}</div>
+              </div>
+              <div class="doc-grid-3">
+                <div><b>كود السيارة:</b> ${this.escapeHtml(car.id)}</div>
+                <div><b>الماركة والموديل:</b> ${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)}</div>
+                <div><b>سنة الصنع:</b> ${car.year}</div>
+                <div><b>قراءة العداد:</b> ${car.formattedMileage}</div>
+                <div><b>حالة الدهان:</b> ${this.escapeHtml(car.paintStatus)}</div>
+                <div><b>درجة الفحص:</b> ${car.inspectionScore} / 10</div>
+                <div><b>إجمالي السعر المتفق عليه:</b> ${car.formattedPrice}</div>
+                <div><b>العربون المسدد:</b> ${paidFormatted}</div>
+                <div><b>المبلغ المتبقي للسداد:</b> ${remainFormatted}</div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">ثالثاً: شروط الحجز والضمان</div>
+              <ol class="doc-terms">
+                <li>يلتزم معرض النخبة بحجز السيارة الموضحة أعلاه باسم العميل وإيقاف عرضها للبيع للغير طوال مهلة الحجز (${this.escapeHtml(holdDays)}).</li>
+                <li>يلتزم العميل بسداد باقي ثمن السيارة (${remainFormatted}) أو إنهاء إجراءات التمويل البنكي قبل انتهاء المهلة المحددة.</li>
+                <li>يقر العميل باطلاعه على تقرير الفحص الهندسي المعتمد للسيارة، وفي حال ثبوت أي عيب جوهري يخالف الفحص المعلن يحق للعميل استرداد العربون كاملاً فوراً.</li>
+              </ol>
+            </div>
+
+            <div class="doc-signatures-3">
+              <div>توقيع مسؤول المبيعات / الخزينة<br><br>................................</div>
+              <div>ختم معرض النخبة للسيارات<br><br>................................</div>
+              <div>توقيع العميل الحاجز<br><br>................................</div>
+            </div>
+          `;
+        } else {
+          previewBox.innerHTML = `
+            <div class="doc-header">
+              <div>
+                <h1 class="doc-main-title">معرض النخبة للسيارات</h1>
+                <p class="doc-sub">الإدارة القانونية والعقود — إنه في يوم ${today} الساعة (${currentTime})</p>
+              </div>
+              <div class="doc-badge-wrap">
+                <div class="doc-badge">${docTitle}</div>
+                <div class="doc-code">رقم العقد: ${docCode}</div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">أطراف التعاقد</div>
+              <div class="doc-grid-1">
+                <div><b>الطرف الأول (البائع):</b> معرض النخبة للسيارات، ويمثله قانوناً في هذا العقد السيد/ ${this.escapeHtml(AuthService.getName())}.</div>
+                <div><b>الطرف الثاني (المشتري):</b> السيد/ ${this.escapeHtml(cName)} — يحمل رقم قومي: (${this.escapeHtml(cNid)}) — هاتف: (${this.escapeHtml(cPhone)}).</div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">البند الأول: بيانات السيارة محل البيع والفحص الفني</div>
+              <div class="doc-grid-3">
+                <div><b>الماركة والموديل:</b> ${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)}</div>
+                <div><b>سنة الصنع:</b> ${car.year}</div>
+                <div><b>قراءة العداد:</b> ${car.formattedMileage}</div>
+                <div><b>رقم الشاسيه:</b> ${this.escapeHtml(chassis)}</div>
+                <div><b>رقم الموتور:</b> ${this.escapeHtml(engine)}</div>
+                <div><b>كود الفحص:</b> ${this.escapeHtml(car.id)} (${car.inspectionScore}/10)</div>
+              </div>
+              <div style="margin-top:8px; padding-top:6px; border-top:1px dashed #cbd5e1;">
+                <b>بيان حالة الدهان والفحص الهندسي:</b> ${this.escapeHtml(car.paintStatus)} — ${this.escapeHtml(car.paintDetails)}.
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">البند الثاني: الثمن وطريقة السداد</div>
+              <div class="doc-grid-3">
+                <div><b>إجمالي الثمن المتفق عليه:</b> ${car.formattedPrice}</div>
+                <div><b>المسدد عند توقيع العقد:</b> ${paidFormatted}</div>
+                <div><b>المبلغ المتبقي بذمة المشتري:</b> ${remainFormatted}</div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <div class="doc-sec-title">البنود القانونية والالتزامات والضمان</div>
+              <ol class="doc-terms">
+                <li><b>المعاينة النافية للجهالة:</b> يقر الطرف الثاني (المشتري) بأنه عاين السيارة المباعة المعاينة التامة النافية للجهالة شرعاً وقانوناً وفحصها فنياً وقبل شرائها بحالتها الراهنة الموضحة بتقرير الفحص.</li>
+                <li><b>خلو السيارة من الموانع:</b> يقر الطرف الأول (البائع) بخلو السيارة من أي رهون أو حجوزات أو مخالفات مرورية أو مستحقات حكومية سابقة لتاريخ وساعة تحرير هذا العقد.</li>
+                <li><b>الاستلام والمسؤولية المدنية والجنائية:</b> يقر الطرف الثاني باستلامه للسيارة المباعة فعلياً بتاريخ (${today}) الساعة (${currentTime})، وأنه أصبح المسؤول الوحيد عنها مدنياً وجنائياً ومرورياً منذ لحظة الاستلام.</li>
+                <li><b>نقل الملكية وحفظ الامتياز:</b> يلتزم الطرف الأول بتسليم مستندات الملكية/التوكيل للمشتري فور سداد كامل الثمن، وفي حال وجود مبالغ متبقية تظل ملكية السيارة محفوظة للمعرض لحين السداد التام.</li>
+              </ol>
+            </div>
+
+            <div class="doc-signatures-3">
+              <div>الطرف الأول (البائع)<br>معرض النخبة للسيارات<br><br>................................</div>
+              <div>الطرف الثاني (المشتري المستلم)<br><br><br>................................</div>
+              <div>توقيع الشهود<br>1. ..............................<br>2. ..............................</div>
+            </div>
+          `;
+        }
+      },
+
+      printCleanA4Document() {
+        this.refreshDocPreview();
+        const previewBox = document.getElementById('a4-preview-box');
+        if (!previewBox) return;
+
+        let iframe = document.getElementById('elite-a4-print-frame');
+        if (iframe) iframe.remove();
+
+        iframe = document.createElement('iframe');
+        iframe.id = 'elite-a4-print-frame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+          <!DOCTYPE html>
+          <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8" />
+            <title>طباعة وثيقة رسمية - معرض النخبة</title>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+            <style>
+              @page { size: A4 portrait; margin: 12mm; }
+              * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                background: #ffffff;
+                color: #0f172a;
+                font-family: 'Cairo', Tahoma, Arial, sans-serif;
+                font-size: 13px;
+                line-height: 1.65;
+                direction: rtl;
+              }
+              .a4-sheet {
+                width: 100%;
+                border: 3px solid #0f172a;
+                border-radius: 14px;
+                padding: 20px 24px;
+              }
+              .doc-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 2px solid #0f172a;
+                padding-bottom: 14px;
+                margin-bottom: 16px;
+              }
+              .doc-main-title { margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; }
+              .doc-sub { margin: 4px 0 0; font-size: 12px; font-weight: 700; color: #475569; }
+              .doc-badge-wrap { text-align: left; }
+              .doc-badge {
+                background: #0f172a;
+                color: #fbbf24;
+                font-weight: 900;
+                font-size: 14px;
+                padding: 6px 14px;
+                border-radius: 8px;
+                display: inline-block;
+              }
+              .doc-code { font-size: 11px; font-weight: 700; color: #475569; margin-top: 4px; }
+              .doc-section {
+                background: #f8fafc;
+                border: 1px solid #cbd5e1;
+                border-radius: 10px;
+                padding: 12px 16px;
+                margin-bottom: 14px;
+              }
+              .doc-sec-title {
+                font-size: 14px;
+                font-weight: 900;
+                color: #1e3a8a;
+                border-bottom: 1px solid #cbd5e1;
+                padding-bottom: 6px;
+                margin-bottom: 10px;
+              }
+              .doc-highlight-box {
+                background: #fef3c7;
+                border: 1px solid #f59e0b;
+                border-radius: 8px;
+                padding: 8px 12px;
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: space-between;
+                font-size: 13px;
+              }
+              .doc-grid-1 { display: grid; grid-template-columns: 1fr; gap: 6px; }
+              .doc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+              .doc-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 12px; }
+              .doc-terms { margin: 0; padding-right: 18px; }
+              .doc-terms li { margin-bottom: 6px; text-align: justify; }
+              .doc-signatures-3 {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 16px;
+                margin-top: 28px;
+                padding-top: 14px;
+                border-top: 2px solid #0f172a;
+                text-align: center;
+                font-weight: 800;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="a4-sheet">
+              ${previewBox.innerHTML}
+            </div>
+          </body>
+          </html>
+        `);
+        doc.close();
+
+        setTimeout(() => {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        }, 350);
       },
 
       syncAll() {
