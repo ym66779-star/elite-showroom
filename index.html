@@ -1501,10 +1501,13 @@
         let car = null, clientName = '........................................', clientPhone = '....................';
         if (type === 'RESERVATION') {
           const r = CarRepository.getReservations().find(x => x.id === recordId);
-          if (!r) return;
-          car = CarRepository.findCarAnywhere(r.carId).car;
-          clientName = r.clientName;
-          clientPhone = r.clientPhone;
+          if (r) {
+            car = CarRepository.findCarAnywhere(r.carId).car;
+            clientName = r.clientName;
+            clientPhone = r.clientPhone;
+          } else {
+            car = CarRepository.findCarAnywhere(recordId).car;
+          }
         } else {
           car = CarRepository.findCarAnywhere(recordId).car;
         }
@@ -2435,12 +2438,15 @@
                 </div>
 
                 ${isAdmin ? `
-                  <div class="grid grid-cols-2 gap-2 bg-slate-900 p-2.5 rounded-2xl border border-amber-400/40 no-print">
-                    <button type="button" onclick="App.openSocialAdStudio('${this.escapeHtml(car.id)}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
-                      <span>📢</span> بوست إعلاني جاهز
+                  <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-2.5 rounded-2xl border border-amber-400/40 no-print">
+                    <button type="button" onclick="App.openSocialAdStudio('${this.escapeHtml(car.id)}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 px-2 rounded-xl text-[11px] flex items-center justify-center gap-1 shadow transition">
+                      <span>📢</span> بوست إعلاني
                     </button>
-                    <button type="button" onclick="App.openPrintableContract('SALE', '${this.escapeHtml(car.id)}')" class="bg-white/10 hover:bg-white/20 text-white font-black py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
-                      <span>📜</span> عقد بيع ابتدائي (A4)
+                    <button type="button" onclick="App.openPrintableContract('RESERVATION', '${this.escapeHtml(car.id)}')" class="bg-white/10 hover:bg-white/20 text-amber-300 font-black py-2 px-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition">
+                      <span>📄</span> إيصال عربون
+                    </button>
+                    <button type="button" onclick="App.openPrintableContract('SALE', '${this.escapeHtml(car.id)}')" class="bg-white/10 hover:bg-white/20 text-white font-black py-2 px-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition">
+                      <span>📜</span> عقد بيع
                     </button>
                   </div>
                 ` : ''}
