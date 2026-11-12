@@ -43,13 +43,85 @@
     body.dark-mode .text-blue-950, body.dark-mode .text-blue-900 { color: #fbbf24 !important; }
     body.dark-mode .border-slate-100, body.dark-mode .border-slate-200, body.dark-mode .border-slate-300, body.dark-mode .border { border-color: #1e293b !important; }
 
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
     @media print {
-      body { background: #ffffff !important; color: #000000 !important; }
-      body * { visibility: hidden; }
-      #modal-backdrop { position: static !important; overflow: visible !important; background: transparent !important; padding: 0 !important; }
-      #printable-quote-area, #printable-quote-area * { visibility: visible; }
-      #printable-quote-area { position: absolute; left: 0; top: 0; width: 100%; max-height: none !important; overflow: visible !important; box-shadow: none !important; background: #ffffff !important; color: #000000 !important; }
-      .no-print { display: none !important; }
+      html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body > *:not(#modal-backdrop) {
+        display: none !important;
+      }
+      #modal-backdrop {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      #modal-content-box {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #printable-quote-area {
+        position: static !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        margin: 0 auto !important;
+        padding: 16px !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border-radius: 16px !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        box-sizing: border-box !important;
+      }
+      body.dark-mode #printable-quote-area,
+      body.dark-mode #printable-quote-area .bg-white {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+      }
+      body.dark-mode #printable-quote-area .bg-slate-50,
+      body.dark-mode #printable-quote-area .bg-slate-100 {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+      }
+      body.dark-mode #printable-quote-area .text-slate-900,
+      body.dark-mode #printable-quote-area .text-slate-950,
+      body.dark-mode #printable-quote-area .text-slate-800,
+      body.dark-mode #printable-quote-area .text-slate-700 {
+        color: #0f172a !important;
+      }
+      body.dark-mode #printable-quote-area .text-slate-600,
+      body.dark-mode #printable-quote-area .text-slate-500 {
+        color: #475569 !important;
+      }
+      body.dark-mode #printable-quote-area .text-blue-950,
+      body.dark-mode #printable-quote-area .text-blue-900 {
+        color: #1e3a8a !important;
+      }
+      .no-print {
+        display: none !important;
+      }
     }
   </style>
 </head>
