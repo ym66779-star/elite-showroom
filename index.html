@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>معرض النخبة للسيارات | المنصة السحابية الاحترافية</title>
+  <title>معرض أبو بهاء للسيارات | المنصة السحابية الاحترافية</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚘</text></svg>" />
   <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#090d16" />
@@ -131,21 +131,26 @@
   <header class="glass-header text-white shadow-xl sticky top-0 z-30 border-b border-blue-800/40 no-print">
     <div class="max-w-7xl mx-auto px-3 py-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3 cursor-pointer" onclick="App.resetFilters()">
-        <div class="bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg">🚘</div>
+        <div class="relative w-12 h-12 rounded-2xl bg-slate-950 border-2 border-orange-500 flex items-center justify-center overflow-hidden shadow-lg shrink-0">
+          <img src="./logo.jpg" alt="أبو بهاء" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover" />
+          <div style="display:none" class="w-full h-full bg-gradient-to-br from-red-600 via-orange-600 to-slate-950 text-white flex-col items-center justify-center leading-none">
+            <span class="text-base">🏎️</span>
+            <span class="text-[8px] font-black text-amber-300 mt-0.5">أبو بهاء</span>
+          </div>
+        </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-sm sm:text-lg font-black tracking-wide">معرض النخبة للسيارات</h1>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base sm:text-xl font-black tracking-wide text-white">أبو بهاء <span class="text-orange-400 text-xs sm:text-sm font-extrabold">لتجارة السيارات</span></h1>
             <span id="cloud-status-badge" onclick="event.stopPropagation(); App.handleCloudBadgeClick()" class="bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 cursor-pointer transition" title="حالة الاتصال بقاعدة بيانات Firebase">
               <span id="cloud-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
               <span id="cloud-text">جاري الاتصال...</span>
             </span>
           </div>
-          <p class="text-[10px] text-amber-300/90 font-semibold">نظام المبيعات والفحص الهندسي المعتمد (Cloud Sync)</p>
+          <p class="text-[10px] sm:text-[11px] text-amber-300/95 font-bold">📍 أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</p>
         </div>
       </div>
 
       <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
-        <!-- زر الوضع الليلي الفاخر -->
         <button onclick="App.toggleDarkMode()" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-600/60 text-amber-300 w-9 h-8 rounded-xl flex items-center justify-center text-sm shadow-sm transition" title="تبديل الوضع الليلي / النهاري">
           <span id="dark-mode-icon">🌙</span>
         </button>
@@ -158,12 +163,11 @@
           <span>❤️</span> <span id="client-fav-btn-text">مفضلتي</span> (<span id="client-favorites-count">0</span>)
         </button>
 
-        <button id="open-tradein-modal-btn" onclick="App.openTradeInModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1.5 shadow-md">
+        <button id="open-tradein-modal-btn" onclick="App.openTradeInModal()" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 text-xs px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1.5 shadow-md">
           <span>🔄</span> استبدل أو بع سيارتك
         </button>
 
-        <!-- أزرار الإدارة الموحدة -->
-        <button id="open-command-center-btn" onclick="App.openCommandCenter('overview')" class="hidden bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs px-3.5 py-1.5 rounded-xl font-black transition items-center gap-1.5 shadow-lg">
+        <button id="open-command-center-btn" onclick="App.openCommandCenter('overview')" class="hidden bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs px-3.5 py-1.5 rounded-xl font-black transition items-center gap-1.5 shadow-lg">
           <span>🎛️</span> مركز القيادة
           <span id="total-tasks-badge" class="bg-slate-950 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full">0</span>
         </button>
@@ -177,8 +181,27 @@
         </button>
       </div>
     </div>
+
+    <!-- شريط أرقام التواصل السريع وعنوان معرض أبو بهاء -->
+    <div class="bg-slate-950/90 border-t border-slate-800/80 py-1.5 px-3 text-[11px]">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 text-slate-300 font-bold">
+          <span class="text-rose-500">📍</span>
+          <span>أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</span>
+        </div>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-amber-400 font-black">📞 للحجز والاستعلام:</span>
+          <button type="button" onclick="App.whatsApp('01060970007', 'استفسار من الموقع')" class="bg-slate-900 hover:bg-rose-950 text-white border border-slate-700 px-2 py-0.5 rounded-lg font-mono font-bold transition">01060970007</button>
+          <button type="button" onclick="App.whatsApp('01001446377', 'استفسار من الموقع')" class="bg-slate-900 hover:bg-rose-950 text-white border border-slate-700 px-2 py-0.5 rounded-lg font-mono font-bold transition">01001446377</button>
+          <button type="button" onclick="App.whatsApp('01091167083', 'استفسار من الموقع')" class="bg-slate-900 hover:bg-rose-950 text-white border border-slate-700 px-2 py-0.5 rounded-lg font-mono font-bold transition">01091167083</button>
+          <button type="button" onclick="App.whatsApp('01063764207', 'استفسار من الموقع')" class="bg-slate-900 hover:bg-rose-950 text-white border border-slate-700 px-2 py-0.5 rounded-lg font-mono font-bold transition">01063764207</button>
+        </div>
+      </div>
+    </div>
   </header>
 
+  <!-- المحتوى الرئيسي -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full no-print">
   <!-- المحتوى الرئيسي -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full no-print">
     <!-- شريط الملخص السريع للإدارة -->
@@ -232,7 +255,7 @@
     <div class="flex items-center justify-between mb-5">
       <div>
         <h2 class="text-xl sm:text-2xl font-black text-slate-900">السيارات المعتمدة المتاحة بالمعرض</h2>
-        <p class="text-xs text-slate-500">جميع السيارات مفحوصة فنياً في 4 محاور أساسية مع بيان حالة الفابريكة وبضمان معرض النخبة</p>
+        <p class="text-xs text-slate-500">جميع السيارات مفحوصة فنياً في 4 محاور أساسية مع بيان حالة الفابريكة وبضمان معرض أبو بهاء</p>
       </div>
       <span id="cars-count-badge" class="bg-blue-950 text-amber-400 text-xs sm:text-sm font-black px-4 py-1.5 rounded-xl shadow-sm border border-blue-800">0 سيارات</span>
     </div>
@@ -281,7 +304,7 @@
     </div>
     <div id="chat-messages" class="p-3.5 h-72 overflow-y-auto space-y-3 bg-slate-50 text-xs font-medium flex flex-col custom-scroll">
       <div class="bg-blue-100 text-blue-950 p-3 rounded-2xl rounded-tr-none max-w-[90%] self-start shadow-sm leading-relaxed">
-        أهلاً بك في <b>معرض النخبة</b>! اضغط على زر الترشيح بالأسفل وأدخل ميزانيتك لأقترح عليك أفضل سيارة كاش أو بالتقسيط فوراً.
+        أهلاً بك في <b>معرض أبو بهاء</b>! اضغط على زر الترشيح بالأسفل وأدخل ميزانيتك لأقترح عليك أفضل سيارة كاش أو بالتقسيط فوراً.
       </div>
     </div>
     <div class="p-2.5 bg-slate-100 border-t grid grid-cols-2 gap-1.5">
@@ -310,7 +333,7 @@
   <footer class="fixed bottom-0 inset-x-0 bg-slate-950 text-slate-300 z-30 border-t border-slate-800 shadow-2xl no-print">
     <div class="max-w-7xl mx-auto px-4 h-8 flex items-center justify-between text-[10px]">
       <div class="flex items-center gap-3">
-        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> منصة معرض النخبة (مربوطة بمشروع elite-showroom)</span>
+        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> منصة معرض أبو بهاء (مربوطة بمشروع elite-showroom)</span>
         <button onclick="App.restoreDefaults()" class="text-slate-400 hover:text-amber-300 underline cursor-pointer">استعادة السيارات الافتراضية</button>
       </div>
       <span id="footer-session-info" class="font-bold text-amber-400">وضع تصفح العميل</span>
@@ -318,7 +341,16 @@
   </footer>
 
   <script>
-    const DEFAULT_DEALER_PHONE = '201066980075';
+    // وضع التجربة الآمن: (true = كل رسائل الواتساب تذهب لرقمك الشخصي 201066980075 | false = تذهب لرقم معرض أبو بهاء)
+    const SANDBOX_TEST_MODE = true;
+    const MY_PERSONAL_TEST_PHONE = '201066980075';
+    const ABU_BAHAA_MAIN_PHONE = '201060970007';
+
+    const DEFAULT_DEALER_PHONE = SANDBOX_TEST_MODE ? MY_PERSONAL_TEST_PHONE : ABU_BAHAA_MAIN_PHONE;
+    const DEALER_BRAND_NAME = 'أبو بهاء لتجارة السيارات';
+    const DEALER_ADDRESS = 'أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9';
+    const DEALER_PHONES_DISPLAY = '01060970007 - 01001446377 - 01091167083 - 01063764207';
+    const DEALER_PHONES_ARRAY = ['01060970007', '01001446377', '01091167083', '01063764207'];
 
     /**
      * 1. طبقة التخزين المحلي الآمن (SafeStorage)
@@ -1181,6 +1213,11 @@
       },
 
       whatsApp(phone, customText = '') {
+        let cleanPhone = SANDBOX_TEST_MODE
+          ? MY_PERSONAL_TEST_PHONE
+          : String(phone || DEFAULT_DEALER_PHONE).replace(/[^0-9]/g, '');
+        if (!cleanPhone || cleanPhone === '201000000001') cleanPhone = DEFAULT_DEALER_PHONE;
+        if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
         let cleanPhone = String(phone || DEFAULT_DEALER_PHONE).replace(/[^0-9]/g, '');
         if (!cleanPhone || cleanPhone === '201000000001') cleanPhone = DEFAULT_DEALER_PHONE;
         if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
@@ -1195,7 +1232,7 @@
       whatsAppRes(resId) {
         const r = CarRepository.getReservations().find(item => item.id === resId);
         if (!r) return;
-        this.whatsApp(r.clientPhone, `مرحباً أستاذ ${r.clientName}، نتواصل معك من معرض النخبة بخصوص حجز سيارة ${r.carTitle}`);
+        this.whatsApp(r.clientPhone, `مرحباً أستاذ ${r.clientName}، نتواصل معك من معرض أبو بهاء بخصوص حجز سيارة ${r.carTitle}`);
       },
 
       whatsAppInsp(inspId) {
@@ -1207,7 +1244,7 @@
       whatsAppTradeIn(tiId) {
         const item = CarRepository.getTradeIns().find(i => i.id === tiId);
         if (!item) return;
-        this.whatsApp(item.clientPhone, `مرحباً أستاذ ${item.clientName || ''}، نتواصل معك من قسم التثمين بمعرض النخبة بخصوص سيارتك ${item.brand} ${item.model}`);
+        this.whatsApp(item.clientPhone, `مرحباً أستاذ ${item.clientName || ''}، نتواصل معك من قسم التثمين بمعرض أبو بهاء بخصوص سيارتك ${item.brand} ${item.model}`);
       },
 
       setGalleryImage(idx) {
@@ -1246,8 +1283,8 @@
         if (!car) return;
 
         const carUrl = this.getDirectCarUrl(car.id);
-        const shareText = `🚘 ${car.brand} ${car.model} (موديل ${car.year})\n💰 السعر: ${car.formattedPrice}${car.hasDiscount ? ` (بدلاً من ${car.formattedOldPrice})` : ''}\n🛡️ الحالة: ${car.paintStatus} | فحص ${car.inspectionScore}/10\n🛣️ العداد: ${car.formattedMileage}\n📍 معرض النخبة للسيارات (كود: ${car.id})`;
-        const fullSharePayload = `${shareText}\n🔗 رابط السيارة المباشر:\n${carUrl}`;
+        const shareText = `🚘 ${car.brand} ${car.model} (موديل ${car.year})\n💰 السعر: ${car.formattedPrice}${car.hasDiscount ? ` (بدلاً من ${car.formattedOldPrice})` : ''}\n🛡️ الحالة: ${car.paintStatus} | فحص ${car.inspectionScore}/10\n🛣️ العداد: ${car.formattedMileage}\n📍 معرض أبو بهاء للسيارات (كود: ${car.id})`;
+        const fullSharePayload = `${shareText}\n📍 العنوان: ${DEALER_ADDRESS}\n📞 للتواصل: ${DEALER_PHONES_DISPLAY}\n🔗 رابط السيارة المباشر:\n${carUrl}`;
 
         this._tempSharePayload = fullSharePayload;
         this._tempShareUrlOnly = carUrl;
@@ -1257,7 +1294,7 @@
         if (isMobileDevice && navigator.share) {
           try {
             await navigator.share({
-              title: `معرض النخبة - ${car.brand} ${car.model}`,
+              title: `معرض أبو بهاء - ${car.brand} ${car.model}`,
               text: shareText,
               url: carUrl
             });
@@ -1372,7 +1409,7 @@
               <div class="flex items-center gap-3">
                 <div class="bg-amber-400 text-slate-950 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-black">🚘</div>
                 <div>
-                  <h2 class="text-lg sm:text-xl font-black tracking-wide">معرض النخبة للسيارات</h2>
+                  <h2 class="text-lg sm:text-xl font-black tracking-wide">معرض أبو بهاء للسيارات</h2>
                   <p class="text-xs text-amber-400 font-bold">بطاقة المواصفات والفحص الهندسي المعتمد</p>
                 </div>
               </div>
@@ -1434,7 +1471,7 @@
                 <p class="text-[11px] text-slate-200 font-bold leading-relaxed">
                   افتح ملف السيارة على هاتفك لحساب القسط الشهري المناسب لك أو طلب الحجز الفوري
                 </p>
-                <div class="text-[10px] text-amber-300 font-mono dir-ltr break-all opacity-80">${this.escapeHtml(car.dealerPhone)}</div>
+                <div class="text-[10px] text-amber-300 font-bold leading-relaxed">📍 ${DEALER_ADDRESS}<br><span class="font-mono text-white">${DEALER_PHONES_DISPLAY}</span></div>
               </div>
             </div>
           </div>
@@ -1530,7 +1567,7 @@
         });
 
         const { months, monthly } = this.currentCalcState;
-        const msg = `مرحباً معرض النخبة، أرغب في استبدال سيارتي بسيارة من المعرض:\n` +
+        const msg = `مرحباً معرض أبو بهاء، أرغب في استبدال سيارتي بسيارة من المعرض:\n` +
           `🚘 السيارة المطلوبة: ${car.brand} ${car.model} (${car.year}) - السعر: ${car.formattedPrice}\n` +
           `🔄 سيارتي الحالية: ${ti.oldCarTitle} (${ti.conditionLabel})\n` +
           `📊 نطاق التثمين الاسترشادي: من ${ti.minVal.toLocaleString('ar-EG')} إلى ${ti.maxVal.toLocaleString('ar-EG')} ج.م\n` +
@@ -1564,8 +1601,9 @@
           `💳 متاح التقسيط (بنكي / بصورة البطاقة / سجل تجاري) بمقدم يبدأ من ${minDown.toLocaleString('ar-EG')} ج.م وقسط شهري يبدأ من ${estMonthly.toLocaleString('ar-EG')} ج.م!\n` +
           `🔄 متاح استبدال سيارتك القديمة وتقسيط الفرق فوراً.\n\n` +
           `🔗 فحص السيارة وحساب قسطك أونلاين:\n${carUrl}\n\n` +
-          `📞 للتواصل والحجز: ${car.dealerPhone}\n` +
-          `#سيارات_مصر #معرض_النخبة #تقسيط_سيارات #استبدال_سيارات #${car.brand.replace(/\s+/g, '_')}`;
+          `📍 العنوان: ${DEALER_ADDRESS}\n` +
+          `📞 للتواصل والحجز: ${DEALER_PHONES_DISPLAY}\n` +
+          `#أبو_بهاء_لتجارة_السيارات #سيارات_أسيوط #تقسيط_سيارات #استبدال_سيارات #${car.brand.replace(/\s+/g, '_')}`;
 
         this.openModalHtml(`
           <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative text-xs space-y-4">
@@ -1678,8 +1716,9 @@
           previewBox.innerHTML = `
             <div class="doc-header">
               <div>
-                <h1 class="doc-main-title">معرض النخبة للسيارات</h1>
+                <h1 class="doc-main-title">معرض أبو بهاء للسيارات</h1>
                 <p class="doc-sub">قسم المبيعات والتعاقدات — تحريراً في: ${today}</p>
+                <p class="doc-sub" style="color:#0f172a; margin-top:3px;">📍 ${DEALER_ADDRESS} | 📞 ${DEALER_PHONES_DISPLAY}</p>
               </div>
               <div class="doc-badge-wrap">
                 <div class="doc-badge">${docTitle}</div>
@@ -1690,7 +1729,7 @@
             <div class="doc-section">
               <div class="doc-sec-title">أولاً: بيانات العميل الحاجز ومستلم العربون</div>
               <div class="doc-grid-2">
-                <div><b>استلمنا نحن:</b> معرض النخبة للسيارات (يمثله: ${this.escapeHtml(AuthService.getName())})</div>
+                <div><b>استلمنا نحن:</b> معرض أبو بهاء للسيارات (يمثله: ${this.escapeHtml(AuthService.getName())})</div>
                 <div><b>من السيد /</b> ${this.escapeHtml(cName)}</div>
                 <div><b>رقم الهاتف:</b> ${this.escapeHtml(cPhone)}</div>
                 <div><b>الرقم القومي:</b> ${this.escapeHtml(cNid)}</div>
@@ -1719,7 +1758,7 @@
             <div class="doc-section">
               <div class="doc-sec-title">ثالثاً: شروط الحجز والضمان</div>
               <ol class="doc-terms">
-                <li>يلتزم معرض النخبة بحجز السيارة الموضحة أعلاه باسم العميل وإيقاف عرضها للبيع للغير طوال مهلة الحجز (${this.escapeHtml(holdDays)}).</li>
+                <li>يلتزم معرض أبو بهاء بحجز السيارة الموضحة أعلاه باسم العميل وإيقاف عرضها للبيع للغير طوال مهلة الحجز (${this.escapeHtml(holdDays)}).</li>
                 <li>يلتزم العميل بسداد باقي ثمن السيارة (${remainFormatted}) أو إنهاء إجراءات التمويل البنكي قبل انتهاء المهلة المحددة.</li>
                 <li>يقر العميل باطلاعه على تقرير الفحص الهندسي المعتمد للسيارة، وفي حال ثبوت أي عيب جوهري يخالف الفحص المعلن يحق للعميل استرداد العربون كاملاً فوراً.</li>
               </ol>
@@ -1727,7 +1766,7 @@
 
             <div class="doc-signatures-3">
               <div>توقيع مسؤول المبيعات / الخزينة<br><br>................................</div>
-              <div>ختم معرض النخبة للسيارات<br><br>................................</div>
+              <div>ختم معرض أبو بهاء للسيارات<br><br>................................</div>
               <div>توقيع العميل الحاجز<br><br>................................</div>
             </div>
           `;
@@ -1735,8 +1774,9 @@
           previewBox.innerHTML = `
             <div class="doc-header">
               <div>
-                <h1 class="doc-main-title">معرض النخبة للسيارات</h1>
+                <h1 class="doc-main-title">معرض أبو بهاء للسيارات</h1>
                 <p class="doc-sub">الإدارة القانونية والعقود — إنه في يوم ${today} الساعة (${currentTime})</p>
+                <p class="doc-sub" style="color:#0f172a; margin-top:3px;">📍 ${DEALER_ADDRESS} | 📞 ${DEALER_PHONES_DISPLAY}</p>
               </div>
               <div class="doc-badge-wrap">
                 <div class="doc-badge">${docTitle}</div>
@@ -1747,7 +1787,7 @@
             <div class="doc-section">
               <div class="doc-sec-title">أطراف التعاقد</div>
               <div class="doc-grid-1">
-                <div><b>الطرف الأول (البائع):</b> معرض النخبة للسيارات، ويمثله قانوناً في هذا العقد السيد/ ${this.escapeHtml(AuthService.getName())}.</div>
+                <div><b>الطرف الأول (البائع):</b> معرض أبو بهاء للسيارات، ويمثله قانوناً في هذا العقد السيد/ ${this.escapeHtml(AuthService.getName())}.</div>
                 <div><b>الطرف الثاني (المشتري):</b> السيد/ ${this.escapeHtml(cName)} — يحمل رقم قومي: (${this.escapeHtml(cNid)}) — هاتف: (${this.escapeHtml(cPhone)}).</div>
               </div>
             </div>
@@ -1787,7 +1827,7 @@
             </div>
 
             <div class="doc-signatures-3">
-              <div>الطرف الأول (البائع)<br>معرض النخبة للسيارات<br><br>................................</div>
+              <div>الطرف الأول (البائع)<br>معرض أبو بهاء للسيارات<br><br>................................</div>
               <div>الطرف الثاني (المشتري المستلم)<br><br><br>................................</div>
               <div>توقيع الشهود<br>1. ..............................<br>2. ..............................</div>
             </div>
@@ -1839,7 +1879,7 @@ printCleanA4Document() {
           <html lang="ar" dir="rtl">
           <head>
             <meta charset="UTF-8" />
-            <title>طباعة وثيقة رسمية A4 - معرض النخبة للسيارات</title>
+            <title>طباعة وثيقة رسمية A4 - معرض أبو بهاء للسيارات</title>
             <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
             ${tailwindStyles}
             <style>
@@ -1958,13 +1998,17 @@ printCleanA4Document() {
           <body>
             <div class="print-container">
               <div class="top-print-bar no-print">
-                <span>🖨️ معاينة الطباعة القياسية (A4 Portrait) — معرض النخبة للسيارات</span>
+                <span>🖨️ معاينة الطباعة القياسية (A4 Portrait) — معرض أبو بهاء للسيارات</span>
                 <div style="display:flex; gap:8px;">
                   <button onclick="window.print()" style="background:#fbbf24; color:#0f172a;">🖨️ طباعة الآن</button>
                   <button onclick="window.close()" style="background:#334155; color:#ffffff;">✕ إغلاق النافذة</button>
                 </div>
               </div>
               ${contentHtml}
+              <div style="margin-top:12px; padding:10px 16px; border:2px solid #0f172a; border-radius:12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:800; color:#0f172a;">
+                <div>📍 ${DEALER_BRAND_NAME}: ${DEALER_ADDRESS}</div>
+                <div dir="ltr">📞 ${DEALER_PHONES_DISPLAY}</div>
+              </div>
             </div>
             <script>
               window.onload = function() {
@@ -2010,7 +2054,7 @@ printCleanA4Document() {
                 <div class="bg-amber-400 text-slate-950 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-black">🛡️</div>
                 <div>
                   <h2 class="text-lg sm:text-xl font-black">شهادة الفحص الهندسي وضمان الفابريكة</h2>
-                  <p class="text-[11px] text-amber-400 font-bold">معرض النخبة للسيارات — مركز الفحص الفني المعتمد</p>
+                  <p class="text-[11px] text-amber-400 font-bold">معرض أبو بهاء للسيارات — مركز الفحص الفني المعتمد</p>
                 </div>
               </div>
               <div class="text-left">
@@ -2066,7 +2110,7 @@ printCleanA4Document() {
                 <p class="font-black text-slate-900">📋 تقرير مهندس الفحص وحالة الهيكل:</p>
                 <p class="text-slate-700 font-bold bg-white p-2.5 rounded-xl border">${this.escapeHtml(car.paintDetails)} — ${this.escapeHtml(car.description)}</p>
                 <p class="text-[11px] text-emerald-950 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl font-bold">
-                  ✓ يضمن معرض النخبة للسيارات صحة بيانات الفحص الفني الموضحة بهذه الشهادة وخلو الشاسيه والدواخل من أي حوادث جوهرية أو لحامات.
+                  ✓ يضمن معرض أبو بهاء للسيارات صحة بيانات الفحص الفني الموضحة بهذه الشهادة وخلو الشاسيه والدواخل من أي حوادث جوهرية أو لحامات.
                 </p>
               </div>
               <div class="sm:col-span-3 text-center">
@@ -2077,7 +2121,7 @@ printCleanA4Document() {
 
             <div class="grid grid-cols-3 gap-4 pt-4 border-t-2 border-slate-900 text-center font-black text-slate-900">
               <div>اعتماد مهندس الفحص الفني<br><br>................................</div>
-              <div>ختم معرض النخبة المعتمد<br><br>................................</div>
+              <div>ختم معرض أبو بهاء المعتمد<br><br>................................</div>
               <div>توقيع العميل بالاطلاع<br><br>................................</div>
             </div>
           </div>
@@ -2863,7 +2907,7 @@ printCleanA4Document() {
           <div class="bg-white rounded-3xl max-w-5xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
             <div class="flex justify-between items-center border-b pb-4 mb-4">
               <div>
-                <h3 class="font-black text-lg sm:text-xl text-slate-900 flex items-center gap-2"><span>🎛️</span> مركز قيادة معرض النخبة</h3>
+                <h3 class="font-black text-lg sm:text-xl text-slate-900 flex items-center gap-2"><span>🎛️</span> مركز قيادة معرض أبو بهاء</h3>
                 <p class="text-xs text-slate-500">تحكم مركزي كامل في المخزون، المبيعات، الفريق، والربط السحابي بمشروع elite-showroom</p>
               </div>
               <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-9 h-9 rounded-full font-black text-sm flex items-center justify-center">✕</button>
@@ -3021,7 +3065,7 @@ printCleanA4Document() {
               <div class="flex items-center gap-2">
                 <span class="bg-blue-950 text-amber-400 w-8 h-8 rounded-xl flex items-center justify-center font-black">🚘</span>
                 <div>
-                  <h4 class="font-black text-sm text-slate-900">معرض النخبة للسيارات - وثيقة الفحص والتقسيط</h4>
+                  <h4 class="font-black text-sm text-slate-900">معرض أبو بهاء للسيارات - وثيقة الفحص والتقسيط</h4>
                   <p class="text-[10px] text-slate-500">كود السيارة المرجعي: ${this.escapeHtml(car.id)}</p>
                 </div>
               </div>
@@ -3407,7 +3451,7 @@ printCleanA4Document() {
         const { car } = CarRepository.findCarAnywhere(carId);
         if (!car) return;
         const { down, months, monthly, programName } = this.currentCalcState;
-        const msg = `مرحباً معرض النخبة، أستفسر عن سيارة: ${car.brand} ${car.model} (${car.year}) - كود [${car.id}]\n• السعر النقدي: ${car.formattedPrice}\n• نظام التقسيط المختار: ${programName || 'تقسيط المعرض'}\n• خطة السداد: مقدم (${down.toLocaleString('ar-EG')} ج.م) وقسط شهري (${monthly.toLocaleString('ar-EG')} ج.م) لمدة ${months} شهر.`;
+        const msg = `مرحباً معرض أبو بهاء، أستفسر عن سيارة: ${car.brand} ${car.model} (${car.year}) - كود [${car.id}]\n• السعر النقدي: ${car.formattedPrice}\n• نظام التقسيط المختار: ${programName || 'تقسيط المعرض'}\n• خطة السداد: مقدم (${down.toLocaleString('ar-EG')} ج.م) وقسط شهري (${monthly.toLocaleString('ar-EG')} ج.م) لمدة ${months} شهر.`;
         this.whatsApp(car.dealerPhone, msg);
       },
 
@@ -4238,7 +4282,7 @@ printCleanA4Document() {
 
         const reportContent = [
           '====================================================',
-          '   التقرير التنفيذي الرسمي - معرض النخبة للسيارات',
+          '   التقرير التنفيذي الرسمي - معرض أبو بهاء للسيارات',
           '====================================================',
           `المسؤول المصدر للتقرير: ${AuthService.getName()} (${AuthService.getRole()})`,
           `تاريخ الإصدار: ${new Date().toLocaleString('ar-EG')}`,
@@ -4331,7 +4375,7 @@ printCleanA4Document() {
           } else if (action === 'howto') {
             replyHtml = '🚗 يمكنك الضغط على أي سيارة لمراجعة خريطة الفابريكة وتقرير الفحص الـ 4 محاور، أو طباعة ملصق الـ QR Code، أو طلب <b>حجز مؤقت</b> بضغطة زر.';
           } else if (action === 'human') {
-            replyHtml = `👨‍💻 فريق المبيعات جاهز لخدمتك فوراً.<br><button onclick="App.whatsApp('${DEFAULT_DEALER_PHONE}', 'مرحباً معرض النخبة، أرغب في التحدث مع مشرف المبيعات')" class="mt-2 bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">💬 فتح واتساب المشرف</button>`;
+            replyHtml = `👨‍💻 فريق المبيعات جاهز لخدمتك فوراً.<br><button onclick="App.whatsApp('${DEFAULT_DEALER_PHONE}', 'مرحباً معرض أبو بهاء، أرغب في التحدث مع مشرف المبيعات')" class="mt-2 bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">💬 فتح واتساب المشرف</button>`;
           }
 
           const aiDiv = document.createElement('div');
