@@ -4407,7 +4407,7 @@ printCleanA4Document() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=5');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=6', { updateViaCache: 'none' });
           if (reg && reg.update) reg.update();
         } catch (err) {
           console.warn('PWA Service Worker Warning:', err);
