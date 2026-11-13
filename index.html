@@ -195,6 +195,7 @@
           <button onclick="App.setQuickFilter('TOP_SCORE')" data-chip="TOP_SCORE" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">⭐ فحص زيرو (+9.5)</button>
           <button onclick="App.setQuickFilter('DISCOUNT')" data-chip="DISCOUNT" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">🔥 عروض وخصومات</button>
           <button onclick="App.setQuickFilter('UNDER_2M')" data-chip="UNDER_2M" class="chip-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-bold transition">💰 أقل من 2 مليون</button>
+          <button onclick="App.openVipRequestModal(document.getElementById('filter-search')?.value || '')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3 py-1.5 rounded-xl font-black transition shadow-sm">🎯 اطلب سيارتك بالطلب (VIP)</button>
         </div>
 
         <div class="flex items-center gap-3">
@@ -607,6 +608,17 @@
         this.soldViaStaff = data.soldViaStaff || null;
         this.isReserved = Boolean(data.isReserved);
         this.reservedByClient = data.reservedByClient || null;
+
+        // بيانات التكلفة السرية وصافي الربح وحد التفاوض المسموح (الجيل الثالث)
+        this.purchaseCost = Math.max(0, Number(data.purchaseCost) || Math.round(this.price * 0.90));
+        this.prepCost = Math.max(0, data.prepCost !== undefined && data.prepCost !== '' ? Number(data.prepCost) : 15000);
+        this.minAllowedPrice = Math.max(0, Number(data.minAllowedPrice) || Math.round(this.price * 0.97));
+      }
+
+      get totalCost() { return this.purchaseCost + this.prepCost; }
+      get expectedProfit() { return this.price - this.totalCost; }
+      get minProfitAtLimit() { return this.minAllowedPrice - this.totalCost; }
+      get maxNegotiationDiscount() { return Math.max(0, this.price - this.minAllowedPrice);
       }
 
       toMap() { return { ...this }; }
@@ -1968,6 +1980,292 @@ printCleanA4Document() {
         printWin.document.close();
       },
 
+      /**
+       * === محرك مميزات الجيل الثالث (شهادة الفحص A4 + جدول خطط السداد + طلب سيارة VIP) ===
+       */
+      openInspectionCertificateModal(carId) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car) return;
+
+        const certCode = 'CERT-' + car.id.replace(/[^0-9]/g, '') + '-' + new Date().getFullYear();
+        const today = new Date().toLocaleDateString('ar-EG');
+        const carUrl = this.getDirectCarUrl(car.id);
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=4&data=${encodeURIComponent(carUrl)}`;
+
+        this.openModalHtml(`
+          <div id="printable-quote-area" class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll border-4 border-slate-900 text-xs leading-relaxed">
+            <div class="flex flex-wrap justify-between items-center gap-2 pb-4 mb-5 border-b-2 border-slate-900 no-print">
+              <button onclick="App.openDetails('${this.escapeHtml(car.id)}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-black px-3.5 py-2 rounded-xl transition">← العودة لصفحة السيارة</button>
+              <div class="flex items-center gap-2">
+                <button onclick="App.printCleanA4Document()" class="bg-blue-950 hover:bg-blue-900 text-amber-400 font-black px-5 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition">
+                  <span>🖨️</span> طباعة شهادة الفحص المعتمدة (A4)
+                </button>
+                <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+              </div>
+            </div>
+
+            <!-- ترويسة شهادة الفحص الهندسي -->
+            <div class="bg-slate-950 text-white p-5 rounded-2xl flex justify-between items-center mb-5">
+              <div class="flex items-center gap-3">
+                <div class="bg-amber-400 text-slate-950 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-black">🛡️</div>
+                <div>
+                  <h2 class="text-lg sm:text-xl font-black">شهادة الفحص الهندسي وضمان الفابريكة</h2>
+                  <p class="text-[11px] text-amber-400 font-bold">معرض النخبة للسيارات — مركز الفحص الفني المعتمد</p>
+                </div>
+              </div>
+              <div class="text-left">
+                <span class="block text-[10px] text-slate-300 font-bold">رقم الشهادة: ${certCode}</span>
+                <span class="block text-[11px] text-amber-300 font-black mt-0.5">تاريخ الإصدار: ${today}</span>
+              </div>
+            </div>
+
+            <!-- بيانات السيارة والنتيجة النهائية -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 mb-5 items-center">
+              <div class="sm:col-span-8 grid grid-cols-2 gap-2.5 text-slate-900">
+                <div><b>الماركة والموديل:</b> ${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)}</div>
+                <div><b>سنة الصنع:</b> ${car.year}</div>
+                <div><b>قراءة العداد الحالية:</b> ${car.formattedMileage}</div>
+                <div><b>كود السيارة المرجعي:</b> ${this.escapeHtml(car.id)}</div>
+                <div class="col-span-2 pt-1 border-t"><b>حالة الدهان المعتمدة:</b> <span class="text-emerald-800 font-black">${this.escapeHtml(car.paintStatus)}</span></div>
+              </div>
+              <div class="sm:col-span-4 bg-emerald-900 text-white p-3.5 rounded-2xl text-center">
+                <span class="block text-[10px] text-emerald-200 font-bold">التقييم الهندسي العام</span>
+                <span class="text-3xl font-black text-amber-300 block my-0.5">${car.inspectionScore} / 10</span>
+                <span class="text-[10px] bg-white/15 px-2.5 py-0.5 rounded-full font-black inline-block">${car.inspectionBadge}</span>
+              </div>
+            </div>
+
+            <!-- نتائج المحاور الـ 4 وخريطة الـ 6 مناطق -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <div class="bg-white p-4 rounded-2xl border-2 border-slate-200 space-y-2.5">
+                <h4 class="font-black text-sm text-blue-950 border-b pb-1.5">⚙️ أولاً: نتائج الفحص الميكانيكي (4 محاور)</h4>
+                <div class="space-y-2">
+                  <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border"><span>1. كفاءة المحرك ودورة التبريد:</span><b class="text-blue-950 font-black">${car.engineScore} / 10</b></div>
+                  <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border"><span>2. ناقل الحركة (الفتيس) والأداء:</span><b class="text-blue-950 font-black">${car.gearScore} / 10</b></div>
+                  <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border"><span>3. الشاسيه والهيكل الخارجي:</span><b class="text-blue-950 font-black">${car.bodyScore} / 10</b></div>
+                  <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border"><span>4. العفشة والصالون والكهرباء:</span><b class="text-blue-950 font-black">${car.interiorScore} / 10</b></div>
+                </div>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border-2 border-slate-200 space-y-2.5">
+                <h4 class="font-black text-sm text-emerald-950 border-b pb-1.5">🛡️ ثانياً: خريطة فحص الفابريكة (6 مناطق)</h4>
+                <div class="grid grid-cols-1 gap-1.5">
+                  ${car.bodyZones.map(z => `
+                    <div class="flex justify-between items-center bg-slate-50 px-2.5 py-1.5 rounded-xl border">
+                      <span class="font-bold text-slate-700">${z.part}:</span>
+                      <span class="font-black ${z.ok ? 'text-emerald-700' : 'text-amber-700'}">${z.ok ? '✓ ' : ''}${z.state}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- الملاحظات الفنية والـ QR وإقرار الضمان -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center bg-slate-50 p-4 rounded-2xl border border-slate-300 mb-6">
+              <div class="sm:col-span-9 space-y-2">
+                <p class="font-black text-slate-900">📋 تقرير مهندس الفحص وحالة الهيكل:</p>
+                <p class="text-slate-700 font-bold bg-white p-2.5 rounded-xl border">${this.escapeHtml(car.paintDetails)} — ${this.escapeHtml(car.description)}</p>
+                <p class="text-[11px] text-emerald-950 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl font-bold">
+                  ✓ يضمن معرض النخبة للسيارات صحة بيانات الفحص الفني الموضحة بهذه الشهادة وخلو الشاسيه والدواخل من أي حوادث جوهرية أو لحامات.
+                </p>
+              </div>
+              <div class="sm:col-span-3 text-center">
+                <img src="${qrApiUrl}" alt="QR" class="w-28 h-28 mx-auto rounded-xl border bg-white p-1.5" />
+                <span class="block text-[9px] text-slate-500 font-bold mt-1">امسح للتحقق أونلاين</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 pt-4 border-t-2 border-slate-900 text-center font-black text-slate-900">
+              <div>اعتماد مهندس الفحص الفني<br><br>................................</div>
+              <div>ختم معرض النخبة المعتمد<br><br>................................</div>
+              <div>توقيع العميل بالاطلاع<br><br>................................</div>
+            </div>
+          </div>
+        `);
+      },
+
+      openInstallmentPlansModal(carId, customDownPct = null) {
+        const { car } = CarRepository.findCarAnywhere(carId);
+        if (!car) return;
+
+        const currentDownInput = Number(document.getElementById('calc-down')?.value) || Math.round(car.price * 0.30);
+        const downAmount = customDownPct ? Math.round(car.price * customDownPct) : currentDownInput;
+        const downPctLabel = Math.round((downAmount / car.price) * 100);
+        const interestRate = Number(document.getElementById('calc-interest')?.value) || 14.5;
+        const financed = Math.max(0, car.price - downAmount);
+        const adminFees = Math.round((financed * 0.025) / 500) * 500;
+
+        const durations = [
+          { months: 12, title: 'خطة سنة واحدة (12 شهراً)', badge: 'أقل فائدة إجمالية' },
+          { months: 36, title: 'خطة 3 سنوات (36 شهراً)', badge: 'الأكثر طلباً وتوازناً ⭐' },
+          { months: Math.min(60, car.maxInstallmentMonths || 60), title: `خطة ${Math.round(Math.min(60, car.maxInstallmentMonths || 60) / 12)} سنوات (${Math.min(60, car.maxInstallmentMonths || 60)} شهراً)`, badge: 'أقل قسط شهري مريح' }
+        ];
+
+        const plans = durations.map(d => {
+          const totalInterest = financed * (interestRate / 100) * (d.months / 12);
+          const totalPayable = financed + totalInterest;
+          const monthly = Math.round(totalPayable / d.months);
+          return { ...d, monthly, totalPayable: Math.round(totalPayable) };
+        });
+
+        this.openModalHtml(`
+          <div id="printable-quote-area" class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll border-4 border-slate-900 text-xs leading-relaxed">
+            <div class="flex flex-wrap justify-between items-center gap-2 pb-4 mb-5 border-b-2 border-slate-900 no-print">
+              <button onclick="App.openDetails('${this.escapeHtml(car.id)}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-black px-3.5 py-2 rounded-xl transition">← العودة لحاسبة السيارة</button>
+              <div class="flex items-center gap-2">
+                <button onclick="App.printCleanA4Document()" class="bg-blue-950 hover:bg-blue-900 text-amber-400 font-black px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition">
+                  <span>🖨️</span> طباعة جدول الخطط (A4)
+                </button>
+                <button onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 text-white p-5 rounded-2xl flex justify-between items-center mb-5">
+              <div>
+                <h2 class="text-lg sm:text-xl font-black">📊 جدول مقارنة خطط التمويل والتقسيط</h2>
+                <p class="text-xs text-amber-400 font-bold mt-0.5">${this.escapeHtml(car.brand)} ${this.escapeHtml(car.model)} (موديل ${car.year}) — السعر النقدي: ${car.formattedPrice}</p>
+              </div>
+              <span class="bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-xl text-xs">مقدم ${downPctLabel}%</span>
+            </div>
+
+            <!-- أزرار تغيير نسبة المقدم السريعة -->
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-amber-50 p-3 rounded-2xl border border-amber-200 mb-5 no-print">
+              <span class="font-black text-amber-950">⚡ جرب تغيير نسبة الدفعة المقدمة لمقارنة الأقساط:</span>
+              <div class="flex gap-1.5">
+                <button onclick="App.openInstallmentPlansModal('${this.escapeHtml(car.id)}', 0.20)" class="px-3 py-1.5 rounded-xl font-black ${downPctLabel === 20 ? 'bg-blue-950 text-amber-400' : 'bg-white border text-slate-800'}">مقدم 20%</button>
+                <button onclick="App.openInstallmentPlansModal('${this.escapeHtml(car.id)}', 0.30)" class="px-3 py-1.5 rounded-xl font-black ${downPctLabel === 30 ? 'bg-blue-950 text-amber-400' : 'bg-white border text-slate-800'}">مقدم 30%</button>
+                <button onclick="App.openInstallmentPlansModal('${this.escapeHtml(car.id)}', 0.40)" class="px-3 py-1.5 rounded-xl font-black ${downPctLabel === 40 ? 'bg-blue-950 text-amber-400' : 'bg-white border text-slate-800'}">مقدم 40%</button>
+                <button onclick="App.openInstallmentPlansModal('${this.escapeHtml(car.id)}', 0.50)" class="px-3 py-1.5 rounded-xl font-black ${downPctLabel === 50 ? 'bg-blue-950 text-amber-400' : 'bg-white border text-slate-800'}">مقدم 50%</button>
+              </div>
+            </div>
+
+            <!-- ملخص المبلغ الممول -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-5 text-center">
+              <div>
+                <span class="block text-[11px] text-slate-500 font-bold">الدفعة المقدمة (${downPctLabel}%)</span>
+                <span class="text-base font-black text-emerald-700">${downAmount.toLocaleString('ar-EG')} ج.م</span>
+              </div>
+              <div>
+                <span class="block text-[11px] text-slate-500 font-bold">المبلغ المتبقي للتمويل</span>
+                <span class="text-base font-black text-blue-950">${financed.toLocaleString('ar-EG')} ج.م</span>
+              </div>
+              <div>
+                <span class="block text-[11px] text-slate-500 font-bold">المصاريف الإدارية التقديرية</span>
+                <span class="text-base font-black text-slate-800">${adminFees.toLocaleString('ar-EG')} ج.م</span>
+              </div>
+            </div>
+
+            <!-- كروت مقارنة الـ 3 خطط -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+              ${plans.map((p, idx) => `
+                <div class="p-4 rounded-2xl border-2 ${idx === 1 ? 'border-amber-400 bg-amber-50/40' : 'border-slate-200 bg-white'} flex flex-col justify-between space-y-3">
+                  <div>
+                    <span class="inline-block text-[10px] font-black px-2.5 py-0.5 rounded-full ${idx === 1 ? 'bg-amber-400 text-slate-950' : 'bg-slate-100 text-slate-700'} mb-2">${p.badge}</span>
+                    <h4 class="font-black text-sm text-slate-900">${p.title}</h4>
+                  </div>
+                  <div class="py-3 border-y border-slate-200">
+                    <span class="block text-[10px] text-slate-500 font-bold">القسط الشهري الثابت</span>
+                    <span class="text-xl font-black text-blue-950">${p.monthly.toLocaleString('ar-EG')} ج.م</span>
+                  </div>
+                  <div class="text-[11px] text-slate-600 font-bold">
+                    عدد الأقساط: <b>${p.months} قسطاً شهرياً</b>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <p class="text-[11px] text-slate-500 font-bold bg-slate-50 p-3 rounded-xl border">
+              * الأقساط الموضحة أعلاه استرشادية وفق معدل الفائدة السنوي (${interestRate}%)، وتخضع للموافقة الائتمانية النهائية للبنك أو شركة التمويل.
+            </p>
+          </div>
+        `);
+      },
+
+      openVipRequestModal(prefillSearch = '') {
+        this.openModalHtml(`
+          <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
+            <button onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="bg-amber-400 text-slate-950 w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black shadow">🎯</span>
+              <div>
+                <h3 class="font-black text-base sm:text-lg text-slate-900">خدمة توفير سيارة بالطلب الخاص (VIP Order)</h3>
+                <p class="text-xs text-slate-500">نوفر لك أي سيارة مفحوصة ومعتمدة بمواصفاتك وميزانيتك خلال 48 ساعة</p>
+              </div>
+            </div>
+
+            <form id="vip-order-form" class="space-y-3 text-xs mt-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">الماركة والموديل المطلوب *</label>
+                  <input id="vip-car" required value="${this.escapeHtml(prefillSearch)}" placeholder="مثال: أودي Q3 أو تويوتا راف فور" class="w-full border p-2.5 rounded-xl font-bold" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">موديل السنة المفضل *</label>
+                  <input id="vip-year" required value="2024 - 2026" placeholder="مثال: من 2023 إلى 2026" class="w-full border p-2.5 rounded-xl font-bold" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">الميزانية التقريبية (ج.م) *</label>
+                  <input id="vip-budget" required type="number" min="100000" step="50000" placeholder="مثال: 2200000" class="w-full border p-2.5 rounded-xl font-black text-blue-900" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">نظام الشراء المفضل</label>
+                  <select id="vip-pay-type" class="w-full border p-2.5 rounded-xl font-bold bg-white">
+                    <option value="شراء كاش نقدي">💵 شراء كاش نقدي</option>
+                    <option value="تقسيط بنكي / شركات">💳 تقسيط بنكي / شركات</option>
+                    <option value="استبدال بسيارتي الحالية">🔄 استبدال بسيارتي الحالية</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">اللون المفضل أو مواصفات خاصة (الفئة / حالة الدهان)</label>
+                <textarea id="vip-notes" placeholder="مثال: يفضل اللون الأسود أو الرمادي، أعلى فئة بانوراما، فابريكة بالكامل..." class="w-full border p-2.5 rounded-xl h-16"></textarea>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input id="vip-name" required placeholder="اسمك الكريم *" class="w-full border p-2.5 rounded-xl font-bold" />
+                <input id="vip-phone" required type="tel" placeholder="رقم الموبايل للتواصل *" class="w-full border p-2.5 rounded-xl font-bold" />
+              </div>
+
+              <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-amber-400 font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                <span>🚀</span> إرسال طلب التوفير الخاص لإدارة المشتريات
+              </button>
+            </form>
+          </div>
+        `);
+
+        document.getElementById('vip-order-form').onsubmit = (e) => {
+          e.preventDefault();
+          const carWanted = document.getElementById('vip-car').value.trim();
+          const yearWanted = document.getElementById('vip-year').value.trim();
+          const budget = Number(document.getElementById('vip-budget').value) || 0;
+          const payType = document.getElementById('vip-pay-type').value;
+          const notes = document.getElementById('vip-notes').value.trim();
+          const clientName = document.getElementById('vip-name').value.trim();
+          const clientPhone = document.getElementById('vip-phone').value.trim();
+
+          CarRepository.addTradeIn({
+            id: 'VIP-' + Date.now().toString().slice(-5),
+            brand: carWanted,
+            model: `(طلب توفير VIP - ${payType})`,
+            year: yearWanted,
+            km: `ميزانية: ${budget.toLocaleString('ar-EG')} ج.م`,
+            type: '🎯 طلب شراء خاص (VIP)',
+            desc: notes || 'مطلوب فابريكة بحالة ممتازة',
+            clientName,
+            clientPhone,
+            requestedAt: new Date().toLocaleString('ar-EG')
+          });
+
+          this.closeModal();
+          this.syncAll();
+          this.showToast('🎯 تم تسجيل طلبك الخاص في قسم المشتريات بالمعرض وسنتواصل معك فوراً!', 'success');
+        };
+      },
+
       syncAll() {
         if (!window._elitePrintHooked) {
           window._elitePrintHooked = true;
@@ -2332,6 +2630,12 @@ printCleanA4Document() {
                 <div class="bg-slate-50 p-4 rounded-2xl border">
                   <span class="text-xs text-slate-500 font-bold">إجمالي المبيعات المحققة</span>
                   <h4 class="text-lg font-black text-amber-600 mt-1">${totalRev.toLocaleString('ar-EG')} ج.م</h4>
+                  ${role === 'SuperAdmin' ? `
+                    <div class="mt-2 pt-2 border-t border-slate-200 text-[10px] space-y-0.5">
+                      <div class="text-emerald-700 font-black">💰 صافي ربح المباع: ${soldCars.reduce((s, c) => s + c.expectedProfit, 0).toLocaleString('ar-EG')} ج.م</div>
+                      <div class="text-blue-900 font-bold">📈 ربح المخزون المتوقع: ${cars.reduce((s, c) => s + c.expectedProfit, 0).toLocaleString('ar-EG')} ج.م</div>
+                    </div>
+                  ` : ''}
                 </div>
                 <div class="bg-slate-50 p-4 rounded-2xl border">
                   <span class="text-xs text-slate-500 font-bold">مشاهدات العملاء الفعلية</span>
@@ -2856,6 +3160,48 @@ printCleanA4Document() {
                   </div>
                 ` : ''}
 
+                <!-- لوحة الأسرار المالية وصافي الربح (للمدير العام) وحد التفاوض المسموح (للمشرفين) -->
+                ${isAdmin ? (role === 'SuperAdmin' ? `
+                  <div class="bg-slate-950 text-white p-3.5 rounded-2xl border-2 border-emerald-500/60 space-y-2 text-xs shadow-lg no-print">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
+                      <span class="font-black text-amber-400 flex items-center gap-1">🔐 البيانات المالية السرية (للمدير العام فقط)</span>
+                      <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-lg text-[10px] font-black">صافي الربح: ${car.expectedProfit.toLocaleString('ar-EG')} ج.م</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-[11px] text-center pt-1">
+                      <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+                        <span class="block text-slate-400 text-[10px]">التكلفة الكلية (شراء+تجهيز)</span>
+                        <b class="text-white font-black">${car.totalCost.toLocaleString('ar-EG')} ج.م</b>
+                      </div>
+                      <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+                        <span class="block text-slate-400 text-[10px]">أقل سعر بيع مسموح</span>
+                        <b class="text-amber-400 font-black">${car.minAllowedPrice.toLocaleString('ar-EG')} ج.م</b>
+                      </div>
+                      <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+                        <span class="block text-slate-400 text-[10px]">أقصى خصم تفاوض</span>
+                        <b class="text-rose-400 font-black">${car.maxNegotiationDiscount.toLocaleString('ar-EG')} ج.م</b>
+                      </div>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="bg-indigo-950 text-white p-3 rounded-2xl border border-indigo-400/50 flex justify-between items-center text-xs shadow no-print">
+                    <div>
+                      <span class="block font-black text-amber-300">🎯 حد التفاوض المسموح للمبيعات:</span>
+                      <span class="text-[11px] text-slate-200">أقل سعر بيع مسموح بعد التفاوض: <b>${car.minAllowedPrice.toLocaleString('ar-EG')} ج.م</b></span>
+                    </div>
+                    <span class="bg-white/10 text-amber-300 font-black px-2.5 py-1 rounded-xl text-[10px] shrink-0">خصم حتى ${car.maxNegotiationDiscount.toLocaleString('ar-EG')} ج.م</span>
+                  </div>
+                `) : ''}
+
+                <!-- أزرار الجيل الثالث: شهادة الفحص المعتمدة (A4) + جدول مقارنة خطط السداد (1/3/5 سنوات) -->
+                <div class="grid grid-cols-2 gap-2 no-print">
+                  <button type="button" onclick="App.openInspectionCertificateModal('${this.escapeHtml(car.id)}')" class="bg-emerald-900 hover:bg-emerald-800 text-white font-black py-2.5 px-3 rounded-2xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition border border-emerald-700">
+                    <span>🛡️</span> شهادة الفحص والضمان (A4)
+                  </button>
+                  <button type="button" onclick="App.openInstallmentPlansModal('${this.escapeHtml(car.id)}')" class="bg-blue-900 hover:bg-blue-800 text-amber-300 font-black py-2.5 px-3 rounded-2xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition border border-blue-700">
+                    <span>📊</span> جدول خطط السداد (1/3/5 سنوات)
+                  </button>
+                </div>
+
                 <!-- حاسبة التقسيط التفاعلية المطورة ببرامج التمويل الـ 3 -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                   <h4 class="font-black text-sm text-slate-900 flex items-center justify-between">
@@ -3200,6 +3546,27 @@ printCleanA4Document() {
                 </div>
               </div>
 
+              <!-- البيانات المالية السرية للمدير العام (التكلفة وحد التفاوض) -->
+              ${AuthService.getRole() === 'SuperAdmin' ? `
+                <div class="bg-slate-900 text-white p-3.5 rounded-2xl border border-amber-400/50 space-y-2">
+                  <label class="block font-black text-amber-400">🔐 التكلفة السرية وحد التفاوض المسموح (تظهر للمدير العام فقط):</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                      <span class="block text-[10px] text-slate-300 font-bold mb-1">سعر شراء السيارة (ج.م)</span>
+                      <input id="cf-purchase-cost" type="number" min="0" value="${isEdit ? existing.purchaseCost : ''}" placeholder="تلقائي (90%)" class="w-full border border-slate-700 p-2 rounded-xl bg-slate-950 text-white font-bold" />
+                    </div>
+                    <div>
+                      <span class="block text-[10px] text-slate-300 font-bold mb-1">مصاريف التجهيز (ج.م)</span>
+                      <input id="cf-prep-cost" type="number" min="0" value="${isEdit ? existing.prepCost : 15000}" placeholder="15000" class="w-full border border-slate-700 p-2 rounded-xl bg-slate-950 text-white font-bold" />
+                    </div>
+                    <div>
+                      <span class="block text-[10px] text-amber-300 font-bold mb-1">أقل سعر بيع مسموح للمشرف</span>
+                      <input id="cf-min-allowed-price" type="number" min="0" value="${isEdit ? existing.minAllowedPrice : ''}" placeholder="تلقائي (97%)" class="w-full border border-slate-700 p-2 rounded-xl bg-slate-950 text-amber-300 font-black" />
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+
               <!-- حالة الفابريكة والدهان -->
               <div class="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200 space-y-2">
                 <label class="block font-black text-emerald-950">🛡️ حالة الفابريكة والدهان التفصيلية:</label>
@@ -3284,6 +3651,9 @@ printCleanA4Document() {
             maxInstallmentMonths: document.getElementById('cf-months').value,
             price: document.getElementById('cf-price').value,
             oldPrice: document.getElementById('cf-old-price').value,
+            purchaseCost: document.getElementById('cf-purchase-cost')?.value || (isEdit ? existing.purchaseCost : ''),
+            prepCost: document.getElementById('cf-prep-cost')?.value ?? (isEdit ? existing.prepCost : 15000),
+            minAllowedPrice: document.getElementById('cf-min-allowed-price')?.value || (isEdit ? existing.minAllowedPrice : ''),
             paintStatus: document.getElementById('cf-paint-status').value,
             paintDetails: document.getElementById('cf-paint-details').value,
             dealerPhone: document.getElementById('cf-phone').value,
