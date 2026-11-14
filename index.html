@@ -1557,7 +1557,13 @@
         const esc = (v) => this.escapeHtml ? this.escapeHtml(String(v ?? '')) : String(v ?? '');
         const carId = document.getElementById('bp-car-id')?.value;
         const car = (this.state.cars || []).find(c => String(c.id) === String(carId)) || {};
-        const bankName = esc(document.getElementById('bp-bank-name')?.value || 'إدارة تمويل السيارات');
+
+        const customBankEl = document.getElementById('bp-bank-custom');
+        const rawBankName = (customBankEl && !customBankEl.classList.contains('hidden') && customBankEl.value.trim())
+          ? customBankEl.value.trim()
+          : (document.getElementById('bp-bank-name')?.value || 'إدارة تمويل السيارات');
+
+        const bankName = esc(rawBankName);
         const clientName = esc(document.getElementById('bp-client-name')?.value || '....................................................');
         const clientNid = esc(document.getElementById('bp-client-nid')?.value || '....................................');
         const clientPhone = esc(document.getElementById('bp-client-phone')?.value || '........................');
@@ -1570,91 +1576,150 @@
         const notes = esc(document.getElementById('bp-notes')?.value || '');
         const today = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
         const refNo = 'BNK-' + Date.now().toString().slice(-6);
+        const logoUrl = new URL('./logo.jpg', window.location.href).href;
 
-        const contentHtml = `
-          <div style="border:2px solid #0f172a; border-radius:14px; padding:16px; background:#ffffff;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px dashed #cbd5e1; padding-bottom:10px; margin-bottom:12px;">
-              <div>
-                <h2 style="margin:0; font-size:19px; font-weight:900; color:#0f172a;">عرض سعر رسمي موجّه للبنك (Proforma Invoice)</h2>
-                <p style="margin:4px 0 0; font-size:12px; font-weight:800; color:#c2410c;">إلى السادة / ${bankName}</p>
-              </div>
-              <div style="text-align:left; font-size:11px; font-weight:800; color:#334155;">
-                <div>رقم العرض: <span style="font-family:monospace; color:#0f172a;">${refNo}</span></div>
-                <div>التاريخ: ${today}</div>
-              </div>
-            </div>
+        const fullHtml = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>عرض سعر للبنك - ${esc(car.brand || '')}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4 portrait; margin: 10mm; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { font-family: 'Cairo', Tahoma, Arial, sans-serif; margin: 0; padding: 0; color: #0f172a; background: #ffffff; }
+  </style>
+</head>
+<body>
+  <div style="position:relative; padding:4px;">
+    <!-- علامة مائية وسط الورقة -->
+    <div style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:0; opacity:0.04;">
+      <img src="${logoUrl}" style="width:360px; height:360px; object-fit:contain;" />
+    </div>
 
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:12px;">
-              <div style="font-weight:900; color:#0f172a; margin-bottom:6px;">👤 بيانات العميل طالب التمويل:</div>
-              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-weight:700;">
-                <div>الاسم: <span style="font-weight:900;">${clientName}</span></div>
-                <div>الرقم القومي: <span style="font-family:monospace;">${clientNid}</span></div>
-                <div>الهاتف: <span style="font-family:monospace;">${clientPhone}</span></div>
-              </div>
-            </div>
+    <!-- ترويسة المعرض العلوية -->
+    <div style="position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; background:#0f172a; color:#ffffff; padding:12px 16px; border-radius:14px; margin-bottom:14px; border-bottom:4px solid #f97316;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img src="${logoUrl}" alt="أبو بهاء" style="width:56px; height:56px; border-radius:12px; border:2px solid #f97316; object-fit:cover; background:#020617;" />
+        <div>
+          <div style="font-size:18px; font-weight:900; color:#ffffff;">${esc(DEALER_BRAND_NAME)}</div>
+          <div style="font-size:11px; font-weight:700; color:#fdba74; margin-top:2px;">📍 ${esc(DEALER_ADDRESS)}</div>
+        </div>
+      </div>
+      <div style="text-align:left; font-size:10.5px; font-weight:800; color:#f8fafc; line-height:1.6;" dir="ltr">
+        <div style="color:#fbbf24; font-weight:900;">📞 HOTLINES & WHATSAPP</div>
+        <div>010 60 97 0007 | 010 01 44 6377</div>
+        <div>010 91 16 7083 | 010 63 76 4207</div>
+      </div>
+    </div>
 
-            <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
-              <thead>
-                <tr style="background:#0f172a; color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
-                  <th style="padding:8px 10px; text-align:right; border:1px solid #0f172a;">البيان والمواصفات الفنية للسيارة</th>
-                  <th style="padding:8px 10px; text-align:right; border:1px solid #0f172a;">التفاصيل المعتمدة</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">ماركة وطراز السيارة</td>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:900; font-size:13px;">${esc(car.brand)}</td>
-                </tr>
-                <tr>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">سنة الصنع / الحالة الفنية</td>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800;">موديل ${esc(car.year)} — ${esc(car.condition)} (عداد: ${Number(car.mileage || 0).toLocaleString('ar-EG')} كم)</td>
-                </tr>
-                <tr>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">رقم الشاسيه (VIN)</td>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-family:monospace; font-weight:800;">${chassis}</td>
-                </tr>
-                <tr>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">رقم الموتور / اللون والكماليات</td>
-                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:700;">${engineColor}</td>
-                </tr>
-              </tbody>
-            </table>
+    <!-- محتوى عرض السعر -->
+    <div style="position:relative; z-index:1; border:2px solid #0f172a; border-radius:14px; padding:16px; background:#ffffff;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px dashed #cbd5e1; padding-bottom:10px; margin-bottom:12px;">
+        <div>
+          <h2 style="margin:0; font-size:19px; font-weight:900; color:#0f172a;">عرض سعر رسمي موجّه لجهة التمويل (Proforma Invoice)</h2>
+          <p style="margin:4px 0 0; font-size:13px; font-weight:800; color:#c2410c;">إلى السادة / ${bankName}</p>
+        </div>
+        <div style="text-align:left; font-size:11px; font-weight:800; color:#334155;">
+          <div>رقم العرض: <span style="font-family:monospace; color:#0f172a;">${refNo}</span></div>
+          <div>التاريخ: ${today}</div>
+        </div>
+      </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px;">
-              <div style="border:2px solid #0f172a; border-radius:10px; padding:10px; text-align:center; background:#f8fafc;">
-                <div style="font-size:11px; font-weight:800; color:#475569;">إجمالي سعر السيارة نقداً</div>
-                <div style="font-size:16px; font-weight:900; color:#0f172a; margin-top:4px;">${total.toLocaleString('ar-EG')} ج.م</div>
-              </div>
-              <div style="border:2px solid #059669; border-radius:10px; padding:10px; text-align:center; background:#ecfdf5; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
-                <div style="font-size:11px; font-weight:800; color:#065f46;">الدفعة المقدمة (${pct}%)</div>
-                <div style="font-size:16px; font-weight:900; color:#047857; margin-top:4px;">${down.toLocaleString('ar-EG')} ج.م</div>
-              </div>
-              <div style="border:2px solid #ea580c; border-radius:10px; padding:10px; text-align:center; background:#fff7ed; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
-                <div style="font-size:11px; font-weight:800; color:#9a3412;">صافي مبلغ التمويل المطلوب من البنك</div>
-                <div style="font-size:16px; font-weight:900; color:#c2410c; margin-top:4px;">${loan.toLocaleString('ar-EG')} ج.م</div>
-              </div>
-            </div>
+      <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:12px;">
+        <div style="font-weight:900; color:#0f172a; margin-bottom:6px;">👤 بيانات العميل المشتري (طالب التمويل):</div>
+        <div style="display:grid; grid-template-columns:1.2fr 1fr 0.8fr; gap:8px; font-weight:700;">
+          <div>الاسم: <span style="font-weight:900;">${clientName}</span></div>
+          <div>الرقم القومي: <span style="font-family:monospace; font-weight:900;">${clientNid}</span></div>
+          <div>الهاتف: <span style="font-family:monospace; font-weight:900;">${clientPhone}</span></div>
+        </div>
+      </div>
 
-            <div style="background:#f8fafc; border-right:4px solid #f97316; padding:8px 12px; font-size:11.5px; font-weight:700; color:#1e293b; margin-bottom:18px;">
-              📌 <strong>إقرار المعرض:</strong> يقر <strong>${esc(DEALER_BRAND_NAME)}</strong> بتوافر السيارة المذكورة أعلاه وبصحة بياناتها الفنية، مع التزام المعرض بتسليم السيارة وإصدار عقد البيع النهائي فور إصدار الشيك البنكي أو أمر الدفع.<br/>
-              <span>${notes}</span>
-            </div>
+      <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+        <thead>
+          <tr style="background:#0f172a; color:#ffffff;">
+            <th style="padding:8px 10px; text-align:right; border:1px solid #0f172a;">البيان والمواصفات الفنية للسيارة</th>
+            <th style="padding:8px 10px; text-align:right; border:1px solid #0f172a;">التفاصيل المعتمدة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc; width:32%;">ماركة وطراز السيارة</td>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:900; font-size:13px;">${esc(car.brand || '')}</td>
+          </tr>
+          <tr>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">سنة الصنع / الحالة الفنية</td>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800;">موديل ${esc(car.year || '')} — ${esc(car.condition || 'مفحوصة')} (عداد: ${Number(car.mileage || 0).toLocaleString('ar-EG')} كم)</td>
+          </tr>
+          <tr>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">رقم الشاسيه (VIN)</td>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-family:monospace; font-weight:800;">${chassis}</td>
+          </tr>
+          <tr>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">رقم الموتور / اللون والكماليات</td>
+            <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:700;">${engineColor}</td>
+          </tr>
+        </tbody>
+      </table>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:18px; padding-top:12px; border-top:1px solid #cbd5e1; font-size:12px; font-weight:800; text-align:center;">
-              <div>
-                <div>توقيع المدير المسؤول (${esc(DEALER_BRAND_NAME)})</div>
-                <div style="margin-top:28px; color:#64748b;">....................................................</div>
-              </div>
-              <div>
-                <div>الختم الرسمي للمعرض</div>
-                <div style="margin-top:28px; color:#64748b;">....................................................</div>
-              </div>
-            </div>
-          </div>
-        `;
-        this.printCleanA4Document(`عرض سعر للبنك - ${car.brand || ''}`, contentHtml);
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px;">
+        <div style="border:2px solid #0f172a; border-radius:10px; padding:10px; text-align:center; background:#f8fafc;">
+          <div style="font-size:11px; font-weight:800; color:#475569;">إجمالي سعر السيارة نقداً</div>
+          <div style="font-size:16px; font-weight:900; color:#0f172a; margin-top:4px;">${total.toLocaleString('ar-EG')} ج.م</div>
+        </div>
+        <div style="border:2px solid #059669; border-radius:10px; padding:10px; text-align:center; background:#ecfdf5;">
+          <div style="font-size:11px; font-weight:800; color:#065f46;">الدفعة المقدمة المسددة (${pct}%)</div>
+          <div style="font-size:16px; font-weight:900; color:#047857; margin-top:4px;">${down.toLocaleString('ar-EG')} ج.م</div>
+        </div>
+        <div style="border:2px solid #ea580c; border-radius:10px; padding:10px; text-align:center; background:#fff7ed;">
+          <div style="font-size:11px; font-weight:800; color:#9a3412;">صافي مبلغ التمويل المطلوب</div>
+          <div style="font-size:16px; font-weight:900; color:#c2410c; margin-top:4px;">${loan.toLocaleString('ar-EG')} ج.م</div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc; border-right:4px solid #f97316; padding:9px 12px; font-size:11.5px; font-weight:700; color:#1e293b; margin-bottom:18px; line-height:1.7;">
+        📌 <strong>إقرار المعرض:</strong> يقر <strong>${esc(DEALER_BRAND_NAME)}</strong> بتوافر السيارة المذكورة أعلاه وبصحة بياناتها الفنية، مع التزام المعرض بتسليم السيارة وإصدار عقد البيع النهائي وخطاب المرور فور إصدار الشيك البنكي أو أمر الدفع.<br/>
+        <span>${notes}</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:20px; padding-top:12px; border-top:1px solid #cbd5e1; font-size:12px; font-weight:800; text-align:center;">
+        <div>
+          <div>توقيع المدير المسؤول (${esc(DEALER_BRAND_NAME)})</div>
+          <div style="margin-top:32px; color:#64748b;">....................................................</div>
+        </div>
+        <div>
+          <div>الختم الرسمي للمعرض</div>
+          <div style="margin-top:32px; color:#64748b;">....................................................</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- تذييل الورقة الرسمي -->
+    <div style="position:relative; z-index:1; margin-top:12px; padding:8px 14px; border:2px solid #0f172a; border-radius:12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; font-weight:800; color:#0f172a;">
+      <div>📍 ${esc(DEALER_BRAND_NAME)} — ${esc(DEALER_ADDRESS)}</div>
+      <div dir="ltr">📞 ${esc(DEALER_PHONES_DISPLAY)}</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+        let printFrame = document.getElementById('abu-bahaa-print-frame');
+        if (printFrame) printFrame.remove();
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'abu-bahaa-print-frame';
+        printFrame.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
+        document.body.appendChild(printFrame);
+
+        const doc = printFrame.contentWindow.document;
+        doc.open();
+        doc.write(fullHtml);
+        doc.close();
+
+        setTimeout(() => {
+          printFrame.contentWindow.focus();
+          printFrame.contentWindow.print();
+        }, 450);
       },
-
       // 2. تصدير شيت إكسيل شامل للمخزون والمبيعات والتكلفة وصافي الأرباح (UTF-8 BOM Excel CSV)
       exportExcelReport() {
         if (!this.state.isAdmin) {
