@@ -1222,7 +1222,48 @@
         if (box) box.innerHTML = '';
       },
 
-     // مزامنة أزرار الجيل الرابع تلقائياً مع حالة دخول الإدارة
+     // دالة ذكية لجلب قائمة السيارات الحالية من النظام تلقائياً
+      _resolveCarsList() {
+        const isCarArr = (arr) => Array.isArray(arr) && arr.length > 0 && arr[0] && typeof arr[0] === 'object' && ('brand' in arr[0] || 'price' in arr[0]);
+        if (isCarArr(this._cachedCars)) return this._cachedCars;
+        const scanObj = (obj) => {
+          if (!obj || typeof obj !== 'object') return null;
+          for (const k of Object.keys(obj)) {
+            if (k === 'state' || k === '_cachedCars') continue;
+            const v = obj[k];
+            if (isCarArr(v)) return v;
+            if (v && typeof v === 'object' && !Array.isArray(v)) {
+              for (const sk of Object.keys(v)) {
+                if (isCarArr(v[sk])) return v[sk];
+              }
+            }
+          }
+          return null;
+        };
+        const roots = [
+          this,
+          typeof State !== 'undefined' ? State : null,
+          typeof state !== 'undefined' ? state : null,
+          typeof Store !== 'undefined' ? Store : null,
+          typeof store !== 'undefined' ? store : null
+        ];
+        for (const r of roots) {
+          const found = scanObj(r);
+          if (found) return found;
+        }
+        if (typeof cars !== 'undefined' && isCarArr(cars)) return cars;
+        for (let i = 0; i < localStorage.length; i++) {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(localStorage.key(i)));
+            if (isCarArr(parsed)) return parsed;
+            const nested = scanObj(parsed);
+            if (nested) return nested;
+          } catch (e) {}
+        }
+        return [];
+      },
+
+      // مزامنة أزرار الجيل الرابع وربط this.state تلقائياً مع حالة دخول الإدارة والسيارات
       _gen4AdminSync: (function() {
         if (typeof window !== 'undefined') {
           setInterval(() => {
@@ -1231,13 +1272,24 @@
             const excelBtn = document.getElementById('open-excel-export-btn');
             if (!addBtn) return;
             const isHidden = addBtn.classList.contains('hidden');
+
+            // ربط App.state.isAdmin و App.state.cars تلقائياً لتعمل الأزرار الـ 3 فوراً
+            if (typeof App !== 'undefined') {
+              if (!App.state || typeof App.state !== 'object') App.state = {};
+              App.state.isAdmin = !isHidden || Boolean(App.isAdmin);
+              const liveCars = App._resolveCarsList ? App._resolveCarsList() : [];
+              if (liveCars.length || !Array.isArray(App.state.cars)) {
+                App.state.cars = liveCars;
+              }
+            }
+
             [bankBtn, excelBtn].forEach(btn => {
               if (btn) {
                 btn.classList.toggle('hidden', isHidden);
                 btn.classList.toggle('flex', !isHidden);
               }
             });
-            // إضافة زر متابعة العملاء CRM تلقائياً بجوار زر الإكسيل للإدارة
+
             if (excelBtn && !document.getElementById('open-crm-modal-btn')) {
               const crmBtn = document.createElement('button');
               crmBtn.id = 'open-crm-modal-btn';
@@ -1254,11 +1306,10 @@
                 crmBtn.classList.toggle('flex', !isHidden);
               }
             }
-          }, 600);
+          }, 400);
         }
         return true;
       })(),
-
       // 1. نافذة إصدار عرض سعر رسمي موجّه للبنوك وشركات التمويل (Bank Proforma Invoice)
       openBankProformaModal(preselectedCarId = '') {
         if (!this.state.isAdmin) {
