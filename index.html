@@ -1386,16 +1386,63 @@
 
               <div>
                 <label class="block text-slate-300 font-bold mb-1">موجّه إلى (اسم البنك / شركة التمويل)</label>
-                <input id="bp-bank-name" type="text" list="bp-banks-list" placeholder="مثال: البنك الأهلي المصري - إدارة تمويل السيارات" value="بنك مصر — إدارة تمويل السيارات" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" />
-                <datalist id="bp-banks-list">
-                  <option value="البنك الأهلي المصري — إدارة تمويل السيارات"></option>
-                  <option value="بنك مصر — إدارة تمويل السيارات"></option>
-                  <option value="بنك القاهرة — إدارة القروض والتمويل"></option>
-                  <option value="البنك التجاري الدولي CIB — تمويل السيارات"></option>
-                  <option value="شركة كونتكت للتمويل (Contact Auto)"></option>
-                  <option value="شركة درايف للتمويل (Drive Finance)"></option>
-                  <option value="شركة عبد اللطيف جميل للتمويل"></option>
-                </datalist>
+                <select id="bp-bank-name" onchange="const c=document.getElementById('bp-bank-custom'); if(this.selectedOptions[0]?.id==='bp-custom-opt'){c.classList.remove('hidden');c.focus();}else{c.classList.add('hidden');}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-bold">
+                  <optgroup label="🏦 البنوك الحكومية والتجارية الكبرى">
+                    <option value="البنك الأهلي المصري — إدارة تمويل السيارات">البنك الأهلي المصري (NBE) — إدارة تمويل السيارات</option>
+                    <option value="بنك مصر — إدارة تمويل السيارات" selected>بنك مصر — إدارة تمويل السيارات</option>
+                    <option value="بنك القاهرة — إدارة القروض وتمويل السيارات">بنك القاهرة — إدارة القروض وتمويل السيارات</option>
+                    <option value="البنك التجاري الدولي (CIB) — إدارة تمويل السيارات">البنك التجاري الدولي (CIB) — إدارة تمويل السيارات</option>
+                    <option value="بنك قطر الوطني (QNB مصر) — إدارة تمويل السيارات">بنك قطر الوطني (QNB مصر) — إدارة تمويل السيارات</option>
+                    <option value="البنك العربي الأفريقي الدولي (AAIB) — إدارة تمويل السيارات">البنك العربي الأفريقي الدولي (AAIB) — تمويل السيارات</option>
+                    <option value="بنك الإسكندرية — إدارة تمويل السيارات">بنك الإسكندرية — إدارة تمويل السيارات</option>
+                    <option value="بنك كريدي أجريكول مصر — إدارة تمويل السيارات">بنك كريدي أجريكول مصر — إدارة تمويل السيارات</option>
+                    <option value="بنك إتش إس بي سي مصر (HSBC) — إدارة تمويل السيارات">بنك HSBC مصر — إدارة تمويل السيارات</option>
+                    <option value="بنك الكويت الوطني مصر (NBK) — إدارة تمويل السيارات">بنك الكويت الوطني مصر (NBK) — تمويل السيارات</option>
+                    <option value="بنك الإمارات دبي الوطني مصر — إدارة تمويل السيارات">بنك الإمارات دبي الوطني مصر — تمويل السيارات</option>
+                    <option value="التجاري وفا بنك إيجيبت — إدارة تمويل السيارات">التجاري وفا بنك إيجيبت — إدارة تمويل السيارات</option>
+                    <option value="البنك الأهلي الكويتي مصر (ABK) — إدارة تمويل السيارات">البنك الأهلي الكويتي مصر (ABK) — تمويل السيارات</option>
+                    <option value="بنك التعمير والإسكان — إدارة تمويل السيارات">بنك التعمير والإسكان — إدارة تمويل السيارات</option>
+                    <option value="البنك الزراعي المصري — إدارة تمويل السيارات">البنك الزراعي المصري — إدارة تمويل السيارات</option>
+                    <option value="بنك قناة السويس — إدارة تمويل السيارات">بنك قناة السويس — إدارة تمويل السيارات</option>
+                    <option value="البنك المصري لتنمية الصادرات (EBank) — تمويل السيارات">البنك المصري لتنمية الصادرات (EBank) — تمويل السيارات</option>
+                    <option value="بنك نكست (Bank NXT) — إدارة تمويل السيارات">بنك نكست (Bank NXT) — إدارة تمويل السيارات</option>
+                    <option value="بنك سايب (SAIB) — إدارة تمويل السيارات">بنك سايب (SAIB) — إدارة تمويل السيارات</option>
+                    <option value="المصرف المتحد — إدارة تمويل السيارات">المصرف المتحد — إدارة تمويل السيارات</option>
+                    <option value="ميد بنك (MIDBANK) — إدارة تمويل السيارات">ميد بنك (MIDBANK) — إدارة تمويل السيارات</option>
+                    <option value="بنك المشرق مصر — إدارة تمويل السيارات">بنك المشرق مصر — إدارة تمويل السيارات</option>
+                    <option value="البنك العربي — إدارة تمويل السيارات">البنك العربي — إدارة تمويل السيارات</option>
+                  </optgroup>
+                  <optgroup label="🕌 البنوك الإسلامية (مرابحة السيارات)">
+                    <option value="مصرف أبو ظبي الإسلامي مصر (ADIB) — مرابحة السيارات">مصرف أبو ظبي الإسلامي مصر (ADIB) — مرابحة السيارات</option>
+                    <option value="بنك فيصل الإسلامي المصري — إدارة المرابحة وتمويل السيارات">بنك فيصل الإسلامي المصري — مرابحة السيارات</option>
+                    <option value="بنك البركة مصر — إدارة تمويل ومرابحة السيارات">بنك البركة مصر — مرابحة السيارات</option>
+                    <option value="بيت التمويل الكويتي مصر — إدارة تمويل السيارات">بيت التمويل الكويتي مصر — تمويل السيارات</option>
+                    <option value="بنك أبو ظبي الأول مصر (FABMISR) — إدارة تمويل السيارات">بنك أبو ظبي الأول مصر (FABMISR) — تمويل السيارات</option>
+                  </optgroup>
+                  <optgroup label="🏢 شركات التمويل وتقسيط السيارات الكبرى">
+                    <option value="شركة كونتكت للتمويل (Contact Auto) — تمويل السيارات">شركة كونتكت للتمويل (Contact Auto)</option>
+                    <option value="شركة درايف للتمويل والخدمات المالية غير المصرفية (Drive Finance)">شركة درايف للتمويل (Drive Finance - غبور)</option>
+                    <option value="شركة عبد اللطيف جميل للتمويل مصر (أوتو جميل)">شركة عبد اللطيف جميل للتمويل مصر</option>
+                    <option value="شركة مباشر أوتو لتمويل السيارات (Mubasher Auto)">شركة مباشر أوتو لتمويل السيارات (Mubasher Auto)</option>
+                    <option value="شركة أمان للتمويل الاستهلاكي — قطاع السيارات (AMAN Auto)">شركة أمان لتمويل السيارات (AMAN Auto)</option>
+                    <option value="شركة فاليو للتمويل الاستهلاكي — تمويل السيارات (ValU Auto)">شركة فاليو لتمويل السيارات (ValU Auto)</option>
+                    <option value="شركة حالا للتمويل الاستهلاكي — تمويل السيارات (Halan Auto)">شركة حالا لتمويل السيارات (Halan Auto)</option>
+                    <option value="شركة سهولة للتمويل الاستهلاكي (Sohoula Auto Finance)">شركة سهولة لتمويل السيارات (Sohoula)</option>
+                    <option value="شركة سيفن للتمويل الاستهلاكي (Seven - بلتون)">شركة سيفن للتمويل الاستهلاكي (Seven / Beltone)</option>
+                    <option value="شركة ثروة للتمويل الاستهلاكي — تمويل السيارات (Sarwa Finance)">شركة ثروة لتمويل السيارات (Sarwa Finance)</option>
+                    <option value="شركة رواج للتمويل الاستهلاكي (Rawaj Auto Finance)">شركة رواج لتمويل السيارات (Rawaj Auto)</option>
+                    <option value="شركة مشروعي / تساهيل لتمويل المركبات والسيارات">شركة مشروعي / تساهيل لتمويل السيارات</option>
+                    <option value="شركة التوفيق للتأجير التمويلي والتمويل (A.T.Lease)">شركة التوفيق للتمويل (A.T.Lease)</option>
+                    <option value="شركة كوربليس للتمويل (Corplease)">شركة كوربليس للتمويل (Corplease)</option>
+                    <option value="شركة جلوبال كورب للخدمات المالية (GlobalCorp / Ollin)">شركة جلوبال كورب للتمويل (GlobalCorp)</option>
+                    <option value="شركة أوريكس مصر للتمويل (ORIX Egypt)">شركة أوريكس مصر للتمويل (ORIX)</option>
+                    <option value="نظام التقسيط المباشر — معرض أبو بهاء لتجارة السيارات">نظام التقسيط المباشر — معرض أبو بهاء لتجارة السيارات</option>
+                  </optgroup>
+                  <optgroup label="✏️ إدخال مخصص">
+                    <option id="bp-custom-opt" value="جهة تمويل مخصصة">✏️ كتابة اسم بنك أو فرع أو شركة أخرى يدوياً...</option>
+                  </optgroup>
+                </select>
+                <input id="bp-bank-custom" type="text" oninput="const opt=document.getElementById('bp-custom-opt'); if(opt) opt.value=this.value;" placeholder="اكتب اسم البنك أو الفرع المخصص هنا (مثال: البنك الأهلي - فرع جامعة أسيوط)..." class="hidden mt-2 w-full bg-slate-950 border border-amber-500 rounded-xl px-3 py-2 text-white font-bold" />
               </div>
 
               <div>
