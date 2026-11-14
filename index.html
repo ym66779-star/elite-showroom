@@ -2605,11 +2605,13 @@ printCleanA4Document() {
           }
         });
 
-        const printWin = window.open('', '_blank', 'width=1050,height=850');
-        if (!printWin) {
-          this.showToast('⚠️ يرجى السماح بالنوافذ المنبثقة (Pop-ups) لطباعة الوثيقة بمقاس A4 كامل.', 'warning');
-          return;
-        }
+        let printFrame = document.getElementById('abu-bahaa-print-frame');
+        if (printFrame) printFrame.remove();
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'abu-bahaa-print-frame';
+        printFrame.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
+        document.body.appendChild(printFrame);
+        const printWin = printFrame.contentWindow;
 
         printWin.document.open();
         printWin.document.write(`
