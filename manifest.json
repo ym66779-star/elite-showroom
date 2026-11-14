@@ -1,26 +1,23 @@
 {
-  "id": "/elite-showroom/",
   "name": "أبو بهاء لتجارة السيارات",
-  "short_name": "أبو بهاء لتجارة السيارات",
-  "description": "نظام المبيعات والفحص الهندسي المعتمد - أبو بهاء لتجارة السيارات",
+  "short_name": "أبو بهاء للسيارات",
+  "description": "منصة معرض أبو بهاء لتجارة السيارات — أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#090d16",
-  "theme_color": "#090d16",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "lang": "ar",
+  "dir": "rtl",
   "icons": [
     {
-      "src": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=192&h=192&fm=png",
+      "src": "./logo.jpg",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg"
     },
     {
-      "src": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=512&h=512&fm=png",
+      "src": "./logo.jpg",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg"
     }
   ]
 }
