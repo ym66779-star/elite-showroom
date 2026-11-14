@@ -178,6 +178,14 @@
           <span>➕</span> إضافة سيارة
         </button>
 
+        <button id="open-bank-quote-btn" onclick="App.openBankProformaModal()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl font-black transition items-center gap-1 shadow-md" title="إصدار عرض سعر رسمي مختوم موجّه للبنوك وشركات التمويل">
+          <span>🏦</span> عرض سعر للبنك
+        </button>
+
+        <button id="open-excel-export-btn" onclick="App.exportExcelReport()" class="hidden bg-teal-600 hover:bg-teal-500 text-white text-xs px-3 py-1.5 rounded-xl font-black transition items-center gap-1 shadow-md" title="تحميل شيت إكسيل شامل للمخزون والتكلفة وصافي الأرباح">
+          <span>📊</span> شيت Excel
+        </button>
+
         <button id="admin-auth-btn" onclick="App.handleAuthClick()" class="bg-white text-slate-950 text-xs px-3.5 py-1.5 rounded-xl font-black transition flex items-center gap-1 shadow hover:bg-slate-100">
           <span>🔐</span> دخول الإدارة
         </button>
@@ -1214,7 +1222,539 @@
         if (box) box.innerHTML = '';
       },
 
-     whatsApp(phone, customText = '') {
+     // مزامنة أزرار الجيل الرابع تلقائياً مع حالة دخول الإدارة
+      _gen4AdminSync: (function() {
+        if (typeof window !== 'undefined') {
+          setInterval(() => {
+            const addBtn = document.getElementById('open-add-car-btn');
+            const bankBtn = document.getElementById('open-bank-quote-btn');
+            const excelBtn = document.getElementById('open-excel-export-btn');
+            if (!addBtn) return;
+            const isHidden = addBtn.classList.contains('hidden');
+            [bankBtn, excelBtn].forEach(btn => {
+              if (btn) {
+                btn.classList.toggle('hidden', isHidden);
+                btn.classList.toggle('flex', !isHidden);
+              }
+            });
+            // إضافة زر متابعة العملاء CRM تلقائياً بجوار زر الإكسيل للإدارة
+            if (excelBtn && !document.getElementById('open-crm-modal-btn')) {
+              const crmBtn = document.createElement('button');
+              crmBtn.id = 'open-crm-modal-btn';
+              crmBtn.type = 'button';
+              crmBtn.onclick = () => App.openCrmManagerModal();
+              crmBtn.className = (isHidden ? 'hidden ' : 'flex ') + 'bg-purple-600 hover:bg-purple-500 text-white text-xs px-3 py-1.5 rounded-xl font-black transition items-center gap-1 shadow-md';
+              crmBtn.title = 'سجل متابعة العملاء وملاحظات المبيعات (Mini-CRM)';
+              crmBtn.innerHTML = '<span>🗂️</span> متابعة CRM';
+              excelBtn.parentNode.insertBefore(crmBtn, excelBtn.nextSibling);
+            } else {
+              const crmBtn = document.getElementById('open-crm-modal-btn');
+              if (crmBtn) {
+                crmBtn.classList.toggle('hidden', isHidden);
+                crmBtn.classList.toggle('flex', !isHidden);
+              }
+            }
+          }, 600);
+        }
+        return true;
+      })(),
+
+      // 1. نافذة إصدار عرض سعر رسمي موجّه للبنوك وشركات التمويل (Bank Proforma Invoice)
+      openBankProformaModal(preselectedCarId = '') {
+        if (!this.state.isAdmin) {
+          this.showToast('🔒 هذه الأداة مخصصة لإدارة المعرض فقط', 'error');
+          return;
+        }
+        const cars = this.state.cars || [];
+        if (!cars.length) {
+          this.showToast('لا توجد سيارات مسجلة حالياً لإصدار عرض سعر', 'error');
+          return;
+        }
+        const esc = (v) => this.escapeHtml ? this.escapeHtml(String(v ?? '')) : String(v ?? '');
+        const existing = document.getElementById('gen4-bank-modal');
+        if (existing) existing.remove();
+
+        const selectedCar = cars.find(c => String(c.id) === String(preselectedCarId)) || cars[0];
+        const carOptions = cars.map(c =>
+          `<option value="${esc(c.id)}" ${String(c.id) === String(selectedCar.id) ? 'selected' : ''}>${esc(c.brand)} (${esc(c.year)}) — ${Number(c.price || 0).toLocaleString('ar-EG')} ج.م</option>`
+        ).join('');
+
+        const modal = document.createElement('div');
+        modal.id = 'gen4-bank-modal';
+        modal.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto no-print';
+        modal.innerHTML = `
+          <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl my-8">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
+              <div>
+                <h3 class="text-lg font-black text-amber-400 flex items-center gap-2">🏦 إصدار عرض سعر رسمي للبنك / شركة التمويل</h3>
+                <p class="text-xs text-slate-400 mt-0.5">وثيقة رسمية مختومة ببيانات ${esc(DEALER_BRAND_NAME)} لتقديمها لجهات التمويل البنكي</p>
+              </div>
+              <button type="button" onclick="document.getElementById('gen4-bank-modal').remove()" class="bg-slate-800 hover:bg-rose-600 text-white w-8 h-8 rounded-xl font-black transition">✕</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+              <div class="sm:col-span-2">
+                <label class="block text-slate-300 font-bold mb-1">اختر السيارة من المخزون</label>
+                <select id="bp-car-id" onchange="App.syncBankQuoteCarChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-bold">
+                  ${carOptions}
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">موجّه إلى (اسم البنك / شركة التمويل)</label>
+                <input id="bp-bank-name" type="text" list="bp-banks-list" placeholder="مثال: البنك الأهلي المصري - إدارة تمويل السيارات" value="بنك مصر — إدارة تمويل السيارات" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" />
+                <datalist id="bp-banks-list">
+                  <option value="البنك الأهلي المصري — إدارة تمويل السيارات"></option>
+                  <option value="بنك مصر — إدارة تمويل السيارات"></option>
+                  <option value="بنك القاهرة — إدارة القروض والتمويل"></option>
+                  <option value="البنك التجاري الدولي CIB — تمويل السيارات"></option>
+                  <option value="شركة كونتكت للتمويل (Contact Auto)"></option>
+                  <option value="شركة درايف للتمويل (Drive Finance)"></option>
+                  <option value="شركة عبد اللطيف جميل للتمويل"></option>
+                </datalist>
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">اسم العميل المشتري (رباعي)</label>
+                <input id="bp-client-name" type="text" placeholder="اكتب اسم العميل كما في البطاقة..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">الرقم القومي للعميل (اختياري)</label>
+                <input id="bp-client-nid" type="text" maxlength="14" placeholder="14 رقماً..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">رقم هاتف العميل</label>
+                <input id="bp-client-phone" type="text" placeholder="010xxxxxxxx" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">السعر الإجمالي للسيارة (ج.م)</label>
+                <input id="bp-car-price" type="number" value="${Number(selectedCar.price || 0)}" oninput="App.recalcBankQuoteAmounts()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-amber-400 font-black font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">نسبة الدفعة المقدمة المسددة للمعرض (%)</label>
+                <input id="bp-down-pct" type="number" min="0" max="90" value="30" oninput="App.recalcBankQuoteAmounts()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-emerald-400 font-black font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">قيمة المقدم (ج.م)</label>
+                <input id="bp-down-amount" type="text" readonly class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 font-mono font-bold" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">صافي مبلغ التمويل المطلوب من البنك (ج.م)</label>
+                <input id="bp-loan-amount" type="text" readonly class="w-full bg-slate-800/80 border border-amber-500/60 rounded-xl px-3 py-2 text-amber-300 font-mono font-black" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">رقم الشاسيه (VIN)</label>
+                <input id="bp-chassis" type="text" placeholder="أدخل رقم الشاسيه إن وجد..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">رقم الموتور / اللون</label>
+                <input id="bp-engine-color" type="text" placeholder="مثال: موتور 849302 - لون أسود ميتاليك" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" />
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-slate-300 font-bold mb-1">ملاحظات وإقرار المعرض للبنك</label>
+                <input id="bp-notes" type="text" value="السيارة متاحة للتسليم الفوري وخالية من أي التزامات أو حظر بيع، والعرض سارٍ لمدة 15 يوماً من تاريخه." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold" />
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-2.5 mt-6 pt-4 border-t border-slate-800">
+              <button type="button" onclick="App.sendBankQuoteWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2.5 rounded-xl font-black transition flex items-center gap-1.5">
+                <span>💬</span> إرسال تفاصيل العرض واتساب
+              </button>
+              <button type="button" onclick="App.printBankProformaInvoice()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs px-5 py-2.5 rounded-xl font-black transition flex items-center gap-1.5 shadow-lg">
+                <span>🖨️</span> طباعة عرض السعر الرسمي للبنك (A4)
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        this.recalcBankQuoteAmounts();
+      },
+
+      syncBankQuoteCarChange() {
+        const carId = document.getElementById('bp-car-id')?.value;
+        const car = (this.state.cars || []).find(c => String(c.id) === String(carId));
+        if (car) {
+          const priceInput = document.getElementById('bp-car-price');
+          if (priceInput) priceInput.value = Number(car.price || 0);
+          this.recalcBankQuoteAmounts();
+        }
+      },
+
+      recalcBankQuoteAmounts() {
+        const total = Math.max(0, Number(document.getElementById('bp-car-price')?.value || 0));
+        const pct = Math.min(95, Math.max(0, Number(document.getElementById('bp-down-pct')?.value || 0)));
+        const down = Math.round(total * (pct / 100));
+        const loan = Math.max(0, total - down);
+        const downEl = document.getElementById('bp-down-amount');
+        const loanEl = document.getElementById('bp-loan-amount');
+        if (downEl) downEl.value = down.toLocaleString('ar-EG') + ' ج.م';
+        if (loanEl) loanEl.value = loan.toLocaleString('ar-EG') + ' ج.م';
+      },
+
+      sendBankQuoteWhatsApp() {
+        const carId = document.getElementById('bp-car-id')?.value;
+        const car = (this.state.cars || []).find(c => String(c.id) === String(carId)) || {};
+        const bankName = document.getElementById('bp-bank-name')?.value || 'البنك';
+        const clientName = document.getElementById('bp-client-name')?.value || 'العميل';
+        const total = Number(document.getElementById('bp-car-price')?.value || 0);
+        const pct = Number(document.getElementById('bp-down-pct')?.value || 30);
+        const down = Math.round(total * (pct / 100));
+        const loan = Math.max(0, total - down);
+        const msg =
+          `🏦 *عرض سعر رسمي للتمويل البنكي — ${DEALER_BRAND_NAME}*\n` +
+          `• موجّه إلى: ${bankName}\n` +
+          `• باسم العميل: ${clientName}\n` +
+          `• السيارة: ${car.brand || ''} موديل ${car.year || ''}\n` +
+          `• السعر الإجمالي: ${total.toLocaleString('ar-EG')} ج.م\n` +
+          `• الدفعة المقدمة (${pct}%): ${down.toLocaleString('ar-EG')} ج.م\n` +
+          `• صافي مبلغ التمويل المطلوب: ${loan.toLocaleString('ar-EG')} ج.م\n` +
+          `📍 العنوان: ${DEALER_ADDRESS}\n` +
+          `📞 للتواصل: ${DEALER_PHONES_DISPLAY}`;
+        this.whatsApp(DEFAULT_DEALER_PHONE, msg);
+      },
+
+      printBankProformaInvoice() {
+        const esc = (v) => this.escapeHtml ? this.escapeHtml(String(v ?? '')) : String(v ?? '');
+        const carId = document.getElementById('bp-car-id')?.value;
+        const car = (this.state.cars || []).find(c => String(c.id) === String(carId)) || {};
+        const bankName = esc(document.getElementById('bp-bank-name')?.value || 'إدارة تمويل السيارات');
+        const clientName = esc(document.getElementById('bp-client-name')?.value || '....................................................');
+        const clientNid = esc(document.getElementById('bp-client-nid')?.value || '....................................');
+        const clientPhone = esc(document.getElementById('bp-client-phone')?.value || '........................');
+        const total = Math.max(0, Number(document.getElementById('bp-car-price')?.value || 0));
+        const pct = Math.min(95, Math.max(0, Number(document.getElementById('bp-down-pct')?.value || 0)));
+        const down = Math.round(total * (pct / 100));
+        const loan = Math.max(0, total - down);
+        const chassis = esc(document.getElementById('bp-chassis')?.value || 'يُحدد عند الاستلام النهائي');
+        const engineColor = esc(document.getElementById('bp-engine-color')?.value || (car.condition || 'مفحوصة بالكامل'));
+        const notes = esc(document.getElementById('bp-notes')?.value || '');
+        const today = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+        const refNo = 'BNK-' + Date.now().toString().slice(-6);
+
+        const contentHtml = `
+          <div style="border:2px solid #0f172a; border-radius:14px; padding:16px; background:#ffffff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px dashed #cbd5e1; padding-bottom:10px; margin-bottom:12px;">
+              <div>
+                <h2 style="margin:0; font-size:19px; font-weight:900; color:#0f172a;">عرض سعر رسمي موجّه للبنك (Proforma Invoice)</h2>
+                <p style="margin:4px 0 0; font-size:12px; font-weight:800; color:#c2410c;">إلى السادة / ${bankName}</p>
+              </div>
+              <div style="text-align:left; font-size:11px; font-weight:800; color:#334155;">
+                <div>رقم العرض: <span style="font-family:monospace; color:#0f172a;">${refNo}</span></div>
+                <div>التاريخ: ${today}</div>
+              </div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:12px;">
+              <div style="font-weight:900; color:#0f172a; margin-bottom:6px;">👤 بيانات العميل طالب التمويل:</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-weight:700;">
+                <div>الاسم: <span style="font-weight:900;">${clientName}</span></div>
+                <div>الرقم القومي: <span style="font-family:monospace;">${clientNid}</span></div>
+                <div>الهاتف: <span style="font-family:monospace;">${clientPhone}</span></div>
+              </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+                  <th style="padding:8px 10px; text-align:right; border:1px solid #0f172a;">البيان والمواصفات الفنية للسيارة</th>
+                  <th style="padding:8px 10px; text-align:right; border:1px solid #0f172a;">التفاصيل المعتمدة</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">ماركة وطراز السيارة</td>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:900; font-size:13px;">${esc(car.brand)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">سنة الصنع / الحالة الفنية</td>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800;">موديل ${esc(car.year)} — ${esc(car.condition)} (عداد: ${Number(car.mileage || 0).toLocaleString('ar-EG')} كم)</td>
+                </tr>
+                <tr>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">رقم الشاسيه (VIN)</td>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-family:monospace; font-weight:800;">${chassis}</td>
+                </tr>
+                <tr>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:800; background:#f8fafc;">رقم الموتور / اللون والكماليات</td>
+                  <td style="padding:7px 10px; border:1px solid #cbd5e1; font-weight:700;">${engineColor}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px;">
+              <div style="border:2px solid #0f172a; border-radius:10px; padding:10px; text-align:center; background:#f8fafc;">
+                <div style="font-size:11px; font-weight:800; color:#475569;">إجمالي سعر السيارة نقداً</div>
+                <div style="font-size:16px; font-weight:900; color:#0f172a; margin-top:4px;">${total.toLocaleString('ar-EG')} ج.م</div>
+              </div>
+              <div style="border:2px solid #059669; border-radius:10px; padding:10px; text-align:center; background:#ecfdf5; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+                <div style="font-size:11px; font-weight:800; color:#065f46;">الدفعة المقدمة (${pct}%)</div>
+                <div style="font-size:16px; font-weight:900; color:#047857; margin-top:4px;">${down.toLocaleString('ar-EG')} ج.م</div>
+              </div>
+              <div style="border:2px solid #ea580c; border-radius:10px; padding:10px; text-align:center; background:#fff7ed; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+                <div style="font-size:11px; font-weight:800; color:#9a3412;">صافي مبلغ التمويل المطلوب من البنك</div>
+                <div style="font-size:16px; font-weight:900; color:#c2410c; margin-top:4px;">${loan.toLocaleString('ar-EG')} ج.م</div>
+              </div>
+            </div>
+
+            <div style="background:#f8fafc; border-right:4px solid #f97316; padding:8px 12px; font-size:11.5px; font-weight:700; color:#1e293b; margin-bottom:18px;">
+              📌 <strong>إقرار المعرض:</strong> يقر <strong>${esc(DEALER_BRAND_NAME)}</strong> بتوافر السيارة المذكورة أعلاه وبصحة بياناتها الفنية، مع التزام المعرض بتسليم السيارة وإصدار عقد البيع النهائي فور إصدار الشيك البنكي أو أمر الدفع.<br/>
+              <span>${notes}</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:18px; padding-top:12px; border-top:1px solid #cbd5e1; font-size:12px; font-weight:800; text-align:center;">
+              <div>
+                <div>توقيع المدير المسؤول (${esc(DEALER_BRAND_NAME)})</div>
+                <div style="margin-top:28px; color:#64748b;">....................................................</div>
+              </div>
+              <div>
+                <div>الختم الرسمي للمعرض</div>
+                <div style="margin-top:28px; color:#64748b;">....................................................</div>
+              </div>
+            </div>
+          </div>
+        `;
+        this.printCleanA4Document(`عرض سعر للبنك - ${car.brand || ''}`, contentHtml);
+      },
+
+      // 2. تصدير شيت إكسيل شامل للمخزون والمبيعات والتكلفة وصافي الأرباح (UTF-8 BOM Excel CSV)
+      exportExcelReport() {
+        if (!this.state.isAdmin) {
+          this.showToast('🔒 تصدير شيت الإكسيل المحاسبي متاح للإدارة فقط', 'error');
+          return;
+        }
+        const cars = this.state.cars || [];
+        const cleanCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+        const headers = [
+          'كود السيارة',
+          'الماركة والطراز',
+          'سنة الصنع',
+          'حالة الفابريكة',
+          'العداد (كم)',
+          'تقييم الفحص الهندسي',
+          'حالة التوافر',
+          'سعر البيع المعلن (ج.م)',
+          'تكلفة الشراء (ج.م)',
+          'مصروفات التجهيز (ج.م)',
+          'إجمالي التكلفة (ج.م)',
+          'صافي الربح المتوقع / المحقق (ج.م)',
+          'عدد المشاهدات'
+        ];
+
+        let totalRevenue = 0;
+        let totalCostAll = 0;
+        let totalNetProfit = 0;
+
+        const rows = cars.map(c => {
+          const sellPrice = Number(c.soldPrice || c.price || 0);
+          const buyCost = Number(c.purchasePrice || c.costPrice || c.cost || Math.round(sellPrice * 0.91));
+          const prepCost = Number(c.expenses || c.prepCost || 0);
+          const totalCost = buyCost + prepCost;
+          const netProfit = sellPrice - totalCost;
+
+          totalRevenue += sellPrice;
+          totalCostAll += totalCost;
+          totalNetProfit += netProfit;
+
+          const statusAr = c.status === 'sold' ? 'مباعة' : (c.status === 'reserved' ? 'محجوزة بعربون' : 'متاحة بالمعرض');
+          return [
+            c.id,
+            c.brand,
+            c.year,
+            c.condition,
+            Number(c.mileage || 0),
+            `${c.inspectionScore || 9.2}/10`,
+            statusAr,
+            sellPrice,
+            buyCost,
+            prepCost,
+            totalCost,
+            netProfit,
+            Number(c.views || 0)
+          ].map(cleanCell).join(',');
+        });
+
+        rows.push([]);
+        rows.push([
+          'الإجمالي العام للمعرض',
+          `عدد السيارات: ${cars.length}`,
+          '', '', '', '', '',
+          totalRevenue,
+          '', '',
+          totalCostAll,
+          totalNetProfit,
+          ''
+        ].map(cleanCell).join(','));
+
+        // إلحاق سجل متابعات الـ CRM في أسفل شيت الإكسيل
+        const crmList = JSON.parse(localStorage.getItem('abu_bahaa_crm_leads_v1') || '[]');
+        if (crmList.length > 0) {
+          rows.push([]);
+          rows.push(['سجل متابعة العملاء (CRM) — ' + DEALER_BRAND_NAME].map(cleanCell).join(','));
+          rows.push(['اسم العميل', 'رقم الهاتف', 'السيارة المطلوبة / نوع الطلب', 'حالة المتابعة', 'ملاحظات المشرف', 'تاريخ التسجيل'].map(cleanCell).join(','));
+          crmList.forEach(item => {
+            rows.push([item.name, item.phone, item.interest, item.status, item.notes, item.date].map(cleanCell).join(','));
+          });
+        }
+
+        const csvContent = '\uFEFF' + [headers.map(cleanCell).join(','), ...rows].join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        link.href = url;
+        link.download = `Abu_Bahaa_Inventory_Profit_${dateStr}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        this.showToast('📊 تم تحميل شيت الإكسيل المحاسبي بنجاح!', 'success');
+      },
+
+      // 3. نظام متابعة العملاء الذكي وملاحظات المبيعات (Mini-CRM)
+      openCrmManagerModal() {
+        if (!this.state.isAdmin) {
+          this.showToast('🔒 سجل متابعة العملاء مخصص للإدارة فقط', 'error');
+          return;
+        }
+        const existing = document.getElementById('gen4-crm-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'gen4-crm-modal';
+        modal.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto no-print';
+        modal.innerHTML = `
+          <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-4xl w-full p-6 shadow-2xl my-8">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div>
+                <h3 class="text-lg font-black text-amber-400 flex items-center gap-2">🗂️ نظام متابعة العملاء والمبيعات (Mini-CRM)</h3>
+                <p class="text-xs text-slate-400 mt-0.5">تسجيل المكالمات وحالة التمويل البنكي ومواعيد حضور العملاء لمعرض ${DEALER_BRAND_NAME}</p>
+              </div>
+              <button type="button" onclick="document.getElementById('gen4-crm-modal').remove()" class="bg-slate-800 hover:bg-rose-600 text-white w-8 h-8 rounded-xl font-black transition">✕</button>
+            </div>
+
+            <!-- إضافة عميل / متابعة جديدة -->
+            <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 mb-5 grid grid-cols-1 sm:grid-cols-5 gap-2.5 text-xs">
+              <input id="crm-new-name" type="text" placeholder="اسم العميل..." class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" />
+              <input id="crm-new-phone" type="text" placeholder="رقم الموبايل..." class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
+              <input id="crm-new-car" type="text" placeholder="السيارة المهتم بها..." class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" />
+              <select id="crm-new-status" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-bold">
+                <option value="مهتم - جاري المتابعة">📞 مهتم - جاري المتابعة</option>
+                <option value="في انتظار أوراق البنك">🏦 في انتظار أوراق البنك</option>
+                <option value="موعد معاينة بالمعرض">📅 موعد معاينة بالمعرض</option>
+                <option value="تم البيع والتعاقد">✅ تم البيع والتعاقد</option>
+              </select>
+              <button type="button" onclick="App.addCrmLeadRecord()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-3 py-2 font-black transition">➕ حفظ بالمتابعة</button>
+              <input id="crm-new-notes" type="text" placeholder="ملاحظة المتابعة (مثال: العميل قادم غداً الساعة 5 مساءً ومعه مقدم 300 ألف)..." class="sm:col-span-5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 font-semibold" />
+            </div>
+
+            <div id="crm-leads-container" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        this.renderCrmLeadsList();
+      },
+
+      addCrmLeadRecord() {
+        const name = (document.getElementById('crm-new-name')?.value || '').trim();
+        const phone = (document.getElementById('crm-new-phone')?.value || '').trim();
+        const interest = (document.getElementById('crm-new-car')?.value || 'استفسار عام').trim();
+        const status = document.getElementById('crm-new-status')?.value || 'مهتم - جاري المتابعة';
+        const notes = (document.getElementById('crm-new-notes')?.value || '').trim();
+        if (!name || !phone) {
+          this.showToast('يرجى إدخال اسم العميل ورقم الهاتف أولاً', 'error');
+          return;
+        }
+        const list = JSON.parse(localStorage.getItem('abu_bahaa_crm_leads_v1') || '[]');
+        const record = {
+          id: 'CRM-' + Date.now(),
+          name,
+          phone,
+          interest,
+          status,
+          notes: notes || 'تم تسجيل العميل للمتابعة',
+          date: new Date().toLocaleString('ar-EG')
+        };
+        list.unshift(record);
+        localStorage.setItem('abu_bahaa_crm_leads_v1', JSON.stringify(list));
+        if (this.db) {
+          this.db.collection('crm_leads').doc(record.id).set(record).catch(() => {});
+        }
+        ['crm-new-name', 'crm-new-phone', 'crm-new-car', 'crm-new-notes'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        this.renderCrmLeadsList();
+        this.showToast('✅ تم حفظ متابعة العميل في سجل الـ CRM', 'success');
+      },
+
+      updateCrmLeadStatus(id, newStatus) {
+        const list = JSON.parse(localStorage.getItem('abu_bahaa_crm_leads_v1') || '[]');
+        const idx = list.findIndex(i => i.id === id);
+        if (idx > -1) {
+          list[idx].status = newStatus;
+          localStorage.setItem('abu_bahaa_crm_leads_v1', JSON.stringify(list));
+          if (this.db) {
+            this.db.collection('crm_leads').doc(id).update({ status: newStatus }).catch(() => {});
+          }
+          this.renderCrmLeadsList();
+          this.showToast('تم تحديث حالة العميل بنجاح', 'success');
+        }
+      },
+
+      deleteCrmLeadRecord(id) {
+        let list = JSON.parse(localStorage.getItem('abu_bahaa_crm_leads_v1') || '[]');
+        list = list.filter(i => i.id !== id);
+        localStorage.setItem('abu_bahaa_crm_leads_v1', JSON.stringify(list));
+        if (this.db) {
+          this.db.collection('crm_leads').doc(id).delete().catch(() => {});
+        }
+        this.renderCrmLeadsList();
+      },
+
+      renderCrmLeadsList() {
+        const container = document.getElementById('crm-leads-container');
+        if (!container) return;
+        const esc = (v) => this.escapeHtml ? this.escapeHtml(String(v ?? '')) : String(v ?? '');
+        const list = JSON.parse(localStorage.getItem('abu_bahaa_crm_leads_v1') || '[]');
+        if (!list.length) {
+          container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs font-bold">لا توجد متابعات مسجلة حالياً — أضف أول عميل من النموذج بالأعلى.</div>`;
+          return;
+        }
+        container.innerHTML = list.map(item => `
+          <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-black text-white text-sm">${esc(item.name)}</span>
+                <span class="font-mono bg-slate-800 text-amber-300 px-2 py-0.5 rounded-lg">${esc(item.phone)}</span>
+                <span class="bg-indigo-950 text-indigo-300 border border-indigo-700/50 px-2 py-0.5 rounded-lg font-bold">🚘 ${esc(item.interest)}</span>
+              </div>
+              <p class="text-slate-300 font-semibold">📝 ${esc(item.notes)}</p>
+              <div class="text-[10px] text-slate-500">🕒 ${esc(item.date)}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <select onchange="App.updateCrmLeadStatus('${esc(item.id)}', this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-amber-300 font-bold text-xs">
+                <option value="مهتم - جاري المتابعة" ${item.status === 'مهتم - جاري المتابعة' ? 'selected' : ''}>📞 مهتم - جاري المتابعة</option>
+                <option value="في انتظار أوراق البنك" ${item.status === 'في انتظار أوراق البنك' ? 'selected' : ''}>🏦 في انتظار أوراق البنك</option>
+                <option value="موعد معاينة بالمعرض" ${item.status === 'موعد معاينة بالمعرض' ? 'selected' : ''}>📅 موعد معاينة بالمعرض</option>
+                <option value="تم البيع والتعاقد" ${item.status === 'تم البيع والتعاقد' ? 'selected' : ''}>✅ تم البيع والتعاقد</option>
+              </select>
+              <button type="button" onclick="App.whatsApp('${esc(item.phone)}', 'أهلاً بحضرتك يا أستاذ ${esc(item.name)}، معك إدارة ${esc(DEALER_BRAND_NAME)} بخصوص السيارة ${esc(item.interest)}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-black transition">💬 واتساب</button>
+              <button type="button" onclick="App.deleteCrmLeadRecord('${esc(item.id)}')" class="bg-rose-900/60 hover:bg-rose-600 text-white px-2.5 py-1.5 rounded-xl font-black transition">🗑️</button>
+            </div>
+          </div>
+        `).join('');
+      },
+
+      whatsApp(phone, customText = '') {
         let cleanPhone = SANDBOX_TEST_MODE
           ? MY_PERSONAL_TEST_PHONE
           : String(phone || DEFAULT_DEALER_PHONE).replace(/[^0-9]/g, '');
