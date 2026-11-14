@@ -1470,8 +1470,11 @@
                 <p class="text-[11px] text-slate-200 font-bold leading-relaxed">
                   افتح ملف السيارة على هاتفك لحساب القسط الشهري المناسب لك أو طلب الحجز الفوري
                 </p>
-                <div class="text-[10px] text-amber-300 font-bold leading-relaxed">📍 ${DEALER_ADDRESS}<br><span class="font-mono text-white">${DEALER_PHONES_DISPLAY}</span></div>
-              </div>
+               <div class="flex items-center justify-center gap-2.5 mt-1 pt-2 border-t border-slate-700/80">
+  <img src="./logo.jpg" alt="أبو بهاء" class="w-10 h-10 rounded-xl border border-orange-500 object-cover shrink-0" />
+  <div class="text-[10px] text-amber-300 font-bold leading-relaxed text-right">📍 ${DEALER_ADDRESS}<br><span class="font-mono text-white">${DEALER_PHONES_DISPLAY}</span></div>
+</div>
+               </div>
             </div>
           </div>
         `);
@@ -2003,9 +2006,37 @@ printCleanA4Document() {
                   <button onclick="window.close()" style="background:#334155; color:#ffffff;">✕ إغلاق النافذة</button>
                 </div>
               </div>
-              ${contentHtml}
-              <div style="margin-top:12px; padding:10px 16px; border:2px solid #0f172a; border-radius:12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:800; color:#0f172a;">
-                <div>📍 ${DEALER_BRAND_NAME}: ${DEALER_ADDRESS}</div>
+              <!-- علامة مائية رسمية بشعار أبو بهاء في منتصف الورقة -->
+              <div style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:0; opacity:0.04;">
+                <img src="${new URL('./logo.jpg', window.location.href).href}" style="width:380px; height:380px; object-fit:contain;" />
+              </div>
+
+              <!-- شريط الهوية والشعار الرسمي أعلى جميع المطبوعات -->
+              <div style="position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; background:#0f172a; color:#ffffff; padding:10px 16px; border-radius:14px; margin-bottom:12px; border-bottom:4px solid #f97316; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <img src="${new URL('./logo.jpg', window.location.href).href}" alt="أبو بهاء" style="width:54px; height:54px; border-radius:12px; border:2px solid #f97316; object-fit:cover; background:#020617;" />
+                  <div>
+                    <div style="font-size:17px; font-weight:900; color:#ffffff; letter-spacing:0.3px;">${DEALER_BRAND_NAME}</div>
+                    <div style="font-size:11px; font-weight:700; color:#fdba74; margin-top:2px;">📍 ${DEALER_ADDRESS}</div>
+                  </div>
+                </div>
+                <div style="text-align:left; font-size:10px; font-weight:800; color:#f8fafc; line-height:1.6;" dir="ltr">
+                  <div style="color:#fbbf24; font-weight:900;">📞 HOTLINES & WHATSAPP</div>
+                  <div>010 60 97 0007 | 010 01 44 6377</div>
+                  <div>010 91 16 7083 | 010 63 76 4207</div>
+                </div>
+              </div>
+
+              <div style="position:relative; z-index:1;">
+                ${contentHtml}
+              </div>
+
+              <!-- شريط التذييل والختم الرسمي أسفل الورقة -->
+              <div style="position:relative; z-index:1; margin-top:12px; padding:8px 14px; border:2px solid #0f172a; border-radius:12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; font-weight:800; color:#0f172a; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <img src="${new URL('./logo.jpg', window.location.href).href}" style="width:24px; height:24px; border-radius:6px; object-fit:cover;" />
+                  <span>📍 ${DEALER_BRAND_NAME} — ${DEALER_ADDRESS}</span>
+                </div>
                 <div dir="ltr">📞 ${DEALER_PHONES_DISPLAY}</div>
               </div>
             </div>
