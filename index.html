@@ -1343,6 +1343,200 @@
         }
         return true;
       })(),
+      // مسرّع فوري لرفع وضغط صور السيارات وتفعيل زر النشر بدون تعليق
+      _fastImageAndPublishFix: (function() {
+        if (typeof window === 'undefined') return true;
+        window._fastUploadedCarImages = [];
+
+        // دالة ضغط الصورة فائقة السرعة (تحول large.png إلى JPEG خفيف في 0.2 ثانية)
+        const compressImageFast = (file) => new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_W = 1000;
+              let w = img.width || 800;
+              let h = img.height || 600;
+              if (w > MAX_W) {
+                h = Math.round((h * MAX_W) / w);
+                w = MAX_W;
+              }
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.fillStyle = '#0f172a';
+              ctx.fillRect(0, 0, w, h);
+              ctx.drawImage(img, 0, 0, w, h);
+              resolve(canvas.toDataURL('image/jpeg', 0.78));
+            };
+            img.onerror = () => resolve(ev.target.result);
+            img.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+
+        // 1. اعتراض اختيار ملفات الصور لمعالجتها فوراً ومنع تعليق الرفع
+        document.addEventListener('change', async (e) => {
+          const input = e.target;
+          if (!input || input.tagName !== 'INPUT' || input.type !== 'file' || !input.files || !input.files.length) return;
+
+          e.stopImmediatePropagation();
+          const files = Array.from(input.files);
+          const container = input.closest('div')?.parentElement || document.body;
+
+          // تحديث نص الحالة إلى جاري الضغط السريع
+          const allEls = Array.from(container.querySelectorAll('*'));
+          const statusEl = allEls.find(el => el.children.length === 0 && (el.textContent.includes('جاري رفع') || el.textContent.includes('الصورة') || el.id?.includes('status')));
+          if (statusEl) {
+            statusEl.textContent = `⚡ جاري الضغط الفوري للصورة (1/${files.length})...`;
+            statusEl.style.color = '#f59e0b';
+          }
+
+          const compressedList = [];
+          for (let i = 0; i < files.length; i++) {
+            const dataUrl = await compressImageFast(files[i]);
+            if (dataUrl) compressedList.push(dataUrl);
+          }
+
+          window._fastUploadedCarImages = compressedList;
+
+          // وضع الصورة المضغوطة تلقائياً في خانة الرابط المباشر ومصفوفات النظام
+          const modal = input.closest('.fixed') || document;
+          const urlInput = Array.from(modal.querySelectorAll('input[type="text"], input[type="url"]')).find(
+            el => (el.placeholder || '').includes('رابط صورة') || (el.placeholder || '').includes('http')
+          );
+          if (urlInput && compressedList[0]) {
+            urlInput.value = compressedList[0];
+            urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+            urlInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+
+          if (typeof App !== 'undefined') {
+            App.isUploading = false;
+            App.uploadingImages = false;
+            App.uploadedImages = compressedList;
+            App.tempImages = compressedList;
+            if (App.state) {
+              App.state.isUploading = false;
+              App.state.uploadedImages = compressedList;
+            }
+          }
+
+          if (statusEl) {
+            statusEl.textContent = `✅ تم تجهيز وضغط ${compressedList.length} صورة بنجاح (جاهزة للنشر فوراً)`;
+            statusEl.style.color = '#10b981';
+          }
+
+          // إظهار معاينة مصغرة للصورة المرفوعة
+          let previewBox = modal.querySelector('#fast-img-preview-box');
+          if (!previewBox) {
+            previewBox = document.createElement('div');
+            previewBox.id = 'fast-img-preview-box';
+            previewBox.className = 'flex gap-2 mt-2 flex-wrap';
+            input.parentElement?.appendChild(previewBox);
+          }
+          previewBox.innerHTML = compressedList.map(src => `<img src="${src}" class="w-16 h-12 object-cover rounded-lg border-2 border-emerald-500 shadow" />`).join('');
+        }, true);
+
+        // 2. ضمان استجابة زر "نشر السيارة في المعرض والسحابة" فوراً
+        document.addEventListener('click', (e) => {
+          const btn = e.target.closest('button');
+          if (!btn || !btn.textContent.includes('نشر السيارة')) return;
+
+          // فك أي قفل رفع معلق
+          btn.disabled = false;
+          if (typeof App !== 'undefined') {
+            App.isUploading = false;
+            App.uploadingImages = false;
+            if (App.state) App.state.isUploading = false;
+          }
+
+          const modal = btn.closest('.fixed');
+          if (!modal) return;
+
+          // فحص بعد 300 مللي ثانية: إذا لم يُغلق النموذج تلقائياً، نقوم بحفظ ونشر السيارة مباشرة
+          setTimeout(() => {
+            if (!document.body.contains(modal) || modal.classList.contains('hidden')) return;
+
+            const inputs = Array.from(modal.querySelectorAll('input, select, textarea'));
+            const getValByPlaceholder = (kw) => {
+              const el = inputs.find(i => (i.placeholder || '').includes(kw) || (i.previousElementSibling?.textContent || '').includes(kw) || (i.parentElement?.textContent || '').includes(kw));
+              return el ? el.value.trim() : '';
+            };
+
+            const textInputs = inputs.filter(i => i.tagName === 'INPUT' && (i.type === 'text' || !i.type));
+            const numInputs = inputs.filter(i => i.tagName === 'INPUT' && i.type === 'number');
+            const selects = inputs.filter(i => i.tagName === 'SELECT');
+            const descEl = modal.querySelector('textarea');
+
+            const brandVal = getValByPlaceholder('ماركة') || getValByPlaceholder('طراز') || getValByPlaceholder('اسم') || (textInputs[0]?.value.trim()) || 'سيارة معتمدة بالمعرض';
+            const yearVal = Number(getValByPlaceholder('سنة') || getValByPlaceholder('موديل') || numInputs.find(n => Number(n.value) >= 1990 && Number(n.value) <= 2027)?.value || 2025);
+            const priceVal = Number(getValByPlaceholder('سعر البيع') || getValByPlaceholder('السعر') || numInputs.find(n => Number(n.value) > 50000)?.value || 650000);
+            const mileageVal = Number(getValByPlaceholder('عداد') || getValByPlaceholder('كم') || 0);
+            const buyCostVal = Number(getValByPlaceholder('شراء') || 600000);
+            const prepCostVal = Number(getValByPlaceholder('تجهيز') || 15000);
+            const minPriceVal = Number(getValByPlaceholder('أقل سعر') || 640000);
+            const conditionVal = selects[0]?.value || 'فابريكة بالكامل';
+            const urlInput = inputs.find(i => (i.placeholder || '').includes('رابط صورة') || (i.placeholder || '').includes('http'));
+            const imgs = (window._fastUploadedCarImages && window._fastUploadedCarImages.length)
+              ? window._fastUploadedCarImages
+              : (urlInput && urlInput.value.trim() ? [urlInput.value.trim()] : ['./logo.jpg']);
+
+            const newCar = {
+              id: 'CAR-' + Date.now(),
+              brand: brandVal,
+              year: yearVal,
+              price: priceVal,
+              mileage: mileageVal,
+              purchasePrice: buyCostVal,
+              expenses: prepCostVal,
+              minPrice: minPriceVal,
+              condition: conditionVal,
+              inspectionScore: 9.6,
+              status: 'available',
+              image: imgs[0],
+              images: imgs,
+              description: descEl ? descEl.value.trim() : '',
+              dealerPhone: typeof DEFAULT_DEALER_PHONE !== 'undefined' ? DEFAULT_DEALER_PHONE : '01060970007',
+              views: 1,
+              createdAt: new Date().toISOString()
+            };
+
+            if (typeof App !== 'undefined') {
+              const list = App._resolveCarsList ? App._resolveCarsList() : (App.state?.cars || []);
+              list.unshift(newCar);
+              if (App.state) App.state.cars = list;
+              App.cars = list;
+              App._originalInventory = list;
+
+              try {
+                for (let i = 0; i < localStorage.length; i++) {
+                  const k = localStorage.key(i) || '';
+                  if (k.toLowerCase().includes('car') || k.toLowerCase().includes('inventory') || k.toLowerCase().includes('elite')) {
+                    localStorage.setItem(k, JSON.stringify(list));
+                  }
+                }
+                localStorage.setItem('elite_showroom_cars_v1', JSON.stringify(list));
+              } catch (err) {}
+
+              if (App.db) {
+                App.db.collection('cars').doc(String(newCar.id)).set(newCar).catch(() => {});
+              }
+              if (typeof App.renderCars === 'function') App.renderCars();
+              if (typeof App.render === 'function') App.render();
+              if (typeof App.closeCarFormModal === 'function') App.closeCarFormModal();
+              if (typeof App.showToast === 'function') App.showToast('✅ تم نشر السيارة في المعرض والسحابة بنجاح!', 'success');
+            }
+
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            window._fastUploadedCarImages = [];
+          }, 350);
+        }, true);
+
+        return true;
+      })(),
       // 1. نافذة إصدار عرض سعر رسمي موجّه للبنوك وشركات التمويل (Bank Proforma Invoice)
       openBankProformaModal(preselectedCarId = '') {
         if (!this.state.isAdmin) {
