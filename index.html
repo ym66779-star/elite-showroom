@@ -132,7 +132,7 @@
     <div class="max-w-7xl mx-auto px-3 py-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3 cursor-pointer" onclick="App.resetFilters()">
         <div class="relative w-12 h-12 rounded-2xl bg-slate-950 border-2 border-orange-500 flex items-center justify-center overflow-hidden shadow-lg shrink-0">
-          <img src="./logo.jpg" alt="أبو بهاء" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover" />
+         <img src="./logo.jpg" alt="أبو بهاء" onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='./logo.jpg.jpg';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}" class="w-full h-full object-cover" />
           <div style="display:none" class="w-full h-full bg-gradient-to-br from-red-600 via-orange-600 to-slate-950 text-white flex-col items-center justify-center leading-none">
             <span class="text-base">🏎️</span>
             <span class="text-[8px] font-black text-amber-300 mt-0.5">أبو بهاء</span>
@@ -1212,14 +1212,11 @@
         if (box) box.innerHTML = '';
       },
 
-      whatsApp(phone, customText = '') {
+     whatsApp(phone, customText = '') {
         let cleanPhone = SANDBOX_TEST_MODE
           ? MY_PERSONAL_TEST_PHONE
           : String(phone || DEFAULT_DEALER_PHONE).replace(/[^0-9]/g, '');
-        if (!cleanPhone || cleanPhone === '201000000001') cleanPhone = DEFAULT_DEALER_PHONE;
-        if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
-        let cleanPhone = String(phone || DEFAULT_DEALER_PHONE).replace(/[^0-9]/g, '');
-        if (!cleanPhone || cleanPhone === '201000000001') cleanPhone = DEFAULT_DEALER_PHONE;
+        if (!cleanPhone || cleanPhone === '201000000001' || cleanPhone === '201066980075' || cleanPhone === '01066980075') cleanPhone = DEFAULT_DEALER_PHONE;
         if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone;
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const url = isMobile
