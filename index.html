@@ -1221,49 +1221,83 @@
         }
         if (box) box.innerHTML = '';
       },
-
-     // دالة ذكية لجلب قائمة السيارات الحالية من النظام تلقائياً
+// دالة ذكية لجلب قائمة سيارات المعرض الأساسية فقط (واستبعاد طلبات الاستبدال)
       _resolveCarsList() {
-        const isCarArr = (arr) => Array.isArray(arr) && arr.length > 0 && arr[0] && typeof arr[0] === 'object' && ('brand' in arr[0] || 'price' in arr[0]);
-        if (isCarArr(this._cachedCars)) return this._cachedCars;
-        const scanObj = (obj) => {
-          if (!obj || typeof obj !== 'object') return null;
-          for (const k of Object.keys(obj)) {
-            if (k === 'state' || k === '_cachedCars') continue;
-            const v = obj[k];
-            if (isCarArr(v)) return v;
-            if (v && typeof v === 'object' && !Array.isArray(v)) {
-              for (const sk of Object.keys(v)) {
-                if (isCarArr(v[sk])) return v[sk];
-              }
-            }
+        // فحص ما إذا كانت المصفوفة تخص سيارات المعرض المعتمدة (تحتوي على خصائص الفحص والعداد وحالة الفابريكة)
+        const isShowroomInventory = (arr) =>
+          Array.isArray(arr) &&
+          arr.length > 0 &&
+          arr[0] &&
+          typeof arr[0] === 'object' &&
+          ('brand' in arr[0]) &&
+          ('dealerPhone' in arr[0] || 'condition' in arr[0] || 'mileage' in arr[0] || 'inspectionScore' in arr[0]);
+
+        // 1. البحث المباشر أولاً في مخزون المعرض الأساسي
+        if (this._originalInventory && isShowroomInventory(this._originalInventory)) {
+          return this._originalInventory;
+        }
+        if (this.state && isShowroomInventory(this.state.cars)) {
+          this._originalInventory = this.state.cars;
+          return this.state.cars;
+        }
+        if (isShowroomInventory(this.cars)) {
+          this._originalInventory = this.cars;
+          return this.cars;
+        }
+
+        // 2. البحث في كائنات النظام مع اختيار المصفوفة الأكبر حجماً الخاصة بالمخزون
+        let bestMatch = [];
+        const checkCandidate = (arr) => {
+          if (isShowroomInventory(arr) && arr.length > bestMatch.length) {
+            bestMatch = arr;
           }
-          return null;
         };
+
         const roots = [
           this,
+          this.state,
           typeof State !== 'undefined' ? State : null,
           typeof state !== 'undefined' ? state : null,
           typeof Store !== 'undefined' ? Store : null,
           typeof store !== 'undefined' ? store : null
         ];
+
         for (const r of roots) {
-          const found = scanObj(r);
-          if (found) return found;
+          if (!r || typeof r !== 'object') continue;
+          if (Array.isArray(r.cars)) checkCandidate(r.cars);
+          for (const k of Object.keys(r)) {
+            if (k.toLowerCase().includes('trade') || k.toLowerCase().includes('req') || k.toLowerCase().includes('crm')) continue;
+            const v = r[k];
+            checkCandidate(v);
+            if (v && typeof v === 'object' && !Array.isArray(v)) {
+              for (const sk of Object.keys(v)) {
+                if (sk.toLowerCase().includes('trade') || sk.toLowerCase().includes('req')) continue;
+                checkCandidate(v[sk]);
+              }
+            }
+          }
         }
-        if (typeof cars !== 'undefined' && isCarArr(cars)) return cars;
+
+        // 3. فحص التخزين المحلي مع تجاهل مفاتيح الاستبدال والطلبات
         for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i) || '';
+          if (key.toLowerCase().includes('trade') || key.toLowerCase().includes('req') || key.toLowerCase().includes('crm') || key.toLowerCase().includes('fav')) continue;
           try {
-            const parsed = JSON.parse(localStorage.getItem(localStorage.key(i)));
-            if (isCarArr(parsed)) return parsed;
-            const nested = scanObj(parsed);
-            if (nested) return nested;
+            const parsed = JSON.parse(localStorage.getItem(key));
+            checkCandidate(parsed);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+              if (Array.isArray(parsed.cars)) checkCandidate(parsed.cars);
+            }
           } catch (e) {}
         }
-        return [];
+
+        if (bestMatch.length > 0) {
+          this._originalInventory = bestMatch;
+        }
+        return bestMatch;
       },
 
-      // مزامنة أزرار الجيل الرابع وربط this.state تلقائياً مع حالة دخول الإدارة والسيارات
+      // مزامنة أزرار الجيل الرابع دون المساس بمخزون السيارات الأصلي
       _gen4AdminSync: (function() {
         if (typeof window !== 'undefined') {
           setInterval(() => {
@@ -1273,13 +1307,12 @@
             if (!addBtn) return;
             const isHidden = addBtn.classList.contains('hidden');
 
-            // ربط App.state.isAdmin و App.state.cars تلقائياً لتعمل الأزرار الـ 3 فوراً
             if (typeof App !== 'undefined') {
               if (!App.state || typeof App.state !== 'object') App.state = {};
               App.state.isAdmin = !isHidden || Boolean(App.isAdmin);
-              const liveCars = App._resolveCarsList ? App._resolveCarsList() : [];
-              if (liveCars.length || !Array.isArray(App.state.cars)) {
-                App.state.cars = liveCars;
+              const inventory = App._resolveCarsList ? App._resolveCarsList() : [];
+              if (inventory.length > 0) {
+                App.state.cars = inventory;
               }
             }
 
