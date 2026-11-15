@@ -2144,6 +2144,203 @@
         `).join('');
       },
 
+      // إظهار وتفعيل "مفضلة المدير والمشرف" تلقائياً دون لمس الأكواد السابقة
+      _staffFavSync: (function() {
+        if (typeof window !== 'undefined') {
+          // التقاط ضغطة القلب ❤️ على كروت السيارات أثناء دخول المدير أو المشرف
+          document.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn || typeof App === 'undefined' || !App.state?.isAdmin) return;
+            const txt = (btn.textContent || '').trim();
+            if (txt === '❤️' || txt === '🤍' || btn.innerHTML.includes('❤') || (btn.getAttribute('onclick') || '').toLowerCase().includes('fav')) {
+              if (btn.id === 'open-staff-fav-btn' || btn.id === 'cmd-staff-fav-btn' || btn.textContent.includes('مفضلة')) return;
+              const card = btn.closest('.rounded-3xl, .rounded-2xl, [data-id], [data-car-id]') || btn.parentElement?.parentElement?.parentElement;
+              if (!card) return;
+              const cars = App._resolveCarsList ? App._resolveCarsList() : (App.state?.cars || []);
+              const cardText = card.innerText || '';
+              const matchedCar = cars.find(c => c && c.brand && cardText.includes(c.brand));
+              if (matchedCar) {
+                App.toggleStaffFavoriteCar(matchedCar.id);
+              }
+            }
+          }, true);
+
+          setInterval(() => {
+            const addBtn = document.getElementById('open-add-car-btn');
+            if (!addBtn) return;
+            const isStaffLoggedIn = !addBtn.classList.contains('hidden') || document.body.innerText.includes('مسجل دخول:');
+
+            const staffFavs = JSON.parse(localStorage.getItem('abu_bahaa_staff_favs_v1') || '[]');
+            const favCount = staffFavs.length;
+
+            // 1. زر "مفضلة المدير والمشرف" في الهيدر العلوي
+            if (!document.getElementById('open-staff-fav-btn')) {
+              const staffFavBtn = document.createElement('button');
+              staffFavBtn.id = 'open-staff-fav-btn';
+              staffFavBtn.type = 'button';
+              staffFavBtn.onclick = () => App.openStaffFavoritesModal();
+              staffFavBtn.className = (!isStaffLoggedIn ? 'hidden ' : 'flex ') + 'bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3 py-1.5 rounded-xl font-black transition items-center gap-1 shadow-md';
+              staffFavBtn.innerHTML = `<span>⭐</span> مفضلة المدير والمشرف ( <span id="staff-fav-count">${favCount}</span> )`;
+              addBtn.parentNode.insertBefore(staffFavBtn, addBtn);
+            } else {
+              const staffFavBtn = document.getElementById('open-staff-fav-btn');
+              staffFavBtn.classList.toggle('hidden', !isStaffLoggedIn);
+              staffFavBtn.classList.toggle('flex', isStaffLoggedIn);
+              const countEl = document.getElementById('staff-fav-count');
+              if (countEl) countEl.textContent = String(favCount);
+            }
+
+            // 2. زر "مفضلة الإدارة والمشرف" داخل شريط مركز القيادة الكحلي بجوار زر الاستبدال
+            const tradeBtn = Array.from(document.querySelectorAll('button')).find(b => (b.textContent || '').includes('الاستبدال ('));
+            if (tradeBtn && !document.getElementById('cmd-staff-fav-btn')) {
+              const cmdFavBtn = document.createElement('button');
+              cmdFavBtn.id = 'cmd-staff-fav-btn';
+              cmdFavBtn.type = 'button';
+              cmdFavBtn.onclick = () => App.openStaffFavoritesModal();
+              cmdFavBtn.className = 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1';
+              cmdFavBtn.innerHTML = `<span>⭐</span> مفضلة المدير والمشرف (<span id="cmd-staff-fav-count">${favCount}</span>)`;
+              tradeBtn.parentNode.insertBefore(cmdFavBtn, tradeBtn.nextSibling);
+            } else {
+              const cmdCountEl = document.getElementById('cmd-staff-fav-count');
+              if (cmdCountEl) cmdCountEl.textContent = String(favCount);
+            }
+          }, 400);
+        }
+        return true;
+      })(),
+
+      getCurrentStaffRoleName() {
+        const bodyTxt = document.body.innerText || '';
+        if (bodyTxt.includes('مشرف')) return 'المشرف';
+        return 'المدير العام';
+      },
+
+      toggleStaffFavoriteCar(carId, customNote = '') {
+        const cars = this._resolveCarsList ? this._resolveCarsList() : (this.state?.cars || []);
+        const car = cars.find(c => String(c.id) === String(carId));
+        if (!car) return;
+
+        let list = JSON.parse(localStorage.getItem('abu_bahaa_staff_favs_v1') || '[]');
+        const existsIdx = list.findIndex(item => String(item.carId) === String(carId));
+        const roleName = this.getCurrentStaffRoleName();
+
+        if (existsIdx > -1 && !customNote) {
+          list.splice(existsIdx, 1);
+          localStorage.setItem('abu_bahaa_staff_favs_v1', JSON.stringify(list));
+          if (this.showToast) this.showToast(`تم إزالة (${car.brand}) من مفضلة المدير والمشرف`, 'warning');
+        } else {
+          const record = {
+            carId: car.id,
+            brand: car.brand,
+            year: car.year,
+            price: Number(car.price || 0),
+            condition: car.condition || 'مفحوصة',
+            image: (car.images && car.images[0]) || car.image || './logo.jpg',
+            addedBy: roleName,
+            note: customNote || `تمت إضافتها بواسطة ${roleName}`,
+            date: new Date().toLocaleString('ar-EG')
+          };
+          if (existsIdx > -1) list[existsIdx] = record;
+          else list.unshift(record);
+          localStorage.setItem('abu_bahaa_staff_favs_v1', JSON.stringify(list));
+          if (this.showToast) this.showToast(`⭐ تمت إضافة (${car.brand}) إلى مفضلة المدير والمشرف`, 'success');
+        }
+        this.renderStaffFavoritesList();
+      },
+
+      openStaffFavoritesModal() {
+        if (!this.state?.isAdmin) {
+          if (this.showToast) this.showToast('🔒 هذه القائمة مخصصة للمدير العام والمشرف فقط', 'error');
+          return;
+        }
+        const existing = document.getElementById('gen4-staff-fav-modal');
+        if (existing) existing.remove();
+
+        const cars = this._resolveCarsList ? this._resolveCarsList() : (this.state?.cars || []);
+        const esc = (v) => this.escapeHtml ? this.escapeHtml(String(v ?? '')) : String(v ?? '');
+        const carOptions = cars.map(c =>
+          `<option value="${esc(c.id)}">${esc(c.brand)} (${esc(c.year)}) — ${Number(c.price || 0).toLocaleString('ar-EG')} ج.م</option>`
+        ).join('');
+
+        const modal = document.createElement('div');
+        modal.id = 'gen4-staff-fav-modal';
+        modal.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto no-print';
+        modal.innerHTML = `
+          <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl my-8">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div>
+                <h3 class="text-lg font-black text-amber-400 flex items-center gap-2">⭐ مفضلة وترشيحات المدير العام والمشرف</h3>
+                <p class="text-xs text-slate-400 mt-0.5">السيارات المختارة بواسطة الإدارة أو المشرف لترشيحها للعملاء المميزين (VIP)</p>
+              </div>
+              <button type="button" onclick="document.getElementById('gen4-staff-fav-modal').remove()" class="bg-slate-800 hover:bg-rose-600 text-white w-8 h-8 rounded-xl font-black transition">✕</button>
+            </div>
+
+            <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 mb-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <select id="sfav-car-id" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                ${carOptions}
+              </select>
+              <input id="sfav-note" type="text" placeholder="ملاحظة (مثال: ترشيح المشرف للعميل أ/ محمود)..." class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold" />
+              <button type="button" onclick="App.toggleStaffFavoriteCar(document.getElementById('sfav-car-id').value, document.getElementById('sfav-note').value || 'مرشحة من الإدارة')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl px-3 py-2 font-black transition">⭐ إضافة للمفضلة</button>
+            </div>
+
+            <div id="staff-fav-list-container" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
+
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-slate-800">
+              <button type="button" onclick="localStorage.removeItem('abu_bahaa_staff_favs_v1'); App.renderStaffFavoritesList();" class="text-xs text-rose-400 hover:text-rose-300 font-bold">🗑️ مسح القائمة بالكامل</button>
+              <button type="button" onclick="App.shareStaffFavoritesWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2.5 rounded-xl font-black transition flex items-center gap-1.5">
+                <span>💬</span> إرسال القائمة المرشحة للعميل واتساب
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        this.renderStaffFavoritesList();
+      },
+
+      renderStaffFavoritesList() {
+        const container = document.getElementById('staff-fav-list-container');
+        if (!container) return;
+        const esc = (v) => this.escapeHtml ? this.escapeHtml(String(v ?? '')) : String(v ?? '');
+        const list = JSON.parse(localStorage.getItem('abu_bahaa_staff_favs_v1') || '[]');
+        if (!list.length) {
+          container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs font-bold">لا توجد سيارات في مفضلة المدير والمشرف حالياً — اضغط على ❤️ في أي سيارة أو أضفها من الأعلى.</div>`;
+          return;
+        }
+        container.innerHTML = list.map(item => `
+          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-3">
+              <img src="${esc(item.image || './logo.jpg')}" onerror="this.src='./logo.jpg'" class="w-14 h-11 rounded-xl object-cover border border-amber-500/50" />
+              <div>
+                <div class="font-black text-white text-sm flex items-center gap-2">
+                  <span>${esc(item.brand)} (${esc(item.year)})</span>
+                  <span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-lg text-[10px]">👤 ${esc(item.addedBy || 'الإدارة')}</span>
+                </div>
+                <div class="text-emerald-400 font-black font-mono mt-0.5">${Number(item.price || 0).toLocaleString('ar-EG')} ج.م — <span class="text-slate-300 font-semibold">${esc(item.note)}</span></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="document.getElementById('gen4-staff-fav-modal').remove(); App.openBankProformaModal('${esc(item.carId)}');" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1.5 rounded-xl font-bold">🏦 عرض سعر للبنك</button>
+              <button type="button" onclick="App.toggleStaffFavoriteCar('${esc(item.carId)}')" class="bg-rose-900/60 hover:bg-rose-600 text-white px-2.5 py-1.5 rounded-xl font-black">🗑️</button>
+            </div>
+          </div>
+        `).join('');
+      },
+
+      shareStaffFavoritesWhatsApp() {
+        const list = JSON.parse(localStorage.getItem('abu_bahaa_staff_favs_v1') || '[]');
+        if (!list.length) {
+          if (this.showToast) this.showToast('القائمة فارغة حالياً', 'warning');
+          return;
+        }
+        const lines = list.map((c, idx) => `${idx + 1}. *${c.brand} (${c.year})* — السعر: ${Number(c.price || 0).toLocaleString('ar-EG')} ج.م (${c.note || ''})`).join('\n');
+        const msg =
+          `⭐ *ترشيحات إدارة ومشرفي ${DEALER_BRAND_NAME}*\n\n` +
+          `${lines}\n\n` +
+          `📍 العنوان: ${DEALER_ADDRESS}\n` +
+          `📞 للتواصل والحجز: ${DEALER_PHONES_DISPLAY}`;
+        this.whatsApp(DEFAULT_DEALER_PHONE, msg);
+      },
+
       whatsApp(phone, customText = '') {
         let cleanPhone = SANDBOX_TEST_MODE
           ? MY_PERSONAL_TEST_PHONE
