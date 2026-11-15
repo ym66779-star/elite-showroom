@@ -3,21 +3,24 @@
   "short_name": "أبو بهاء للسيارات",
   "description": "منصة معرض أبو بهاء لتجارة السيارات — أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
     {
-      "src": "./logo.jpg",
+      "src": "./logo.jpg?v=8",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     },
     {
-      "src": "./logo.jpg",
+      "src": "./logo.jpg?v=8",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     }
   ]
 }
