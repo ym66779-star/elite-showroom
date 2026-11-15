@@ -1,8 +1,9 @@
-const CACHE_NAME = 'elite-showroom-v6';
+const CACHE_NAME = 'abu-bahaa-showroom-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './logo.jpg'
 ];
 
 // 1. تثبيت التحديث الجديد فوراً بدون انتظار إغلاق المتصفح
@@ -13,7 +14,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. مسح جميع نسخ الكاش القديمة تلقائياً وتفعيل النسخة v6 على كل الأجهزة
+// 2. مسح جميع نسخ الكاش القديمة تلقائياً وتفعيل النسخة v8 على كل الأجهزة
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -32,12 +33,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // استبعاد طلبات Firebase والـ API الخارجية من الكاش تماماً لضمان المزامنة اللحظية
+  // استبعاد الطلبات غير القياسية وطلبات Firebase لضمان المزامنة اللحظية
   if (
     req.method !== 'GET' ||
+    !req.url.startsWith('http') ||
     req.url.includes('firestore.googleapis.com') ||
     req.url.includes('firebasestorage.googleapis.com') ||
-    req.url.includes('gstatic.com/firebasejs')
+    req.url.includes('gstatic.com/firebasejs') ||
+    req.url.includes('api.qrserver.com')
   ) {
     return;
   }
@@ -45,8 +48,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(req)
       .then((networkRes) => {
-        const resClone = networkRes.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+        if (networkRes && networkRes.status === 200) {
+          const resClone = networkRes.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+        }
         return networkRes;
       })
       .catch(() => caches.match(req))
