@@ -7,7 +7,7 @@
   <link rel="icon" type="image/jpeg" href="./logo.jpg?v=7" />
   <link rel="apple-touch-icon" href="./logo.jpg?v=7" />
   <link rel="manifest" href="./manifest.json?v=7" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚘</text></svg>" />
+  
   <meta name="theme-color" content="#090d16" />
   <script>
     (function() {
@@ -212,8 +212,6 @@
 
   <!-- المحتوى الرئيسي -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full no-print">
-  <!-- المحتوى الرئيسي -->
-  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full no-print">
     <!-- شريط الملخص السريع للإدارة -->
     <div id="admin-quick-bar" class="hidden mb-6"></div>
 
@@ -307,7 +305,7 @@
   <div id="chat-modal" class="fixed bottom-24 sm:bottom-28 right-3 left-3 sm:left-auto sm:right-5 bg-white sm:w-96 rounded-2xl shadow-2xl border border-slate-200 hidden flex-col z-40 overflow-hidden no-print">
     <div class="glass-header text-white p-3.5 flex justify-between items-center">
       <div>
-        <h3 class="font-black text-sm flex items-center gap-1.5"><span>🤖</span> مستشار النخبة الذكي</h3>
+        <h3 class="font-black text-sm flex items-center gap-1.5"><span>🤖</span> مستشار أبو بهاء الذكي</h3>
         <p class="text-[10px] text-amber-300">تحليل فوري للميزانية وترشيح كاش أو تقسيط</p>
       </div>
       <button onclick="App.toggleChat(false)" class="bg-white/10 hover:bg-white/20 text-white w-7 h-7 rounded-full font-bold text-xs flex items-center justify-center">✕</button>
@@ -551,35 +549,11 @@
       }
 
       static async uploadCarImage(file, onProgress) {
-        if (this.isConnected && this.storage && window.location.protocol.startsWith('http')) {
-          try {
-            const safeName = `cars/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-            const ref = this.storage.ref().child(safeName);
-            const uploadTask = ref.put(file);
-
-            return await new Promise((resolve, reject) => {
-              uploadTask.on('state_changed',
-                (snapshot) => {
-                  const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                  if (onProgress) onProgress(pct);
-                },
-                (err) => reject(err),
-                async () => {
-                  const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
-                  resolve(downloadUrl);
-                }
-              );
-            });
-          } catch (storageErr) {
-            console.warn('Firebase Storage fallback to Smart WebP Compression:', storageErr);
-          }
-        }
-        if (onProgress) onProgress(50);
-        const compressedDataUrl = await this.compressImageFile(file);
+        if (onProgress) onProgress(35);
+        const compressedDataUrl = await this.compressImageFile(file, 960, 0.78);
         if (onProgress) onProgress(100);
         return compressedDataUrl;
       }
-
       static compressImageFile(file, maxWidth = 780, quality = 0.72) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -1316,13 +1290,15 @@
               }
             }
 
-            [bankBtn, excelBtn].forEach(btn => {
-              if (btn) {
-                btn.classList.toggle('hidden', isHidden);
-                btn.classList.toggle('flex', !isHidden);
-              }
-            });
-
+           if (bankBtn) {
+           bankBtn.classList.toggle('hidden', isHidden);
+           bankBtn.classList.toggle('flex', !isHidden);
+         }
+         if (excelBtn) {
+           const showExcel = !isHidden && (typeof AuthService !== 'undefined' && AuthService.getRole() === 'SuperAdmin');
+           excelBtn.classList.toggle('hidden', !showExcel);
+           excelBtn.classList.toggle('flex', showExcel);
+         }
             if (excelBtn && !document.getElementById('open-crm-modal-btn')) {
               const crmBtn = document.createElement('button');
               crmBtn.id = 'open-crm-modal-btn';
@@ -2341,6 +2317,141 @@
         this.whatsApp(DEFAULT_DEALER_PHONE, msg);
       },
 
+      // تصحيح شامل ومباشر لقراءة بيانات CarModel وتأمين الصلاحيات والـ localStorage
+      _auditCleanPatch: (function() {
+        if (typeof window === 'undefined') return true;
+        window.addEventListener('DOMContentLoaded', () => {
+          // 1. تسريع رفع وضغط الصور محلياً بدون انتظار Firebase Storage
+          if (typeof FirebaseCloudService !== 'undefined') {
+            FirebaseCloudService.uploadCarImage = async function(file, onProgress) {
+              if (onProgress) onProgress(40);
+              const compressed = await this.compressImageFile(file, 960, 0.78);
+              if (onProgress) onProgress(100);
+              return compressed;
+            };
+          }
+
+          // 2. تحديث اسم المستشار الذكي في نافذة الشات
+          const chatTitle = document.querySelector('#chat-modal h3');
+          if (chatTitle) chatTitle.innerHTML = '<span>🤖</span> مستشار أبو بهاء الذكي';
+        });
+        return true;
+      })(),
+
+      // قراءة قائمة سيارات المعرض من المستودع الأصلي مباشرة مع توحيد الخصائص
+      _resolveCarsList() {
+        if (typeof CarRepository !== 'undefined' && typeof CarRepository.getAllCars === 'function') {
+          return CarRepository.getAllCars().map(c => {
+            c.condition = c.paintStatus || 'فابريكة بالكامل';
+            c.mileage = c.mileageKm || 0;
+            c.purchasePrice = c.purchaseCost || Math.round(c.price * 0.90);
+            c.expenses = c.prepCost || 15000;
+            c.views = c.viewsCount || 0;
+            return c;
+          });
+        }
+        return [];
+      },
+
+      // قراءة اسم البنك أو الشركة المخصصة بدقة للطباعة والواتساب
+      _getSelectedBankQuoteName() {
+        const customBankEl = document.getElementById('bp-bank-custom');
+        if (customBankEl && !customBankEl.classList.contains('hidden') && customBankEl.value.trim()) {
+          return customBankEl.value.trim();
+        }
+        return document.getElementById('bp-bank-name')?.value || 'إدارة تمويل السيارات';
+      },
+
+      sendBankQuoteWhatsApp() {
+        const carId = document.getElementById('bp-car-id')?.value;
+        const { car } = CarRepository.findCarAnywhere(carId);
+        const targetCar = car || {};
+        const bankName = this._getSelectedBankQuoteName();
+        const clientName = document.getElementById('bp-client-name')?.value || 'العميل';
+        const clientPhone = document.getElementById('bp-client-phone')?.value || '';
+        const total = Number(document.getElementById('bp-car-price')?.value || 0);
+        const pct = Number(document.getElementById('bp-down-pct')?.value || 30);
+        const down = Math.round(total * (pct / 100));
+        const loan = Math.max(0, total - down);
+        const msg =
+          `🏦 *عرض سعر رسمي للتمويل البنكي — ${DEALER_BRAND_NAME}*\n` +
+          `• موجّه إلى: ${bankName}\n` +
+          `• باسم العميل: ${clientName}\n` +
+          `• السيارة: ${targetCar.brand || ''} ${targetCar.model || ''} (موديل ${targetCar.year || ''})\n` +
+          `• الحالة الفنية: ${targetCar.paintStatus || 'فابريكة'} — عداد ${Number(targetCar.mileageKm || 0).toLocaleString('ar-EG')} كم\n` +
+          `• السعر الإجمالي: ${total.toLocaleString('ar-EG')} ج.م\n` +
+          `• الدفعة المقدمة (${pct}%): ${down.toLocaleString('ar-EG')} ج.م\n` +
+          `• صافي مبلغ التمويل المطلوب: ${loan.toLocaleString('ar-EG')} ج.م\n` +
+          `📍 العنوان: ${DEALER_ADDRESS}\n` +
+          `📞 للتواصل: ${DEALER_PHONES_DISPLAY}`;
+        this.whatsApp(clientPhone || DEFAULT_DEALER_PHONE, msg);
+      },
+
+      // قفل شيت الإكسيل المحاسبي للمدير العام فقط مع تضمين السيارات المتاحة والمباعة
+      exportExcelReport() {
+        if (AuthService.getRole() !== 'SuperAdmin') {
+          this.showToast('🔒 شيت الإكسيل المحاسبي والأرباح السرية مخصص للمدير العام فقط', 'error');
+          return;
+        }
+        const activeCars = CarRepository.getAllCars();
+        const soldCars = CarRepository.getSoldCars();
+        const allCars = [
+          ...activeCars.map(c => ({ car: c, isSold: false })),
+          ...soldCars.map(c => ({ car: c, isSold: true }))
+        ];
+        const cleanCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+        const headers = [
+          'كود السيارة', 'الماركة', 'الموديل والفئة', 'سنة الصنع', 'حالة الفابريكة والدهان',
+          'العداد (كم)', 'تقييم الفحص الهندسي', 'حالة التوافر', 'سعر البيع (ج.م)',
+          'تكلفة الشراء (ج.م)', 'مصروفات التجهيز (ج.م)', 'إجمالي التكلفة (ج.م)',
+          'أقل سعر مسموح للمشرف (ج.م)', 'صافي الربح (ج.م)', 'عدد المشاهدات'
+        ];
+
+        let totalRevenue = 0, totalCostAll = 0, totalNetProfit = 0;
+        const rows = allCars.map(({ car: c, isSold }) => {
+          const sellPrice = Number(c.price || 0);
+          const buyCost = Number(c.purchaseCost || 0);
+          const prepCost = Number(c.prepCost || 0);
+          const totalCost = c.totalCost;
+          const netProfit = c.expectedProfit;
+          totalRevenue += sellPrice;
+          totalCostAll += totalCost;
+          totalNetProfit += netProfit;
+          const statusAr = isSold ? `مباعة (${c.soldAt || ''})` : (c.isReserved ? `محجوزة (${c.reservedByClient || ''})` : 'متاحة بالمعرض');
+          return [
+            c.id, c.brand, c.model, c.year, c.paintStatus, Number(c.mileageKm || 0),
+            `${c.inspectionScore}/10`, statusAr, sellPrice, buyCost, prepCost,
+            totalCost, Number(c.minAllowedPrice || 0), netProfit, Number(c.viewsCount || 0)
+          ].map(cleanCell).join(',');
+        });
+
+        rows.push([]);
+        rows.push(['الإجمالي العام للمعرض', `المتاح: ${activeCars.length}`, `المباع: ${soldCars.length}`, '', '', '', '', '', totalRevenue, '', '', totalCostAll, '', totalNetProfit, ''].map(cleanCell).join(','));
+
+        const crmList = SafeStorage.get('abu_bahaa_crm_leads_v1', []) || [];
+        if (crmList.length > 0) {
+          rows.push([]);
+          rows.push(['سجل متابعة العملاء (CRM) — ' + DEALER_BRAND_NAME].map(cleanCell).join(','));
+          rows.push(['اسم العميل', 'رقم الهاتف', 'السيارة المطلوبة', 'حالة المتابعة', 'ملاحظات المشرف', 'تاريخ التسجيل'].map(cleanCell).join(','));
+          crmList.forEach(item => {
+            rows.push([item.name, item.phone, item.interest, item.status, item.notes, item.date].map(cleanCell).join(','));
+          });
+        }
+
+        const csvContent = '\uFEFF' + [headers.map(cleanCell).join(','), ...rows].join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Abu_Bahaa_Inventory_Profit_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        this.showToast('📊 تم تحميل شيت الإكسيل المحاسبي الشامل بنجاح!', 'success');
+      },
+
       whatsApp(phone, customText = '') {
         let cleanPhone = SANDBOX_TEST_MODE
           ? MY_PERSONAL_TEST_PHONE
@@ -2720,7 +2831,7 @@
         const maxM = car.maxInstallmentMonths || 60;
         const estMonthly = Math.round(((car.price - minDown) * (1 + 0.135 * (maxM / 12))) / maxM);
 
-        const adText = `🔥 وحش جديد ينضم لأسطول #معرض_النخبة_للسيارات 🔥\n\n` +
+        const adText = `🔥 وحش جديد ينضم لأسطول #أبو_بهاء_لتجارة_السيارات 🔥\n\n` +
           `🚘 الماركة والموديل: ${car.brand} ${car.model} (موديل ${car.year})\n` +
           `🛡️ حالة الدهان: ${car.paintStatus} (${car.paintDetails})\n` +
           `⚙️ تقييم الفحص الهندسي المعتمد: ${car.inspectionScore}/10\n` +
@@ -5610,7 +5721,7 @@ printCleanA4Document() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=6', { updateViaCache: 'none' });
+          const reg = await navigator.serviceWorker.register('./sw.js?v=8', { updateViaCache: 'none' });
           if (reg && reg.update) reg.update();
         } catch (err) {
           console.warn('PWA Service Worker Warning:', err);
