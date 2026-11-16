@@ -2452,6 +2452,143 @@
         this.showToast('📊 تم تحميل شيت الإكسيل المحاسبي الشامل بنجاح!', 'success');
       },
 
+      // تأمين الشريط السفلي + نظام النسخ الاحتياطي والاستعادة الشامل (Backup & Restore)
+      _backupAndSafetyEnhancer: (function() {
+        if (typeof window === 'undefined') return true;
+
+        const cleanFooterAndInjectRestore = () => {
+          // 1. إخفاء وإزالة زر "استعادة السيارات الافتراضية" نهائياً لحماية بيانات المعرض
+          const restoreDefBtn = document.querySelector('button[onclick*="restoreDefaults"]');
+          if (restoreDefBtn) restoreDefBtn.remove();
+
+          // 2. إضافة زر "استعادة من ملف (Restore)" بجوار زر تحميل Backup JSON في تبويب السحابة
+          const exportBtn = document.querySelector('button[onclick*="exportDatabaseJson"]');
+          if (exportBtn && !document.getElementById('import-db-json-btn')) {
+            const parent = exportBtn.parentElement;
+            if (parent) {
+              const btnWrap = document.createElement('div');
+              btnWrap.className = 'flex items-center gap-1.5';
+              exportBtn.parentNode.insertBefore(btnWrap, exportBtn);
+              btnWrap.appendChild(exportBtn);
+
+              const importBtn = document.createElement('button');
+              importBtn.id = 'import-db-json-btn';
+              importBtn.type = 'button';
+              importBtn.onclick = () => App.triggerImportDatabaseJson();
+              importBtn.className = 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-lg transition shadow-sm';
+              importBtn.innerHTML = '📤 استعادة نسخة (Restore)';
+              btnWrap.appendChild(importBtn);
+            }
+          }
+        };
+
+        window.addEventListener('DOMContentLoaded', cleanFooterAndInjectRestore);
+        setInterval(cleanFooterAndInjectRestore, 600);
+        return true;
+      })(),
+
+      // تعطيل دالة استعادة السيارات الافتراضية لمنع مسح المخزون الفعلي بالخطأ
+      restoreDefaults() {
+        this.showToast('🔒 تم قفل استعادة البيانات الافتراضية لحماية مخزون المعرض الفعلي.', 'warning');
+      },
+
+      // تحميل نسخة احتياطية شاملة لكل بيانات المعرض والـ CRM والمفضلة (9 جداول)
+      exportDatabaseJson() {
+        if (!AuthService.isLogged()) {
+          this.showToast('🔒 النسخ الاحتياطي متاح لإدارة المعرض فقط', 'error');
+          return;
+        }
+        const dump = {
+          meta: {
+            dealer: DEALER_BRAND_NAME,
+            exportedAt: new Date().toISOString(),
+            exportedBy: AuthService.getName(),
+            version: 'v8'
+          },
+          cars: SafeStorage.get(CarRepository.KEY, []),
+          soldCars: SafeStorage.get(CarRepository.SOLD_KEY, []),
+          reservations: SafeStorage.get(CarRepository.RESERVATIONS_KEY, []),
+          inspections: SafeStorage.get(CarRepository.INSPECTIONS_KEY, []),
+          tradeIns: SafeStorage.get(CarRepository.TRADEIN_KEY, []),
+          archivedTradeIns: SafeStorage.get(CarRepository.ARCHIVED_TRADEIN_KEY, []),
+          crmLeads: SafeStorage.get('abu_bahaa_crm_leads_v1', []),
+          staffFavorites: SafeStorage.get('abu_bahaa_staff_favs_v1', []),
+          admins: SafeStorage.get(AuthService.DB_KEY, [])
+        };
+        const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `Abu_Bahaa_Full_Backup_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.showToast('💾 تم تحميل النسخة الاحتياطية الكاملة للمعرض بنجاح!', 'success');
+      },
+
+      // استعادة قاعدة البيانات بالكامل من ملف Backup JSON ومزامنتها مع Firebase
+      triggerImportDatabaseJson() {
+        if (AuthService.getRole() !== 'SuperAdmin') {
+          this.showToast('🔒 استعادة النسخة الاحتياطية مخصصة للمدير العام فقط', 'error');
+          return;
+        }
+        let fileInput = document.getElementById('hidden-restore-json-input');
+        if (fileInput) fileInput.remove();
+        fileInput = document.createElement('input');
+        fileInput.id = 'hidden-restore-json-input';
+        fileInput.type = 'file';
+        fileInput.accept = '.json,application/json';
+        fileInput.style.display = 'none';
+
+        fileInput.onchange = (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            try {
+              const data = JSON.parse(ev.target.result);
+              if (!data || (!Array.isArray(data.cars) && !Array.isArray(data.soldCars))) {
+                this.showToast('❌ ملف النسخة الاحتياطية غير صالح أو تالف.', 'error');
+                return;
+              }
+              const carsCount = Array.isArray(data.cars) ? data.cars.length : 0;
+              const soldCount = Array.isArray(data.soldCars) ? data.soldCars.length : 0;
+
+              this.confirmAction(
+                'تأكيد استعادة النسخة الاحتياطية',
+                `سيتم استعادة (${carsCount} سيارة متاحة و ${soldCount} سيارة مباعة وكافة الحجوزات وسجل الـ CRM) ومزامنتها مع السحابة فوراً. هل تود المتابعة؟`,
+                'نعم، استعادة البيانات الآن',
+                'bg-emerald-700 hover:bg-emerald-600',
+                async () => {
+                  if (Array.isArray(data.cars)) SafeStorage.set(CarRepository.KEY, data.cars);
+                  if (Array.isArray(data.soldCars)) SafeStorage.set(CarRepository.SOLD_KEY, data.soldCars);
+                  if (Array.isArray(data.reservations)) SafeStorage.set(CarRepository.RESERVATIONS_KEY, data.reservations);
+                  if (Array.isArray(data.inspections)) SafeStorage.set(CarRepository.INSPECTIONS_KEY, data.inspections);
+                  if (Array.isArray(data.tradeIns)) SafeStorage.set(CarRepository.TRADEIN_KEY, data.tradeIns);
+                  if (Array.isArray(data.archivedTradeIns)) SafeStorage.set(CarRepository.ARCHIVED_TRADEIN_KEY, data.archivedTradeIns);
+                  if (Array.isArray(data.crmLeads)) SafeStorage.set('abu_bahaa_crm_leads_v1', data.crmLeads);
+                  if (Array.isArray(data.staffFavorites)) SafeStorage.set('abu_bahaa_staff_favs_v1', data.staffFavorites);
+                  if (Array.isArray(data.admins) && data.admins.length > 0) SafeStorage.set(AuthService.DB_KEY, data.admins);
+
+                  await FirebaseCloudService.syncToCloud();
+                  this.syncAll();
+                  this.openCommandCenter('cloud');
+                  this.showToast('✅ تم استعادة النسخة الاحتياطية ومزامنتها مع السحابة بنجاح!', 'success');
+                }
+              );
+            } catch (err) {
+              this.showToast('❌ تعذر قراءة ملف الـ JSON، تأكد من اختيار الملف الصحيح.', 'error');
+            }
+          };
+          reader.readAsText(file);
+        };
+
+        document.body.appendChild(fileInput);
+        fileInput.click();
+      },
+
       whatsApp(phone, customText = '') {
         let cleanPhone = SANDBOX_TEST_MODE
           ? MY_PERSONAL_TEST_PHONE
