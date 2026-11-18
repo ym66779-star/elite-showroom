@@ -3044,6 +3044,215 @@
         this.whatsApp(DEFAULT_DEALER_PHONE, msg);
       },
 
+      // === معالج إصلاح المفضلة + كسر حد 1MB في Firebase لقبول عدد لا نهائي من السيارات ===
+      _infiniteCarsAndFavFix: (function() {
+        if (typeof window === 'undefined') return true;
+
+        // 1. إيقاف اعتراض الصور القديم على مستوى window قبل وصوله لـ document
+        window.addEventListener('change', (e) => {
+          const input = e.target;
+          if (input && input.id === 'cf-file-input' && input.files && input.files.length) {
+            e.stopImmediatePropagation();
+            if (typeof App !== 'undefined' && typeof App.handleCarFilesSelected === 'function') {
+              App.handleCarFilesSelected(input.files);
+            }
+          }
+        }, true);
+
+        // 2. تنظيف مفتاح المفضلة والمفاتيح التالفة فور تشغيل الصفحة
+        const sanitizeCorruptedStorage = () => {
+          try {
+            const rawFavs = SafeStorage.get(CarRepository.FAVORITES_KEY, []);
+            const activeIds = new Set((SafeStorage.get(CarRepository.KEY, []) || []).map(c => String(c?.id || '')));
+            if (Array.isArray(rawFavs)) {
+              const cleanFavs = rawFavs.filter(item => typeof item === 'string' && activeIds.has(item));
+              if (cleanFavs.length !== rawFavs.length) {
+                SafeStorage.set(CarRepository.FAVORITES_KEY, cleanFavs);
+              }
+            }
+
+            // تنظيف أرشيف المباعة من أي كروت أضيفت بالخطأ بدون تاريخ بيع
+            const rawSold = SafeStorage.get(CarRepository.SOLD_KEY, []);
+            if (Array.isArray(rawSold)) {
+              const cleanSold = rawSold.filter(c => c && typeof c === 'object' && c.soldAt && Number(c.price) > 0);
+              if (cleanSold.length !== rawSold.length) {
+                SafeStorage.set(CarRepository.SOLD_KEY, cleanSold);
+              }
+            }
+          } catch (err) {}
+        };
+
+        // دالة ضغط مصغرة لتخفيف الصور القديمة والجديدة حتى لا تتجاوز حد Firebase
+        const shrinkDataUrl = (dataUrl, maxW = 640, qual = 0.62) => new Promise((resolve) => {
+          if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image') || dataUrl.length < 65000) {
+            resolve(dataUrl);
+            return;
+          }
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width || 640;
+            let h = img.height || 480;
+            if (w > maxW) {
+              h = Math.round((h * maxW) / w);
+              w = maxW;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/webp', qual));
+          };
+          img.onerror = () => resolve(dataUrl);
+          img.src = dataUrl;
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+          sanitizeCorruptedStorage();
+
+          // 3. ترقية محرك الصور ليضغط بحجم خفيف جداً (WebP ~30KB)
+          if (typeof FirebaseCloudService !== 'undefined') {
+            FirebaseCloudService.uploadCarImage = async function(file, onProgress) {
+              if (onProgress) onProgress(40);
+              const compressed = await this.compressImageFile(file, 640, 0.62);
+              if (onProgress) onProgress(100);
+              return compressed;
+            };
+
+            // 4. ترقية المزامنة السحابية بنظام تقسيم الوثائق (Chunking) لكسر حد 1 ميجابايت
+            FirebaseCloudService._isWritingCloud = false;
+
+            FirebaseCloudService.syncToCloud = async function() {
+              if (!this.isConnected || !this.db || !this.isCloudHydrated) return;
+              this._isWritingCloud = true;
+              try {
+                sanitizeCorruptedStorage();
+                const rawCars = SafeStorage.get(CarRepository.KEY, []) || [];
+
+                // ضغط أي صورة كبيرة في السيارات الحالية قبل الرفع
+                for (let i = 0; i < rawCars.length; i++) {
+                  const c = rawCars[i];
+                  if (c.imageUrl && c.imageUrl.startsWith('data:image') && c.imageUrl.length > 65000) {
+                    c.imageUrl = await shrinkDataUrl(c.imageUrl);
+                  }
+                  if (Array.isArray(c.images)) {
+                    for (let j = 0; j < c.images.length; j++) {
+                      if (c.images[j] && c.images[j].startsWith('data:image') && c.images[j].length > 65000) {
+                        c.images[j] = await shrinkDataUrl(c.images[j]);
+                      }
+                    }
+                  }
+                }
+                SafeStorage.set(CarRepository.KEY, rawCars);
+
+                // تقسيم السيارات إلى مجموعات (كل 5 سيارات في وثيقة سحابية) لمنع تجاوز 1MB نهائياً
+                const CHUNK_SIZE = 5;
+                const firstChunk = rawCars.slice(0, CHUNK_SIZE);
+                const extraChunks = [];
+                for (let idx = CHUNK_SIZE; idx < rawCars.length; idx += CHUNK_SIZE) {
+                  extraChunks.push(rawCars.slice(idx, idx + CHUNK_SIZE));
+                }
+
+                // حفظ مجموعات السيارات الإضافية أولاً
+                for (let cIdx = 0; cIdx < extraChunks.length; cIdx++) {
+                  await this.db.collection('elite_state').doc(`main_store_chunk_${cIdx + 1}`).set({
+                    cars: extraChunks[cIdx],
+                    updatedAt: new Date().toISOString()
+                  });
+                }
+
+                // حفظ الوثيقة الرئيسية مع مؤشر عدد الأجزاء الإضافية
+                const mainPayload = {
+                  cars: firstChunk,
+                  overflowChunks: extraChunks.length,
+                  totalCarsCount: rawCars.length,
+                  soldCars: SafeStorage.get(CarRepository.SOLD_KEY, []),
+                  reservations: SafeStorage.get(CarRepository.RESERVATIONS_KEY, []),
+                  inspections: SafeStorage.get(CarRepository.INSPECTIONS_KEY, []),
+                  tradeIns: SafeStorage.get(CarRepository.TRADEIN_KEY, []),
+                  archivedTradeIns: SafeStorage.get(CarRepository.ARCHIVED_TRADEIN_KEY, []),
+                  admins: SafeStorage.get(AuthService.DB_KEY, []),
+                  updatedAt: new Date().toISOString()
+                };
+                await this.db.collection('elite_state').doc('main_store').set(mainPayload);
+              } catch (e) {
+                console.warn('Cloud Sync Sharded Write Error:', e);
+              } finally {
+                setTimeout(() => { this._isWritingCloud = false; }, 1200);
+              }
+            };
+
+            // دالة تجميع كل أجزاء السيارات من السحابة عند القراءة
+            FirebaseCloudService._hydrateAllChunksAndApply = async function(mainData) {
+              if (!mainData) return;
+              let combinedCars = Array.isArray(mainData.cars) ? [...mainData.cars] : [];
+              const chunksCount = Number(mainData.overflowChunks || 0);
+              if (chunksCount > 0 && this.db) {
+                for (let cIdx = 1; cIdx <= chunksCount; cIdx++) {
+                  try {
+                    const cSnap = await this.db.collection('elite_state').doc(`main_store_chunk_${cIdx}`).get();
+                    if (cSnap.exists && Array.isArray(cSnap.data()?.cars)) {
+                      combinedCars = combinedCars.concat(cSnap.data().cars);
+                    }
+                  } catch (ce) {}
+                }
+              }
+              this.applyCloudDataToLocal({ ...mainData, cars: combinedCars });
+              sanitizeCorruptedStorage();
+              App.syncAll(false);
+              if (typeof App.renderInteractiveBrandsStrip === 'function') App.renderInteractiveBrandsStrip();
+              App.checkPendingSharedCar();
+            };
+
+            FirebaseCloudService.pushLocalToCloudIfEmpty = async function() {
+              if (!this.isConnected || !this.db) return;
+              try {
+                const snap = await this.db.collection('elite_state').doc('main_store').get();
+                this.isCloudHydrated = true;
+                if (!snap.exists) {
+                  CarRepository.getAllCars();
+                  AuthService.initDB();
+                  await this.syncToCloud();
+                } else {
+                  await this._hydrateAllChunksAndApply(snap.data());
+                }
+              } catch (e) {
+                this.isCloudHydrated = true;
+              }
+            };
+
+            FirebaseCloudService.startRealtimeListeners = function() {
+              if (!this.isConnected || !this.db) return;
+              this.unsubscribers.forEach(u => { try { u(); } catch (e) {} });
+              this.unsubscribers = [];
+              const unsub = this.db.collection('elite_state').doc('main_store').onSnapshot(async (doc) => {
+                if (this._isWritingCloud) return;
+                if (doc.exists) {
+                  this.isCloudHydrated = true;
+                  await this._hydrateAllChunksAndApply(doc.data());
+                }
+              });
+              this.unsubscribers.push(unsub);
+            };
+          }
+
+          // تحديث شريط الماركات تلقائياً مع كل عملية syncAll
+          if (typeof App !== 'undefined' && typeof App.syncAll === 'function') {
+            const origSyncAll = App.syncAll.bind(App);
+            App.syncAll = function(...args) {
+              sanitizeCorruptedStorage();
+              origSyncAll(...args);
+              if (typeof this.renderInteractiveBrandsStrip === 'function') {
+                this.renderInteractiveBrandsStrip();
+              }
+            };
+            App.syncAll();
+          }
+        });
+
+        return true;
+      })(),
+
       whatsApp(phone, customText = '') {
         let cleanPhone = SANDBOX_TEST_MODE
           ? MY_PERSONAL_TEST_PHONE
