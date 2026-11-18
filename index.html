@@ -2589,6 +2589,461 @@
         fileInput.click();
       },
 
+      // === باقة التطوير التسويقي الشاملة (تصفح الفئات والماركات + حاسبة القدرة الشرائية + تنبيهات CRM + لماذا نحن والتوصيل + الفوتر المؤسسي) ===
+      _autoMotorsMarketingSuite: (function() {
+        if (typeof window === 'undefined') return true;
+
+        const injectMarketingModules = () => {
+          // 1. إضافة زر "حاسبة التمويل" المستقل في الهيدر العلوي بجوار زر المقارنة
+          const compareBtn = document.querySelector('header button[onclick*="openCompareModal"]');
+          if (compareBtn && !document.getElementById('header-finance-calc-btn')) {
+            const calcBtn = document.createElement('button');
+            calcBtn.id = 'header-finance-calc-btn';
+            calcBtn.type = 'button';
+            calcBtn.onclick = () => App.openGeneralFinanceModal();
+            calcBtn.className = 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 text-xs px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1.5 shadow-sm';
+            calcBtn.innerHTML = '<span>🧮</span> <span>حاسبة التمويل</span>';
+            compareBtn.parentNode.insertBefore(calcBtn, compareBtn);
+          }
+
+          const mainEl = document.querySelector('main');
+          const carsGrid = document.getElementById('cars-grid-container');
+          if (!mainEl || !carsGrid) return;
+
+          // 2. إضافة شريط فئات الهيكل (سيدان / SUV / كروس أوفر...) وشريط شعارات الماركات التفاعلي
+          const filterSection = mainEl.querySelector('section');
+          if (filterSection && !document.getElementById('visual-categories-brands-sec')) {
+            const catSec = document.createElement('div');
+            catSec.id = 'visual-categories-brands-sec';
+            catSec.className = 'mb-6 space-y-4 no-print';
+            catSec.innerHTML = `
+              <!-- تصفح حسب فئة وهيكل السيارة -->
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/90">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <span>🚘</span> تصفح حسب فئة السيارة (Body Type)
+                  </h3>
+                  <span class="text-[11px] text-slate-500 font-bold">اختر الفئة المناسبة لاستخدامك</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2" id="body-type-cards-wrap">
+                  ${[
+                    { key: 'ALL', label: 'جميع الفئات', icon: '✨', sub: 'كل المخزون' },
+                    { key: 'SEDAN', label: 'سيدان عائلية', icon: '🚗', sub: 'مريحة واقتصادية' },
+                    { key: 'SUV', label: 'SUV ودفع رباعي', icon: '🚙', sub: 'عالية وقوية' },
+                    { key: 'CROSSOVER', label: 'كروس أوفر', icon: '🛞', sub: 'عصرية وشبابية' },
+                    { key: 'HATCHBACK', label: 'هاتشباك', icon: '🏎️', sub: 'عملية للمدينة' },
+                    { key: 'LUXURY', label: 'فارهة ورياضية', icon: '👑', sub: 'أعلى رفاهية' },
+                    { key: 'ECONOMY', label: 'اقتصادية التوفير', icon: '💰', sub: 'أفضل قيمة مقابل سعر' }
+                  ].map((cat, idx) => `
+                    <button type="button" onclick="App.filterByBodyCategory('${cat.key}')" data-body-cat="${cat.key}" class="body-cat-btn ${idx === 0 ? 'bg-blue-950 text-amber-400 border-blue-900 shadow-md' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'} border rounded-2xl p-2.5 text-right transition flex flex-col justify-between group">
+                      <div class="flex items-center justify-between w-full mb-1">
+                        <span class="text-lg group-hover:scale-110 transition">${cat.icon}</span>
+                        <span class="text-[10px] font-black opacity-75">${cat.sub}</span>
+                      </div>
+                      <div class="font-black text-xs">${cat.label}</div>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- شريط الماركات العالمية التفاعلي -->
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/90">
+                <div class="flex items-center justify-between mb-2.5">
+                  <h3 class="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <span>🏆</span> تصفح سريع حسب الماركة المعتمدة
+                  </h3>
+                  <button type="button" onclick="App.selectBrandQuickPill('ALL')" class="text-[11px] text-blue-900 font-black hover:underline">عرض كل الماركات</button>
+                </div>
+                <div id="interactive-brands-strip" class="flex items-center gap-2 overflow-x-auto pb-1 custom-scroll"></div>
+              </div>
+            `;
+            filterSection.parentNode.insertBefore(catSec, filterSection.nextSibling);
+            App.renderInteractiveBrandsStrip();
+          }
+
+          // 3. إضافة أقسام الثقة والتوصيل، تنبيهات العروض (CRM)، والفوتر المؤسسي أسفل شبكة السيارات
+          if (!document.getElementById('abu-bahaa-trust-and-footer')) {
+            const bottomWrap = document.createElement('div');
+            bottomWrap.id = 'abu-bahaa-trust-and-footer';
+            bottomWrap.className = 'mt-12 space-y-8 no-print';
+            bottomWrap.innerHTML = `
+              <!-- قسم: لماذا تختار معرض أبو بهاء + ميزة التوصيل لباب المنزل -->
+              <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/90">
+                <div class="text-center max-w-2xl mx-auto mb-6">
+                  <span class="bg-amber-500/15 text-amber-600 border border-amber-500/30 text-xs font-black px-3.5 py-1 rounded-full">⭐ التميز والمصداقية في صعيد مصر</span>
+                  <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">لماذا تختار ${DEALER_BRAND_NAME}؟</h2>
+                  <p class="text-xs text-slate-500 mt-1">نجمع بين دقة الفحص الهندسي، أسرع موافقة تمويلية، وخدمة توصيل السيارة حتى باب منزلك</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow">🛡️</div>
+                    <h4 class="font-black text-sm text-slate-900">فحص 4 محاور بضمان الفابريكة</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">كل سيارة مرفق معها شهادة فحص هندسي لـ 6 مناطق بالهيكل والمحرك والفتيس بضمان مكتوب في العقد.</p>
+                  </div>
+
+                  <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
+                    <div class="w-11 h-11 rounded-2xl bg-blue-900 text-amber-400 flex items-center justify-center text-xl shadow">🏦</div>
+                    <h4 class="font-black text-sm text-slate-900">تمويل ميسر وموافقة خلال 24 ساعة</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">تعاقد رسمي مع كافة البنوك وشركات التمويل المصرية بأنظمة تبدأ بصورة البطاقة فقط وأقل مقدم.</p>
+                  </div>
+
+                  <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
+                    <div class="w-11 h-11 rounded-2xl bg-orange-500 text-slate-950 flex items-center justify-center text-xl shadow">🚚</div>
+                    <h4 class="font-black text-sm text-slate-900">نوصلها لحد باب بيتك</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">خدمة شحن وتوصيل آمن للسيارة بعد الفحص والتعاقد إلى باب منزلك في أسيوط وجميع محافظات الجمهورية.</p>
+                  </div>
+
+                  <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
+                    <div class="w-11 h-11 rounded-2xl bg-purple-700 text-white flex items-center justify-center text-xl shadow">📑</div>
+                    <h4 class="font-black text-sm text-slate-900">إنهاء إجراءات النقل والترخيص</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">نساعدك في إنهاء كافة إجراءات العقود المسجلة والشهر العقاري والترخيص والتأمين بشفافية كاملة.</p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- قسم: سجل في تنبيهات العروض والسيارات الجديدة (مربوط مباشرة بالـ CRM) -->
+              <section class="glass-header text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-blue-800/50 relative overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                  <div class="lg:col-span-5 space-y-2">
+                    <span class="bg-amber-400 text-slate-950 text-[11px] font-black px-3 py-1 rounded-full inline-block">🔔 خدمة تنبيهات الـ VIP المجانية</span>
+                    <h3 class="text-lg sm:text-xl font-black text-white">كن أول من يعلم بالسيارات الجديدة والعروض الحصرية!</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">سجل اسمك ورقم واتساب والسيارة التي تبحث عنها، وسيقوم فريق مبيعات ${DEALER_BRAND_NAME} بإبلاغك فور وصولها قبل عرضها للجمهور.</p>
+                  </div>
+                  <form id="vip-alerts-crm-form" onsubmit="App.submitVipAlertToCrm(event)" class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <input id="alert-client-name" required type="text" placeholder="اسمك الكريم *" class="bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-3 text-white font-bold focus:outline-none focus:border-amber-400" />
+                    <input id="alert-client-phone" required type="tel" placeholder="رقم الموبايل / واتساب *" class="bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-3 text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
+                    <input id="alert-client-car" type="text" placeholder="السيارة أو الميزانية المطلوبة..." class="bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-3 text-white font-bold focus:outline-none focus:border-amber-400" />
+                    <button type="submit" class="sm:col-span-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs sm:text-sm">
+                      <span>🚀</span> اشترك الآن في قائمة تنبيهات العروض والسيارات الجديدة
+                    </button>
+                  </form>
+                </div>
+              </section>
+
+              <!-- الفوتر المؤسسي الشامل (Mega Footer) بشعارات البنوك ووسائل الدفع المعتمدة -->
+              <section class="bg-slate-950 text-slate-300 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pb-6 border-b border-slate-800">
+                  <div class="md:col-span-5 space-y-3">
+                    <div class="flex items-center gap-3">
+                      <img src="./logo.jpg" alt="أبو بهاء" onerror="this.style.display='none'" class="w-12 h-12 rounded-2xl border-2 border-orange-500 object-cover" />
+                      <div>
+                        <h3 class="text-lg font-black text-white">${DEALER_BRAND_NAME}</h3>
+                        <p class="text-xs text-amber-400 font-bold">📍 ${DEALER_ADDRESS}</p>
+                      </div>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                      الوجهة الأولى للسيارات المفحوصة والمعتمدة في أسيوط وصعيد مصر. نقدم حلول البيع النقدي، الاستبدال الفوري، والتمويل البنكي الميسر بأعلى معايير الشفافية والضمان الهندسي.
+                    </p>
+                    <div class="text-xs text-slate-300 font-bold">
+                      🕒 مواعيد العمل: يومياً من 11:00 صباحاً حتى 11:00 مساءً
+                    </div>
+                  </div>
+
+                  <div class="md:col-span-3 space-y-2 text-xs">
+                    <h4 class="font-black text-amber-400 text-sm mb-2">⚡ روابط وخدمات سريعة</h4>
+                    <ul class="space-y-2 font-bold">
+                      <li><button type="button" onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'});" class="hover:text-amber-300 transition">🏠 تصفح جميع السيارات المتاحة</button></li>
+                      <li><button type="button" onclick="App.openGeneralFinanceModal()" class="hover:text-amber-300 transition">🧮 حاسبة التمويل والقدرة الشرائية</button></li>
+                      <li><button type="button" onclick="App.openTradeInModal()" class="hover:text-amber-300 transition">🔄 استبدل أو بع سيارتك نقداً</button></li>
+                      <li><button type="button" onclick="App.openVipRequestModal()" class="hover:text-amber-300 transition">🎯 اطلب سيارتك بالطلب الخاص (VIP)</button></li>
+                      <li><button type="button" onclick="App.openCompareModal()" class="hover:text-amber-300 transition">⚖️ جدول المقارنة الفنية للسيارات</button></li>
+                    </ul>
+                  </div>
+
+                  <div class="md:col-span-4 space-y-2.5 text-xs">
+                    <h4 class="font-black text-amber-400 text-sm mb-2">📞 تواصل مباشر مع إدارة المبيعات</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                      ${DEALER_PHONES_ARRAY.map(ph => `
+                        <button type="button" onclick="App.whatsApp('${ph}', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-slate-900 hover:bg-emerald-950 border border-slate-800 hover:border-emerald-600 text-white py-2 px-3 rounded-xl font-mono font-bold transition flex items-center justify-center gap-1.5">
+                          <span class="text-emerald-400">💬</span> ${ph}
+                        </button>
+                      `).join('')}
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 mt-2 text-[11px] text-slate-300">
+                      📍 العنوان التفصيلي: <b>${DEALER_ADDRESS}</b>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- شريط البنوك وشركات التمويل ووسائل الدفع المعتمدة -->
+                <div class="flex flex-wrap items-center justify-between gap-3 text-[11px]">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-slate-400 font-black ml-1">🏦 شركاء التمويل والدفع المعتمدون:</span>
+                    ${['البنك الأهلي المصري', 'بنك مصر', 'البنك التجاري الدولي CIB', 'QNB مصر', 'مصرف أبو ظبي الإسلامي', 'كونتكت Contact', 'درايف Drive', 'أمان AMAN', 'فاليو ValU', 'إنستاباي InstaPay'].map(partner => `
+                      <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">${partner}</span>
+                    `).join('')}
+                  </div>
+                  <div class="text-slate-500 font-bold">
+                    © ${new Date().getFullYear()} ${DEALER_BRAND_NAME} — جميع الحقوق محفوظة
+                  </div>
+                </div>
+              </section>
+            `;
+            mainEl.appendChild(bottomWrap);
+          }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => setTimeout(injectMarketingModules, 150));
+        setInterval(injectMarketingModules, 800);
+        return true;
+      })(),
+
+      // عرض وتحديث شريط الماركات التفاعلي
+      renderInteractiveBrandsStrip() {
+        const strip = document.getElementById('interactive-brands-strip');
+        if (!strip) return;
+        const cars = CarRepository.getAllCars();
+        const currentSelected = document.getElementById('filter-brand')?.value || 'ALL';
+        const counts = {};
+        cars.forEach(c => {
+          if (c.brand) counts[c.brand] = (counts[c.brand] || 0) + 1;
+        });
+
+        const brandsList = Object.keys(counts);
+        const esc = (v) => this.escapeHtml(String(v ?? ''));
+
+        strip.innerHTML = `
+          <button type="button" onclick="App.selectBrandQuickPill('ALL')" class="px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 border ${currentSelected === 'ALL' ? 'bg-blue-950 text-amber-400 border-blue-900 shadow' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'}">
+            <span>🚘</span> الكل (${cars.length})
+          </button>
+          ${brandsList.map(b => `
+            <button type="button" onclick="App.selectBrandQuickPill('${esc(b)}')" class="px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 border ${currentSelected === b ? 'bg-blue-950 text-amber-400 border-blue-900 shadow' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'}">
+              <span>🏷️</span> <span>${esc(b)}</span>
+              <span class="bg-slate-200/80 text-slate-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">${counts[b]}</span>
+            </button>
+          `).join('')}
+        `;
+      },
+
+      selectBrandQuickPill(brandName) {
+        const brandSelect = document.getElementById('filter-brand');
+        if (brandSelect) {
+          brandSelect.value = brandName;
+          this.applyFilters();
+          this.renderInteractiveBrandsStrip();
+        }
+      },
+
+      // فلترة ذكية حسب فئة الهيكل (سيدان / SUV / كروس أوفر / هاتشباك / فارهة / اقتصادية)
+      filterByBodyCategory(categoryKey) {
+        document.querySelectorAll('.body-cat-btn').forEach(btn => {
+          const isMatch = btn.getAttribute('data-body-cat') === categoryKey;
+          btn.className = `body-cat-btn ${isMatch ? 'bg-blue-950 text-amber-400 border-blue-900 shadow-md' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'} border rounded-2xl p-2.5 text-right transition flex flex-col justify-between group`;
+        });
+
+        const allCars = CarRepository.getAllCars();
+        if (categoryKey === 'ALL') {
+          this.renderCarsGrid(allCars);
+          return;
+        }
+
+        const matchCategory = (car) => {
+          const text = `${car.brand} ${car.model} ${car.description}`.toLowerCase();
+          if (categoryKey === 'SUV') {
+            return /x5|x3|x6|suv|سبورتاج|توسان|راف|كادجار|تيجوان|كيا سبورتاج|دفع رباعي|جيب|شيروكي|برادو|فورتشنر|جلc|gle|q7|q5|cx-5|3008|5008|توريس|كوليوس/.test(text);
+          }
+          if (categoryKey === 'CROSSOVER') {
+            return /كروس|سبورتاج|توسان|كاشكاي|جوuke|كونا|كريتا|اكليبس|2008|c-hr|أرانو|تي روك|x1|x2|gla|q3/.test(text);
+          }
+          if (categoryKey === 'SEDAN') {
+            return /c200|c180|e200|كورولا|إلنترا|النترا|سيراتو|أوكتافيا|باسات|جيتا|لانسر|صني|سنترا|أوبترا|تيبو|أكسنت|ميجان|سيدان|320i|520i|a4|a6|كامري|أكورد|سيفيك|مازدا 3/.test(text);
+          }
+          if (categoryKey === 'HATCHBACK') {
+            return /هاتشباك|جولف|إبيزا|ليون|فيستا|فوكس|ياريس|سويفت|بيكانتو|i10|i20|بولو|أسترا|مازدا 3 هاتشباك/.test(text);
+          }
+          if (categoryKey === 'LUXURY') {
+            return car.price >= 2800000 || /مرسيدس|بي إم دبليو|أودي|بورش|رنج روفر|لكزس|amg|m-sport/.test(text);
+          }
+          if (categoryKey === 'ECONOMY') {
+            return car.price <= 1650000;
+          }
+          return true;
+        };
+
+        const filtered = allCars.filter(matchCategory);
+        this.renderCarsGrid(filtered);
+        this.showToast(`🚘 تم عرض (${filtered.length}) سيارة ضمن الفئة المختارة`, 'info');
+      },
+
+      // حفظ اشتراك تنبيهات العروض والسيارات الجديدة مباشرة داخل الـ CRM
+      submitVipAlertToCrm(e) {
+        if (e) e.preventDefault();
+        const name = (document.getElementById('alert-client-name')?.value || '').trim();
+        const phone = (document.getElementById('alert-client-phone')?.value || '').trim();
+        const carInterest = (document.getElementById('alert-client-car')?.value || 'اشتراك في تنبيهات العروض والسيارات الجديدة').trim();
+
+        if (!name || !phone) {
+          this.showToast('⚠️ يرجى كتابة الاسم ورقم الهاتف لتفعيل التنبيهات', 'warning');
+          return;
+        }
+
+        const list = SafeStorage.get('abu_bahaa_crm_leads_v1', []) || [];
+        const record = {
+          id: 'CRM-' + Date.now(),
+          name,
+          phone,
+          interest: carInterest || 'تنبيهات العروض الجديدة',
+          status: 'مهتم - جاري المتابعة',
+          notes: '🔔 سجل بنفسه من نموذج تنبيهات العروض والسيارات الجديدة بالموقع',
+          date: new Date().toLocaleString('ar-EG')
+        };
+        list.unshift(record);
+        SafeStorage.set('abu_bahaa_crm_leads_v1', list);
+
+        if (FirebaseCloudService.db) {
+          FirebaseCloudService.db.collection('crm_leads').doc(record.id).set(record).catch(() => {});
+        }
+
+        ['alert-client-name', 'alert-client-phone', 'alert-client-car'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+
+        this.showToast('🎉 تم تسجيلك في قائمة تنبيهات الـ VIP بنجاح! سنتواصل معك بأقوى العروض.', 'success');
+      },
+
+      // نافذة حاسبة التمويل والقدرة الشرائية المستقلة في الهيدر العلوي
+      openGeneralFinanceModal() {
+        const existing = document.getElementById('gen-finance-power-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'gen-finance-power-modal';
+        modal.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto no-print';
+        modal.innerHTML = `
+          <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl my-8 border border-slate-200 text-xs">
+            <div class="flex items-center justify-between border-b pb-4 mb-4">
+              <div class="flex items-center gap-2.5">
+                <span class="bg-blue-950 text-amber-400 w-10 h-10 rounded-2xl flex items-center justify-center text-lg font-black shadow">🧮</span>
+                <div>
+                  <h3 class="text-base sm:text-lg font-black text-slate-900">حاسبة التمويل والقدرة الشرائية الذكية</h3>
+                  <p class="text-[11px] text-slate-500">احسب قسطك الشهري أو اعرف السيارات المتاحة بالمعرض التي تناسب مقدمك</p>
+                </div>
+              </div>
+              <button type="button" onclick="document.getElementById('gen-finance-power-modal').remove()" class="bg-slate-200 hover:bg-rose-600 hover:text-white text-slate-900 w-8 h-8 rounded-full font-black transition">✕</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-4">
+              <div>
+                <label class="block font-black text-slate-700 mb-1">سعر السيارة التقريبي (ج.م)</label>
+                <input id="gf-car-price" type="number" min="100000" step="50000" value="1800000" oninput="App.recalcGeneralFinance()" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-black text-blue-950 text-sm" />
+              </div>
+              <div>
+                <label class="block font-black text-slate-700 mb-1">الدفعة المقدمة المتاحة معك (ج.م)</label>
+                <input id="gf-down-payment" type="number" min="50000" step="25000" value="540000" oninput="App.recalcGeneralFinance()" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-black text-emerald-700 text-sm" />
+              </div>
+              <div>
+                <label class="block font-black text-slate-700 mb-1">نظام التمويل المطلوب</label>
+                <select id="gf-program" onchange="App.recalcGeneralFinance()" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold bg-white">
+                  <option value="13.5">🏦 تمويل بنكي (موظفين / معاشات - مقدم يبدأ من 20%)</option>
+                  <option value="14.5" selected>🏢 أصحاب الأعمال والسجل التجاري (مقدم 30%)</option>
+                  <option value="16.5">⚡ بصورة البطاقة فقط بدون إثبات دخل (مقدم 40%)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-black text-slate-700 mb-1">مدة السداد (من سنة إلى 7 سنوات)</label>
+                <select id="gf-months" onchange="App.recalcGeneralFinance()" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-black bg-white">
+                  <option value="12">12 شهراً (سنة واحدة)</option>
+                  <option value="24">24 شهراً (سنتان)</option>
+                  <option value="36" selected>36 شهراً (3 سنوات - الأكثر طلباً)</option>
+                  <option value="48">48 شهراً (4 سنوات)</option>
+                  <option value="60">60 شهراً (5 سنوات)</option>
+                  <option value="72">72 شهراً (6 سنوات)</option>
+                  <option value="84">84 شهراً (7 سنوات)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="bg-slate-900 text-white rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center mb-4 border border-blue-900">
+              <div>
+                <span class="block text-[10px] text-slate-400 font-bold">صافي مبلغ التمويل</span>
+                <span id="gf-loan-out" class="text-base font-black text-white mt-0.5 block">0 ج.م</span>
+              </div>
+              <div class="border-y sm:border-y-0 sm:border-x border-slate-700 py-2 sm:py-0">
+                <span class="block text-[10px] text-amber-300 font-bold">القسط الشهري التقديري</span>
+                <span id="gf-monthly-out" class="text-xl font-black text-amber-400 mt-0.5 block">0 ج.م / شهر</span>
+              </div>
+              <div>
+                <span class="block text-[10px] text-emerald-300 font-bold">أقصى سيارة يناسبها مقدمك</span>
+                <span id="gf-power-out" class="text-base font-black text-emerald-400 mt-0.5 block">0 ج.م</span>
+              </div>
+            </div>
+
+            <div class="space-y-2 mb-4">
+              <h4 class="font-black text-slate-900 text-xs">🚘 سيارات متاحة بالمعرض تناسب دفعتك المقدمة الآن:</h4>
+              <div id="gf-matching-cars-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 custom-scroll"></div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t">
+              <button type="button" onclick="App.sendGeneralFinanceWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow transition">
+                <span>💬</span> إرسال خطة التمويل للمعرض عبر واتساب
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        this.recalcGeneralFinance();
+      },
+
+      recalcGeneralFinance() {
+        const price = Math.max(0, Number(document.getElementById('gf-car-price')?.value || 0));
+        const down = Math.max(0, Number(document.getElementById('gf-down-payment')?.value || 0));
+        const rate = Number(document.getElementById('gf-program')?.value || 14.5);
+        const months = Math.max(6, Number(document.getElementById('gf-months')?.value || 36));
+
+        const loan = Math.max(0, price - down);
+        const totalPayable = loan + (loan * (rate / 100) * (months / 12));
+        const monthly = Math.round(totalPayable / months);
+        const maxPurchasingPower = Math.round(down / 0.25);
+
+        const loanEl = document.getElementById('gf-loan-out');
+        const monthlyEl = document.getElementById('gf-monthly-out');
+        const powerEl = document.getElementById('gf-power-out');
+        if (loanEl) loanEl.textContent = loan.toLocaleString('ar-EG') + ' ج.م';
+        if (monthlyEl) monthlyEl.textContent = monthly.toLocaleString('ar-EG') + ' ج.م / شهر';
+        if (powerEl) powerEl.textContent = 'حتى ' + maxPurchasingPower.toLocaleString('ar-EG') + ' ج.م';
+
+        const listEl = document.getElementById('gf-matching-cars-list');
+        if (!listEl) return;
+        const esc = (v) => this.escapeHtml(String(v ?? ''));
+        const matches = CarRepository.getAllCars().filter(c => !c.isReserved && down >= c.price * 0.20);
+
+        if (!matches.length) {
+          listEl.innerHTML = `<div class="col-span-full text-center py-4 text-slate-400 font-bold">ارفع قيمة الدفعة المقدمة قليلاً لتظهر لك السيارات المتاحة بالتقسيط (الحد الأدنى للمقدم 20%).</div>`;
+          return;
+        }
+
+        listEl.innerHTML = matches.map(c => {
+          const cLoan = Math.max(0, c.price - down);
+          const cMonthly = Math.round((cLoan + (cLoan * (rate / 100) * (months / 12))) / months);
+          return `
+            <div onclick="document.getElementById('gen-finance-power-modal').remove(); App.openDetails('${esc(c.id)}');" class="bg-slate-50 hover:bg-blue-50/60 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2.5 cursor-pointer transition">
+              <img src="${esc(c.imageUrl)}" onerror="this.src='./logo.jpg'" class="w-14 h-10 rounded-lg object-cover shrink-0" />
+              <div class="overflow-hidden">
+                <div class="font-black text-slate-900 truncate">${esc(c.brand)} ${esc(c.model)} (${c.year})</div>
+                <div class="text-emerald-700 font-black text-[11px]">قسطها بمقدمك: ${cMonthly.toLocaleString('ar-EG')} ج.م/شهر</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      },
+
+      sendGeneralFinanceWhatsApp() {
+        const price = Number(document.getElementById('gf-car-price')?.value || 0);
+        const down = Number(document.getElementById('gf-down-payment')?.value || 0);
+        const months = Number(document.getElementById('gf-months')?.value || 36);
+        const monthlyTxt = document.getElementById('gf-monthly-out')?.textContent || '';
+        const msg =
+          `🧮 *استفسار تمويل وتقسيط — ${DEALER_BRAND_NAME}*\n` +
+          `• ميزانية السيارة المطلوبة: ${price.toLocaleString('ar-EG')} ج.م\n` +
+          `• الدفعة المقدمة المتاحة: ${down.toLocaleString('ar-EG')} ج.م\n` +
+          `• مدة التقسيط: ${months} شهراً\n` +
+          `• القسط الشهري التقديري: ${monthlyTxt}\n` +
+          `يرجى إفادتي بالسيارات المتاحة والأوراق المطلوبة للتنفيذ.`;
+        this.whatsApp(DEFAULT_DEALER_PHONE, msg);
+      },
+
       whatsApp(phone, customText = '') {
         let cleanPhone = SANDBOX_TEST_MODE
           ? MY_PERSONAL_TEST_PHONE
