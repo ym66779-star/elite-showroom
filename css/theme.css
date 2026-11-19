@@ -1,0 +1,244 @@
+/* ============================================================================
+   Abu Bahaa Showroom - Minimalist Luxury Theme Tokens & Dark Mode Rules
+   ============================================================================ */
+
+:root {
+  --bg-main: #f6f7fb;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-soft: #64748b;
+  --navy-deep: #090d16;
+  --navy-brand: #172554;
+  --gold: #f59e0b;
+  --gold-strong: #d97706;
+  --gold-soft: rgba(245, 158, 11, 0.14);
+  --shadow-card: 0 8px 26px -12px rgba(15, 23, 42, 0.12);
+  --shadow-card-hover: 0 18px 38px -14px rgba(15, 23, 42, 0.2);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Cairo', Tahoma, Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.glass-header {
+  background: linear-gradient(135deg, #090d16 0%, #111b33 55%, #172554 100%);
+}
+
+/* Custom Scrollbars */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+
+input[type="range"] {
+  accent-color: #172554;
+}
+
+/* ============================================================================
+   Luxury Dark Mode (#090d16 + #f59e0b Gold Accents)
+   ============================================================================ */
+body.dark-mode {
+  --bg-main: #090d16;
+  --bg-surface: #111827;
+  --bg-subtle: #1c263b;
+  --bg-elevated: #162033;
+  --border-subtle: #1f2b42;
+  --border-strong: #2d3d5c;
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --text-soft: #94a3b8;
+  --shadow-card: 0 10px 30px -12px rgba(0, 0, 0, 0.55);
+  --shadow-card-hover: 0 20px 44px -12px rgba(0, 0, 0, 0.72);
+}
+
+body.dark-mode .custom-scroll::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+body.dark-mode .custom-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+body.dark-mode input[type="range"] {
+  accent-color: #f59e0b;
+}
+
+body.dark-mode .bg-white:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *) {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+body.dark-mode .bg-slate-50:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *),
+body.dark-mode .bg-slate-100:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *) {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-strong) !important;
+}
+
+body.dark-mode .bg-blue-50:not(#printable-quote-area *),
+body.dark-mode .bg-blue-50\/70:not(#printable-quote-area *),
+body.dark-mode .bg-emerald-50:not(#printable-quote-area *),
+body.dark-mode .bg-emerald-50\/70:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50\/60:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50\/80:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50\/90:not(#printable-quote-area *),
+body.dark-mode .bg-rose-50:not(#printable-quote-area *),
+body.dark-mode .bg-purple-50:not(#printable-quote-area *) {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-main) !important;
+}
+
+body.dark-mode input:not([type="range"]):not(#printable-quote-area *),
+body.dark-mode select:not(#printable-quote-area *),
+body.dark-mode textarea:not(#printable-quote-area *) {
+  background-color: #0b1120 !important;
+  color: #f8fafc !important;
+  border-color: #2d3d5c !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #64748b !important;
+}
+
+body.dark-mode .text-slate-950:not(#printable-quote-area *),
+body.dark-mode .text-slate-900:not(#printable-quote-area *),
+body.dark-mode .text-slate-800:not(#printable-quote-area *),
+body.dark-mode .text-slate-700:not(#printable-quote-area *),
+body.dark-mode .text-amber-950:not(#printable-quote-area *),
+body.dark-mode .text-amber-900:not(#printable-quote-area *),
+body.dark-mode .text-emerald-950:not(#printable-quote-area *),
+body.dark-mode .text-rose-950:not(#printable-quote-area *),
+body.dark-mode .text-purple-900:not(#printable-quote-area *) {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-slate-600:not(#printable-quote-area *),
+body.dark-mode .text-slate-500:not(#printable-quote-area *),
+body.dark-mode .text-slate-400:not(#printable-quote-area *) {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .text-blue-950:not(#printable-quote-area *),
+body.dark-mode .text-blue-900:not(#printable-quote-area *) {
+  color: #f59e0b !important;
+}
+
+body.dark-mode .text-emerald-700:not(#printable-quote-area *),
+body.dark-mode .text-emerald-800:not(#printable-quote-area *) {
+  color: #34d399 !important;
+}
+
+body.dark-mode .text-teal-700:not(#printable-quote-area *),
+body.dark-mode .text-teal-800:not(#printable-quote-area *) {
+  color: #2dd4bf !important;
+}
+
+body.dark-mode .text-rose-700:not(#printable-quote-area *),
+body.dark-mode .text-rose-600:not(#printable-quote-area *),
+body.dark-mode .text-rose-500:not(#printable-quote-area *) {
+  color: #fb7185 !important;
+}
+
+body.dark-mode .border-slate-100:not(#printable-quote-area *),
+body.dark-mode .border-slate-200:not(#printable-quote-area *),
+body.dark-mode .border-slate-200\/90:not(#printable-quote-area *),
+body.dark-mode .border-slate-200\/80:not(#printable-quote-area *),
+body.dark-mode .border-slate-300:not(#printable-quote-area *),
+body.dark-mode .border:not(#printable-quote-area *) {
+  border-color: var(--border-subtle) !important;
+}
+
+body.dark-mode table:not(#printable-quote-area *) th,
+body.dark-mode table:not(#printable-quote-area *) td {
+  border-color: var(--border-strong) !important;
+}
+
+/* Keep printable A4 document modals bright and high-contrast even in dark mode */
+body.dark-mode #printable-quote-area,
+body.dark-mode #printable-quote-area .bg-white,
+body.dark-mode #a4-preview-box {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #0f172a !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-50,
+body.dark-mode #printable-quote-area .bg-slate-100,
+body.dark-mode #a4-preview-box .doc-section {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+body.dark-mode #printable-quote-area .bg-amber-50,
+body.dark-mode #printable-quote-area .bg-amber-50\/40 {
+  background-color: #fffbeb !important;
+  color: #0f172a !important;
+  border-color: #fcd34d !important;
+}
+body.dark-mode #printable-quote-area .bg-emerald-50 {
+  background-color: #ecfdf5 !important;
+  color: #064e3b !important;
+  border-color: #a7f3d0 !important;
+}
+body.dark-mode #printable-quote-area .text-slate-950,
+body.dark-mode #printable-quote-area .text-slate-900,
+body.dark-mode #printable-quote-area .text-slate-800,
+body.dark-mode #printable-quote-area .text-slate-700,
+body.dark-mode #a4-preview-box {
+  color: #0f172a !important;
+}
+body.dark-mode #printable-quote-area .text-slate-600,
+body.dark-mode #printable-quote-area .text-slate-500 {
+  color: #475569 !important;
+}
+body.dark-mode #printable-quote-area .text-blue-950,
+body.dark-mode #printable-quote-area .text-blue-900,
+body.dark-mode #a4-preview-box .doc-sec-title {
+  color: #1e3a8a !important;
+}
+body.dark-mode #printable-quote-area .text-emerald-700,
+body.dark-mode #printable-quote-area .text-emerald-800 {
+  color: #047857 !important;
+}
+body.dark-mode #printable-quote-area .text-amber-700,
+body.dark-mode #printable-quote-area .text-amber-950 {
+  color: #92400e !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-950,
+body.dark-mode #printable-quote-area .bg-slate-900,
+body.dark-mode #printable-quote-area .bg-emerald-900,
+body.dark-mode #printable-quote-area .bg-blue-950 {
+  color: #ffffff !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-950 .text-amber-400,
+body.dark-mode #printable-quote-area .bg-slate-900 .text-amber-400,
+body.dark-mode #printable-quote-area .bg-blue-950 .text-amber-400 {
+  color: #fbbf24 !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-950 .text-slate-300,
+body.dark-mode #printable-quote-area .bg-slate-900 .text-slate-200 {
+  color: #e2e8f0 !important;
+}

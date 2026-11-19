@@ -1,0 +1,357 @@
+/* ============================================================================
+   Abu Bahaa Showroom - Minimalist Luxury Components & Admin Drawer (RTL)
+   ============================================================================ */
+
+/* Header & Contact Ribbon */
+.luxury-header {
+  background: rgba(9, 13, 22, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.16);
+}
+
+.contact-ribbon {
+  background: rgba(5, 8, 15, 0.92);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.header-pill-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.9rem;
+  padding: 0.2rem;
+  gap: 0.15rem;
+}
+
+.header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f59e0b;
+}
+
+.header-cta-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #090d16;
+  font-weight: 900;
+  border-radius: 0.85rem;
+  box-shadow: 0 6px 18px -6px rgba(245, 158, 11, 0.55);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.header-cta-gold:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* ============================================================================
+   Admin Drawer (RTL Slide-over from Right)
+   ============================================================================ */
+.admin-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 14, 0.68);
+  backdrop-filter: blur(4px);
+  z-index: 55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.admin-drawer-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.admin-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(92vw, 370px);
+  background: #090d16;
+  color: #f8fafc;
+  border-left: 1px solid rgba(245, 158, 11, 0.28);
+  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.55);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(102%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.admin-drawer.is-open {
+  transform: translateX(0);
+}
+
+.drawer-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.68rem 0.85rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: right;
+  transition: all 0.2s ease;
+}
+
+.drawer-nav-item:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  transform: translateX(-2px);
+}
+
+.drawer-nav-item.is-primary {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.14));
+  border-color: rgba(245, 158, 11, 0.48);
+  color: #fbbf24;
+}
+
+.drawer-section-label {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  padding: 0 0.25rem;
+  margin-bottom: 0.4rem;
+}
+
+/* ============================================================================
+   Compact Unified Filter Bar & Collapsible Advanced Filters
+   ============================================================================ */
+.filter-shell {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  padding: 0.38rem 0.78rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+.filter-pill:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  color: var(--text-main);
+}
+
+.filter-pill.is-active {
+  background: #0f172a;
+  color: #f59e0b;
+  border-color: #0f172a;
+  box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.35);
+}
+
+body.dark-mode .filter-pill.is-active {
+  background: #f59e0b;
+  color: #090d16;
+  border-color: #f59e0b;
+}
+
+.advanced-filters-panel {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+/* ============================================================================
+   Minimalist Luxury Car Card
+   ============================================================================ */
+.car-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.35rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.car-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.car-card-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #090d16;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.car-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.car-card:hover .car-card-media img {
+  transform: scale(1.045);
+}
+
+.car-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 0.28rem 0.72rem;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.car-glass-action {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(9, 13, 22, 0.72);
+  backdrop-filter: blur(8px);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.78rem;
+  transition: all 0.18s ease;
+}
+
+.car-glass-action:hover {
+  background: rgba(9, 13, 22, 0.94);
+  border-color: rgba(245, 158, 11, 0.7);
+}
+
+.car-glass-action.is-active {
+  background: #f59e0b;
+  color: #090d16;
+  border-color: #f59e0b;
+}
+
+.car-spec-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.71rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.car-price-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.95rem;
+  padding: 0.65rem 0.8rem;
+}
+
+/* ============================================================================
+   A4 Contract Preview Box
+   ============================================================================ */
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+.doc-main-title { margin: 0; font-size: 20px; font-weight: 900; color: #0f172a; }
+.doc-sub { margin: 4px 0 0; font-size: 11px; font-weight: 700; color: #475569; }
+.doc-badge-wrap { text-align: left; }
+.doc-badge {
+  background: #0f172a;
+  color: #fbbf24;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: inline-block;
+}
+.doc-code { font-size: 11px; font-weight: 700; color: #475569; margin-top: 4px; }
+.doc-section {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.doc-sec-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #1e3a8a;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.doc-highlight-box {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.doc-grid-1 { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.doc-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.doc-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; }
+.doc-terms { margin: 0; padding-right: 18px; }
+.doc-terms li { margin-bottom: 6px; text-align: justify; }
+.doc-signatures-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 2px solid #0f172a;
+  text-align: center;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .doc-grid-2,
+  .doc-grid-3,
+  .doc-signatures-3 {
+    grid-template-columns: 1fr;
+  }
+}
