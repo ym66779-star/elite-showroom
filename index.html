@@ -5030,12 +5030,17 @@ printCleanA4Document() {
           return;
         }
         try {
-          const jsonCleaned = raw
-            .replace(/const\s+firebaseConfig\s*=\s*/g, '')
-            .replace(/;$/g, '')
-            .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":')
-            .replace(/'/g, '"');
-          const parsed = JSON.parse(jsonCleaned);
+          let parsed;
+          try {
+            parsed = JSON.parse(raw);
+          } catch (_) {
+            const jsonCleaned = raw
+              .replace(/const\s+firebaseConfig\s*=\s*/g, '')
+              .replace(/;$/g, '')
+              .replace(/([{,]\s*)(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '$1"$3":')
+              .replace(/'/g, '"');
+            parsed = JSON.parse(jsonCleaned);
+          }
           await FirebaseCloudService.connect(parsed, true);
           await FirebaseCloudService.syncToCloud();
           this.openCommandCenter('cloud');
@@ -5043,7 +5048,6 @@ printCleanA4Document() {
           this.showToast('❌ صيغة الإعدادات غير صحيحة.', 'error');
         }
       },
-
       exportDatabaseJson() {
         const dump = {
           cars: SafeStorage.get(CarRepository.KEY, []),
