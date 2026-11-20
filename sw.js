@@ -1,9 +1,25 @@
-const CACHE_NAME = 'abu-bahaa-showroom-v8';
+const CACHE_NAME = 'abu-bahaa-showroom-v12';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './logo.jpg'
+  './logo.jpg',
+  './css/theme.css',
+  './css/components.css',
+  './css/print.css',
+  './js/config.js',
+  './js/storage.js',
+  './js/models.js',
+  './js/auth.js',
+  './js/repository.js',
+  './js/firebase.js',
+  './js/print-engine.js',
+  './js/ui-catalog.js',
+  './js/ui-car-details.js',
+  './js/ui-customer-modals.js',
+  './js/ui-admin-drawer.js',
+  './js/ui-admin-tools.js',
+  './js/app.js'
 ];
 
 // 1. تثبيت التحديث الجديد فوراً بدون انتظار إغلاق المتصفح
@@ -14,7 +30,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. مسح جميع نسخ الكاش القديمة تلقائياً وتفعيل النسخة v8 على كل الأجهزة
+// 2. مسح جميع نسخ الكاش القديمة تلقائياً وتفعيل النسخة v12 على كل الأجهزة
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -33,7 +49,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // استبعاد الطلبات غير القياسية وطلبات Firebase لضمان المزامنة اللحظية
+  // استبعاد الطلبات غير القياسية وطلبات Firebase وQR لضمان المزامنة اللحظية
   if (
     req.method !== 'GET' ||
     !req.url.startsWith('http') ||
@@ -54,6 +70,6 @@ self.addEventListener('fetch', (event) => {
         }
         return networkRes;
       })
-      .catch(() => caches.match(req))
+      .catch(() => caches.match(req, { ignoreSearch: true }))
   );
 });

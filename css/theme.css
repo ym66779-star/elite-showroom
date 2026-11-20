@@ -1,0 +1,318 @@
+/* ============================================================================
+   Abu Bahaa Showroom - Royal Navy + Platinum + Metallic Gold Tokens (v12)
+   ============================================================================ */
+
+:root {
+  --bg-main: #F4F6F9;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F8FAFC;
+  --bg-elevated: #FDF8EC;
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --text-main: #0F172A;
+  --text-muted: #475569;
+  --text-soft: #64748B;
+  --primary: #0F172A;
+  --primary-hover: #1E293B;
+  --accent: #C89B3C;
+  --accent-hover: #B0852C;
+  --accent-soft: #FDF8EC;
+  --accent-border: rgba(200, 155, 60, 0.36);
+  --shadow-card: 0 2px 10px -4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 22px 44px -16px rgba(15, 23, 42, 0.16), 0 8px 18px -8px rgba(15, 23, 42, 0.07);
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+body {
+  font-family: 'Cairo', Tahoma, Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  overflow-x: clip;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.bg-accent-soft {
+  background-color: var(--accent-soft);
+}
+
+.border-accent-subtle {
+  border-color: var(--accent-border);
+}
+
+.glass-header {
+  background: linear-gradient(135deg, #111827 0%, #171D2B 100%);
+}
+
+/* Custom Scrollbars */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
+  border-radius: 9999px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+/* Theme toggle SVG swap driven by body.dark-mode */
+.theme-icon-sun {
+  display: none;
+}
+body.dark-mode .theme-icon-moon {
+  display: none;
+}
+body.dark-mode .theme-icon-sun {
+  display: inline-block;
+  color: var(--accent);
+}
+
+/* Cloud badge adaptation on Light Glassmorphic Header */
+body:not(.dark-mode) .luxury-header #cloud-status-badge {
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(17, 24, 39, 0.06);
+}
+
+/* ============================================================================
+   Luxury Dark Mode (#0B0E14 + #131823 + #D4AF37 Champagne Gold)
+   ============================================================================ */
+body.dark-mode {
+  --bg-main: #0B0E14;
+  --bg-surface: #131823;
+  --bg-subtle: #1A2130;
+  --bg-elevated: #171D2B;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text-main: #F3F4F6;
+  --text-muted: #CBD5E1;
+  --text-soft: #9CA3AF;
+  --accent: #D4AF37;
+  --accent-hover: #E0BF4F;
+  --accent-soft: rgba(212, 175, 55, 0.13);
+  --accent-border: rgba(212, 175, 55, 0.34);
+  --shadow-card: 0 8px 28px -12px rgba(0, 0, 0, 0.55);
+  --shadow-card-hover: 0 22px 48px -14px rgba(0, 0, 0, 0.8);
+}
+
+body.dark-mode .custom-scroll::-webkit-scrollbar-track {
+  background: #0B0E14;
+}
+body.dark-mode .custom-scroll::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+body.dark-mode .bg-white:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *) {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+body.dark-mode .bg-slate-50:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *),
+body.dark-mode .bg-slate-100:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *),
+body.dark-mode .bg-slate-100\/80:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *),
+body.dark-mode .bg-slate-200:not(.always-light):not(#printable-quote-area):not(#printable-quote-area *) {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-strong) !important;
+}
+
+body.dark-mode .bg-blue-50:not(#printable-quote-area *),
+body.dark-mode .bg-blue-50\/50:not(#printable-quote-area *),
+body.dark-mode .bg-blue-50\/70:not(#printable-quote-area *),
+body.dark-mode .bg-emerald-50:not(#printable-quote-area *),
+body.dark-mode .bg-emerald-50\/70:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50\/60:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50\/80:not(#printable-quote-area *),
+body.dark-mode .bg-amber-50\/90:not(#printable-quote-area *),
+body.dark-mode .bg-rose-50:not(#printable-quote-area *),
+body.dark-mode .bg-purple-50:not(#printable-quote-area *),
+body.dark-mode .bg-teal-50:not(#printable-quote-area *) {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-main) !important;
+}
+
+body.dark-mode input:not([type="range"]):not(#printable-quote-area *),
+body.dark-mode select:not(#printable-quote-area *),
+body.dark-mode textarea:not(#printable-quote-area *) {
+  background-color: #0B0E14 !important;
+  color: #F3F4F6 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #6B7280 !important;
+}
+
+body.dark-mode .text-slate-950:not(#printable-quote-area *),
+body.dark-mode .text-slate-900:not(#printable-quote-area *),
+body.dark-mode .text-slate-800:not(#printable-quote-area *),
+body.dark-mode .text-slate-700:not(#printable-quote-area *),
+body.dark-mode .text-amber-950:not(#printable-quote-area *),
+body.dark-mode .text-amber-900:not(#printable-quote-area *),
+body.dark-mode .text-emerald-950:not(#printable-quote-area *),
+body.dark-mode .text-rose-950:not(#printable-quote-area *),
+body.dark-mode .text-purple-900:not(#printable-quote-area *) {
+  color: #F3F4F6 !important;
+}
+
+body.dark-mode .text-slate-600:not(#printable-quote-area *),
+body.dark-mode .text-slate-500:not(#printable-quote-area *),
+body.dark-mode .text-slate-400:not(#printable-quote-area *) {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .text-blue-950:not(#printable-quote-area *),
+body.dark-mode .text-blue-900:not(#printable-quote-area *),
+body.dark-mode .text-amber-600:not(#printable-quote-area *),
+body.dark-mode .text-amber-700:not(#printable-quote-area *) {
+  color: var(--accent) !important;
+}
+
+body.dark-mode .text-emerald-700:not(#printable-quote-area *),
+body.dark-mode .text-emerald-800:not(#printable-quote-area *) {
+  color: #34D399 !important;
+}
+
+body.dark-mode .text-teal-700:not(#printable-quote-area *),
+body.dark-mode .text-teal-800:not(#printable-quote-area *) {
+  color: #2DD4BF !important;
+}
+
+body.dark-mode .text-rose-700:not(#printable-quote-area *),
+body.dark-mode .text-rose-600:not(#printable-quote-area *),
+body.dark-mode .text-rose-500:not(#printable-quote-area *) {
+  color: #FB7185 !important;
+}
+
+body.dark-mode .border-slate-100:not(#printable-quote-area *),
+body.dark-mode .border-slate-200:not(#printable-quote-area *),
+body.dark-mode .border-slate-200\/90:not(#printable-quote-area *),
+body.dark-mode .border-slate-200\/80:not(#printable-quote-area *),
+body.dark-mode .border-slate-300:not(#printable-quote-area *),
+body.dark-mode .border:not(#printable-quote-area *) {
+  border-color: var(--border-subtle) !important;
+}
+
+body.dark-mode table:not(#printable-quote-area *) th,
+body.dark-mode table:not(#printable-quote-area *) td {
+  border-color: var(--border-strong) !important;
+}
+
+/* Keep printable A4 document modals bright and high-contrast even in dark mode */
+body.dark-mode #printable-quote-area,
+body.dark-mode #printable-quote-area .bg-white,
+body.dark-mode #a4-preview-box {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: #CBD5E1 !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-50,
+body.dark-mode #printable-quote-area .bg-slate-100,
+body.dark-mode #printable-quote-area .bg-slate-100\/80,
+body.dark-mode #a4-preview-box .doc-section {
+  background-color: #F8FAFC !important;
+  color: #111827 !important;
+  border-color: #CBD5E1 !important;
+}
+body.dark-mode #printable-quote-area .bg-amber-50,
+body.dark-mode #printable-quote-area .bg-amber-50\/40,
+body.dark-mode #printable-quote-area .bg-amber-50\/60,
+body.dark-mode #printable-quote-area .bg-amber-50\/90 {
+  background-color: #FAF6EC !important;
+  color: #111827 !important;
+  border-color: #DFC996 !important;
+}
+body.dark-mode #printable-quote-area .bg-emerald-50 {
+  background-color: #ECFDF5 !important;
+  color: #064E3B !important;
+  border-color: #A7F3D0 !important;
+}
+body.dark-mode #printable-quote-area .bg-rose-50 {
+  background-color: #FFF1F2 !important;
+  color: #881337 !important;
+  border-color: #FECDD3 !important;
+}
+body.dark-mode #printable-quote-area .bg-purple-50 {
+  background-color: #FAF5FF !important;
+  color: #581C87 !important;
+  border-color: #E9D5FF !important;
+}
+body.dark-mode #printable-quote-area .text-slate-950,
+body.dark-mode #printable-quote-area .text-slate-900,
+body.dark-mode #printable-quote-area .text-slate-800,
+body.dark-mode #printable-quote-area .text-slate-700,
+body.dark-mode #a4-preview-box {
+  color: #111827 !important;
+}
+body.dark-mode #printable-quote-area .text-slate-600,
+body.dark-mode #printable-quote-area .text-slate-500 {
+  color: #4B5563 !important;
+}
+body.dark-mode #printable-quote-area .text-blue-950,
+body.dark-mode #printable-quote-area .text-blue-900,
+body.dark-mode #a4-preview-box .doc-sec-title {
+  color: #1E3A8A !important;
+}
+body.dark-mode #printable-quote-area .text-emerald-700,
+body.dark-mode #printable-quote-area .text-emerald-800 {
+  color: #047857 !important;
+}
+body.dark-mode #printable-quote-area .text-amber-700,
+body.dark-mode #printable-quote-area .text-amber-950 {
+  color: #856324 !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-950,
+body.dark-mode #printable-quote-area .bg-slate-900,
+body.dark-mode #printable-quote-area .bg-emerald-900,
+body.dark-mode #printable-quote-area .bg-blue-950,
+body.dark-mode #printable-quote-area .bg-indigo-950 {
+  background-color: #111827 !important;
+  color: #FFFFFF !important;
+}
+body.dark-mode #printable-quote-area .bg-emerald-900 {
+  background-color: #1B4D3E !important;
+}
+body.dark-mode #printable-quote-area .bg-blue-950 {
+  background-color: #172554 !important;
+}
+body.dark-mode #printable-quote-area .bg-indigo-950 {
+  background-color: #1E1B4B !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-950 .text-amber-400,
+body.dark-mode #printable-quote-area .bg-slate-900 .text-amber-400,
+body.dark-mode #printable-quote-area .bg-blue-950 .text-amber-400,
+body.dark-mode #printable-quote-area .bg-indigo-950 .text-amber-300 {
+  color: #D4AF37 !important;
+}
+body.dark-mode #printable-quote-area .bg-slate-950 .text-slate-300,
+body.dark-mode #printable-quote-area .bg-slate-900 .text-slate-200,
+body.dark-mode #printable-quote-area .bg-blue-950 .text-slate-300 {
+  color: #E5E7EB !important;
+}
+body.dark-mode #printable-quote-area input:not([type="range"]),
+body.dark-mode #printable-quote-area select,
+body.dark-mode #printable-quote-area textarea {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: #D1D5DB !important;
+}
