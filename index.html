@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>أبو بهاء لتجارة السيارات | أسيوط الأزهر</title>
-  <link rel="icon" type="image/jpeg" href="./logo.jpg?v=9" />
-  <link rel="apple-touch-icon" href="./logo.jpg?v=9" />
-  <link rel="manifest" href="./manifest.json?v=9" />
-  <meta name="theme-color" content="#090d16" />
+  <link rel="icon" type="image/jpeg" href="./logo.jpg?v=12" />
+  <link rel="apple-touch-icon" href="./logo.jpg?v=12" />
+  <link rel="manifest" href="./manifest.json?v=12" />
+  <meta name="theme-color" content="#F4F6F9" />
 
   <script>
     (function () {
@@ -27,112 +27,103 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
 
   <!-- ملفات التصميم المعيارية -->
-  <link rel="stylesheet" href="./css/theme.css?v=9" />
-  <link rel="stylesheet" href="./css/components.css?v=9" />
-  <link rel="stylesheet" href="./css/print.css?v=9" />
+  <link rel="stylesheet" href="./css/theme.css?v=12" />
+  <link rel="stylesheet" href="./css/components.css?v=12" />
+  <link rel="stylesheet" href="./css/print.css?v=12" />
 
   <!-- ملفات المنطق والواجهة بترتيب تحميل حتمي -->
-  <script defer src="./js/config.js?v=9"></script>
-  <script defer src="./js/storage.js?v=9"></script>
-  <script defer src="./js/models.js?v=9"></script>
-  <script defer src="./js/auth.js?v=9"></script>
-  <script defer src="./js/repository.js?v=9"></script>
-  <script defer src="./js/firebase.js?v=9"></script>
-  <script defer src="./js/print-engine.js?v=9"></script>
-  <script defer src="./js/ui-catalog.js?v=9"></script>
-  <script defer src="./js/ui-car-details.js?v=9"></script>
-  <script defer src="./js/ui-customer-modals.js?v=9"></script>
-  <script defer src="./js/ui-admin-drawer.js?v=9"></script>
-  <script defer src="./js/ui-admin-tools.js?v=9"></script>
-  <script defer src="./js/app.js?v=9"></script>
+  <script defer src="./js/config.js?v=12"></script>
+  <script defer src="./js/storage.js?v=12"></script>
+  <script defer src="./js/models.js?v=12"></script>
+  <script defer src="./js/auth.js?v=12"></script>
+  <script defer src="./js/repository.js?v=12"></script>
+  <script defer src="./js/firebase.js?v=12"></script>
+  <script defer src="./js/print-engine.js?v=12"></script>
+  <script defer src="./js/ui-catalog.js?v=12"></script>
+  <script defer src="./js/ui-car-details.js?v=12"></script>
+  <script defer src="./js/ui-customer-modals.js?v=12"></script>
+  <script defer src="./js/ui-admin-drawer.js?v=12"></script>
+  <script defer src="./js/ui-admin-tools.js?v=12"></script>
+  <script defer src="./js/app.js?v=12"></script>
 </head>
 <body class="min-h-screen flex flex-col pb-24 sm:pb-12">
 
-  <!-- الهيدر العلوي الهادئ (Minimalist Luxury Header) -->
-  <header class="luxury-header text-white shadow-xl sticky top-0 z-30 no-print">
+  <!-- الهيدر الزجاجي الفاخر والهادئ (متجاوب بالكامل بدون شريط أرقام علوي) -->
+  <header class="luxury-header sticky top-0 z-30 no-print">
     <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
-      <!-- الهوية والعنوان -->
-      <div class="flex items-center gap-3 cursor-pointer min-w-0" onclick="App.resetFilters(true)">
-        <div class="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-slate-950 border border-amber-500/70 flex items-center justify-center overflow-hidden shadow-lg shrink-0">
+      <!-- الهوية والعنوان (مع عدم قص اسم المعرض نهائياً على الموبايل) -->
+      <div class="flex items-center gap-2.5 sm:gap-3 cursor-pointer shrink-0" onclick="App.resetFilters(true)">
+        <div class="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#0B0E14] border border-[var(--accent-border)] flex items-center justify-center overflow-hidden shadow-sm shrink-0">
           <img src="./logo.jpg" alt="أبو بهاء لتجارة السيارات" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover" />
-          <div style="display:none" class="w-full h-full bg-slate-950 text-amber-400 flex-col items-center justify-center leading-none">
-            <span class="text-sm">🏎️</span>
-            <span class="text-[8px] font-black mt-0.5">أبو بهاء</span>
+          <div style="display:none" class="w-full h-full bg-[#0B0E14] text-accent flex-col items-center justify-center leading-none">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
           </div>
         </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
-            <h1 class="text-sm sm:text-lg font-black tracking-wide text-white truncate">
-              أبو بهاء <span class="text-amber-400 text-xs sm:text-sm font-extrabold">لتجارة السيارات</span>
+
+        <div class="shrink-0">
+          <div class="flex items-center gap-2">
+            <h1 class="brand-title text-[15px] sm:text-lg font-black tracking-tight leading-tight whitespace-nowrap">
+              أبو بهاء <span class="brand-accent-word block sm:inline text-[10px] sm:text-sm font-extrabold">لتجارة السيارات</span>
             </h1>
-            <span id="cloud-status-badge" onclick="event.stopPropagation(); App.handleCloudBadgeClick()" class="bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline-flex items-center gap-1.5 cursor-pointer transition" title="حالة الاتصال بقاعدة بيانات Firebase">
-              <span id="cloud-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
-              <span id="cloud-text">جاري الاتصال...</span>
+            <span class="hidden xl:inline-flex shrink-0">
+              <span id="cloud-status-badge" onclick="event.stopPropagation(); App.handleCloudBadgeClick()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 text-[10px] px-2.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap" title="حالة الاتصال بقاعدة بيانات Firebase">
+                <span id="cloud-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span id="cloud-text">جاري الاتصال...</span>
+              </span>
             </span>
           </div>
-          <p class="text-[10px] sm:text-[11px] text-slate-300 font-semibold truncate">📍 أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</p>
+          <p class="brand-subtitle hidden lg:flex text-[11px] font-semibold items-center gap-1 mt-0.5 whitespace-nowrap">
+            <svg class="w-3 h-3 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</span>
+          </p>
         </div>
       </div>
 
-      <!-- عناصر الهيدر الرئيسية (بحد أقصى 4 عناصر هادئة) -->
+      <!-- عناصر الهيدر المنظمة -->
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <!-- 1. حاسبة التمويل -->
-        <button type="button" onclick="App.openGeneralFinanceModal()" class="hidden md:inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-100 text-xs px-3 py-2 rounded-xl font-bold transition">
-          <span>🧮</span>
+        <button id="open-finance-header-btn" type="button" onclick="App.openGeneralFinanceModal()" class="header-btn hidden md:inline-flex items-center gap-1.5 px-2.5 lg:px-3 text-xs font-bold">
+          <svg class="w-4 h-4 shrink-0 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
           <span>التمويل</span>
         </button>
 
-        <!-- 2. استبدل سيارتك -->
-        <button id="open-tradein-modal-btn" type="button" onclick="App.openTradeInModal()" class="header-cta-gold text-xs px-3 sm:px-3.5 py-2 inline-flex items-center gap-1.5">
-          <span>🔄</span>
-          <span class="hidden sm:inline">استبدل أو بع سيارتك</span>
-          <span class="sm:hidden">استبدل</span>
+        <!-- 2. استبدل أو بع سيارتك -->
+        <button id="open-tradein-modal-btn" type="button" onclick="App.openTradeInModal()" class="header-cta-gold hidden md:inline-flex text-xs px-3 lg:px-3.5 items-center gap-1.5">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span class="hidden lg:inline">استبدل أو بع سيارتك</span>
+          <span class="lg:hidden">استبدل سيارتك</span>
         </button>
 
         <!-- 3. كبسولة الأدوات المدمجة (المقارنة + المفضلة + الوضع الليلي) -->
         <div class="header-pill-group">
-          <button type="button" onclick="App.openCompareModal()" class="header-icon-btn" title="المقارنة الفنية">
-            <span>⚖️</span>
-            <span id="compare-btn-text" class="hidden lg:inline">المقارنة</span>
-            <span id="compare-count" class="text-amber-400 font-black">0</span>
+          <button type="button" onclick="App.openCompareModal()" class="header-icon-btn hidden sm:inline-flex" title="المقارنة الفنية" aria-label="المقارنة الفنية">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+            <span id="compare-btn-text" class="hidden xl:inline">المقارنة</span>
+            <span id="compare-count" class="text-accent font-black">0</span>
           </button>
-          <button type="button" onclick="App.openClientFavModal()" class="header-icon-btn" title="المفضلة">
-            <span>❤️</span>
-            <span id="client-fav-btn-text" class="hidden lg:inline">مفضلتي</span>
-            <span id="client-favorites-count" class="text-rose-400 font-black">0</span>
+          <button type="button" onclick="App.openClientFavModal()" class="header-icon-btn inline-flex" title="المفضلة" aria-label="المفضلة">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            <span id="client-fav-btn-text" class="hidden xl:inline">مفضلتي</span>
+            <span id="client-favorites-count" class="text-accent font-black">0</span>
           </button>
-          <button type="button" onclick="App.toggleDarkMode()" class="header-icon-btn" title="تبديل الوضع الليلي / النهاري">
-            <span id="dark-mode-icon">🌙</span>
+          <button type="button" onclick="App.toggleDarkMode()" class="header-icon-btn inline-flex" title="تبديل الوضع الليلي / النهاري" aria-label="تبديل الوضع الليلي والنهاري">
+            <span id="dark-mode-icon" class="sr-only" aria-hidden="true"></span>
+            <svg class="theme-icon-moon w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <svg class="theme-icon-sun w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
           </button>
         </div>
 
         <!-- 4. دخول الإدارة للزائر OR زر لوحة الإدارة الوحيد عند تسجيل الدخول -->
-        <button id="admin-auth-btn" type="button" onclick="App.handleAuthClick()" class="bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs px-3 py-2 rounded-xl font-bold inline-flex items-center gap-1.5 transition">
-          <span>🔐</span>
-          <span class="hidden sm:inline">الإدارة</span>
+        <button id="admin-auth-btn" type="button" onclick="App.handleAuthClick()" class="header-btn inline-flex text-xs px-2.5 md:px-3 font-bold items-center gap-1.5" aria-label="دخول الإدارة">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="hidden md:inline">الإدارة</span>
         </button>
 
-        <button id="open-admin-drawer-btn" type="button" onclick="App.toggleAdminDrawer()" class="hidden bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3.5 py-2 rounded-xl font-black items-center gap-1.5 shadow-lg transition">
-          <span>🎛️</span>
-          <span>لوحة الإدارة</span>
-          <span id="drawer-tasks-badge" class="hidden bg-slate-950 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+        <button id="open-admin-drawer-btn" type="button" onclick="App.toggleAdminDrawer()" class="hidden header-cta-gold text-xs px-2.5 sm:px-3.5 items-center gap-1.5" aria-label="لوحة الإدارة">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+          <span class="hidden sm:inline">لوحة الإدارة</span>
+          <span id="drawer-tasks-badge" class="hidden bg-slate-950 text-amber-300 text-[10px] px-1.5 py-0.5 rounded-full">0</span>
         </button>
-      </div>
-    </div>
-
-    <!-- شريط التواصل الرفيع بالأرقام الأربعة -->
-    <div class="contact-ribbon py-1 px-3 text-[10.5px]">
-      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-        <span class="text-slate-400 font-bold hidden sm:inline">معرض سيارات معتمد ومفحوص هندسياً — أسيوط صعيد مصر</span>
-        <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-          <span class="text-amber-400 font-black">📞 للحجز والاستعلام:</span>
-          <div class="flex items-center gap-1 flex-wrap">
-            <button type="button" onclick="App.whatsApp('01060970007', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-white/5 hover:bg-amber-500/20 text-slate-200 border border-white/10 px-2 py-0.5 rounded-md font-mono font-bold transition">01060970007</button>
-            <button type="button" onclick="App.whatsApp('01001446377', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-white/5 hover:bg-amber-500/20 text-slate-200 border border-white/10 px-2 py-0.5 rounded-md font-mono font-bold transition">01001446377</button>
-            <button type="button" onclick="App.whatsApp('01091167083', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-white/5 hover:bg-amber-500/20 text-slate-200 border border-white/10 px-2 py-0.5 rounded-md font-mono font-bold transition">01091167083</button>
-            <button type="button" onclick="App.whatsApp('01063764207', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-white/5 hover:bg-amber-500/20 text-slate-200 border border-white/10 px-2 py-0.5 rounded-md font-mono font-bold transition">01063764207</button>
-          </div>
-        </div>
       </div>
     </div>
   </header>
@@ -142,27 +133,77 @@
   <aside id="admin-drawer" class="admin-drawer no-print" aria-label="لوحة الإدارة">
     <div class="px-4 py-3.5 border-b border-slate-800 flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="text-amber-400 text-lg">🎛️</span>
+        <span class="text-accent inline-flex items-center justify-center"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg></span>
         <span class="font-black text-sm text-white">لوحة إدارة أبو بهاء</span>
       </div>
-      <button type="button" onclick="App.closeAdminDrawer()" class="bg-slate-800 hover:bg-rose-600 text-white w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center transition">✕</button>
+      <button type="button" onclick="App.closeAdminDrawer()" aria-label="إغلاق لوحة الإدارة" class="bg-slate-800 hover:bg-slate-700 text-white w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center transition"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div id="admin-drawer-body" class="flex-grow flex flex-col overflow-hidden"></div>
   </aside>
 
   <!-- المحتوى الرئيسي -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-4 py-5 flex-grow w-full no-print">
+  <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-5 flex-grow w-full no-print">
+
+    <!-- شريط الثقة الفاخر المضغوط (4 ركائز معتمدة) -->
+    <section aria-label="ركائز الثقة والجودة" class="luxury-trust-bar mb-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+        <div class="trust-pillar">
+          <span class="trust-icon-badge">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[11px] sm:text-xs font-black text-slate-900 leading-tight">فحص هندسي 4 محاور</p>
+            <p class="text-[10px] text-slate-500 font-semibold truncate">شهادة معتمدة لكل سيارة</p>
+          </div>
+        </div>
+
+        <div class="trust-pillar">
+          <span class="trust-icon-badge">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[11px] sm:text-xs font-black text-slate-900 leading-tight">ضمان فابريكة معتمد</p>
+            <p class="text-[10px] text-slate-500 font-semibold truncate">فحص دقيق لـ 6 مناطق</p>
+          </div>
+        </div>
+
+        <div class="trust-pillar">
+          <span class="trust-icon-badge">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[11px] sm:text-xs font-black text-slate-900 leading-tight">تقسيط حتى 60 شهراً</p>
+            <p class="text-[10px] text-slate-500 font-semibold truncate">بنكي أو بصورة البطاقة</p>
+          </div>
+        </div>
+
+        <div class="trust-pillar">
+          <span class="trust-icon-badge">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[11px] sm:text-xs font-black text-slate-900 leading-tight">استبدال فوري</p>
+            <p class="text-[10px] text-slate-500 font-semibold truncate">تثمين عادل وتقسيط الفرق</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- شريط البحث والفلاتر الموحد والمضغوط -->
     <section class="filter-shell p-3.5 sm:p-4 mb-5 space-y-3">
       <!-- الصف الأول: البحث الموحد + الترتيب + فلاتر متقدمة + طلب VIP -->
       <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
         <div class="relative flex-grow">
-          <input id="filter-search" oninput="App.applyFilters()" type="text" placeholder="🔍 ابحث بالماركة، الموديل، أو المواصفات..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold bg-slate-50 focus:outline-none focus:border-amber-500 transition" />
+          <div class="relative w-full">
+            <span class="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-slate-400">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input id="filter-search" oninput="App.applyFilters()" type="text" placeholder="ابحث بالماركة، الموديل، أو المواصفات..." class="w-full border border-slate-200 rounded-xl pr-10 pl-3.5 py-2.5 text-xs font-bold bg-slate-50 focus:outline-none focus:border-[#C89B3C] transition" />
+          </div>
         </div>
 
         <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-          <select id="sort-by-select" onchange="App.applyFilters()" class="border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-black text-slate-800 bg-slate-50 focus:outline-none focus:border-amber-500">
+          <select id="sort-by-select" onchange="App.applyFilters()" class="border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-black text-slate-800 bg-slate-50 focus:outline-none focus:border-[#C89B3C]">
             <option value="NEWEST">الأحدث بالمعرض</option>
             <option value="PRICE_ASC">السعر: الأقل للأعلى</option>
             <option value="PRICE_DESC">السعر: الأعلى للأقل</option>
@@ -170,49 +211,55 @@
             <option value="KM_ASC">الأقل عداداً</option>
           </select>
 
-          <button id="toggle-advanced-filters-btn" type="button" onclick="App.toggleAdvancedFilters()" aria-expanded="false" class="border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-black inline-flex items-center gap-1.5 transition">
-            <span>⚙️</span>
+          <button id="toggle-advanced-filters-btn" type="button" onclick="App.toggleAdvancedFilters()" aria-expanded="false" class="btn-luxury-outline rounded-xl px-3.5 py-2.5 text-xs font-black inline-flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
             <span>فلاتر متقدمة</span>
-            <span id="adv-filter-count" class="hidden bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full">0</span>
+            <span id="adv-filter-count" class="hidden bg-accent-soft text-accent border border-[var(--accent-border)] text-[10px] font-black px-1.5 py-0.5 rounded-full">0</span>
+            <svg id="adv-filter-chevron" class="w-3.5 h-3.5 shrink-0 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </button>
 
-          <button type="button" onclick="App.openVipRequestModal(document.getElementById('filter-search')?.value || '')" class="bg-slate-900 hover:bg-slate-800 text-amber-400 rounded-xl px-3.5 py-2.5 text-xs font-black inline-flex items-center gap-1.5 shadow-sm transition">
-            <span>🎯</span>
+          <button type="button" onclick="App.openVipRequestModal(document.getElementById('filter-search')?.value || '')" class="btn-luxury-primary rounded-xl px-3.5 py-2.5 text-xs font-black inline-flex items-center gap-1.5 shadow-sm">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
             <span>طلب VIP</span>
           </button>
 
-          <button id="reset-filters-btn" type="button" onclick="App.resetFilters()" class="hidden text-xs text-rose-600 hover:text-rose-700 font-black px-2 py-2 transition">
-            مسح ✕
+          <button id="reset-filters-btn" type="button" onclick="App.resetFilters()" class="hidden text-xs text-slate-600 hover:text-slate-900 font-black px-2 py-2 inline-flex items-center gap-1 transition">
+            <span>مسح</span>
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- الصف الثاني: فئات الهيكل + الفلاتر السريعة في شريط واحد سلس -->
+      <!-- الصف الثاني: فئات الهيكل + الفلاتر السريعة المستقلة بدون تكرار "الكل" -->
       <div class="flex items-center gap-2 overflow-x-auto pb-1 custom-scroll">
         <div id="body-category-pills" class="flex items-center gap-1.5 shrink-0"></div>
         <span class="h-5 w-px bg-slate-200 mx-1 shrink-0"></span>
         <div id="quick-filter-chips" class="flex items-center gap-1.5 shrink-0"></div>
       </div>
 
-      <!-- درج الفلاتر المتقدمة (قابل للفتح والطي — يضم الماركات، السنة، الميزانية، والعداد) -->
-      <div id="advanced-filters-panel" class="advanced-filters-panel hidden space-y-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          <select id="filter-brand" onchange="App.applyFilters()" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none focus:border-amber-500">
-            <option value="ALL">جميع الماركات</option>
-          </select>
-          <select id="filter-year" onchange="App.applyFilters()" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none focus:border-amber-500">
-            <option value="ALL">جميع سنوات الصنع</option>
-          </select>
-          <input id="filter-max-price" oninput="App.applyFilters()" type="number" min="0" placeholder="أقصى ميزانية (ج.م)" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold bg-white focus:outline-none focus:border-amber-500" />
-          <input id="filter-max-km" oninput="App.applyFilters()" type="number" min="0" placeholder="أقصى عداد (كم) مثال: 50000" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold bg-white focus:outline-none focus:border-amber-500" />
-        </div>
+      <!-- درج الفلاتر المتقدمة -->
+      <div id="advanced-filters-panel" class="advanced-accordion">
+        <div class="advanced-accordion-inner">
+          <div class="advanced-accordion-content space-y-3 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              <select id="filter-brand" onchange="App.applyFilters()" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none focus:border-[#C89B3C]">
+                <option value="ALL">جميع الماركات</option>
+              </select>
+              <select id="filter-year" onchange="App.applyFilters()" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none focus:border-[#C89B3C]">
+                <option value="ALL">جميع سنوات الصنع</option>
+              </select>
+              <input id="filter-max-price" oninput="App.applyFilters()" type="number" min="0" placeholder="أقصى ميزانية (ج.م)" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold bg-white focus:outline-none focus:border-[#C89B3C]" />
+              <input id="filter-max-km" oninput="App.applyFilters()" type="number" min="0" placeholder="أقصى عداد (كم) مثال: 50000" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold bg-white focus:outline-none focus:border-[#C89B3C]" />
+            </div>
 
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between text-[11px]">
-            <span class="font-black text-slate-600">🏆 تصفح حسب الماركة المعتمدة:</span>
-            <button type="button" onclick="App.selectBrandQuickPill('ALL')" class="text-amber-600 font-black hover:underline">عرض كل الماركات</button>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-black text-slate-600 inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg><span>تصفح حسب الماركة المعتمدة:</span></span>
+                <button type="button" onclick="App.selectBrandQuickPill('ALL')" class="text-accent font-black hover:underline">عرض كل الماركات</button>
+              </div>
+              <div id="interactive-brands-strip" class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll"></div>
+            </div>
           </div>
-          <div id="interactive-brands-strip" class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll"></div>
         </div>
       </div>
     </section>
@@ -223,42 +270,104 @@
         <h2 class="text-lg sm:text-xl font-black text-slate-900">السيارات المعتمدة المتاحة بالمعرض</h2>
         <p class="text-[11px] sm:text-xs text-slate-500">فحص هندسي شامل في 4 محاور بضمان الفابريكة المعتمد من معرض أبو بهاء</p>
       </div>
-      <span id="cars-count-badge" class="bg-slate-900 text-amber-400 text-xs sm:text-sm font-black px-3.5 py-1.5 rounded-xl shadow-sm border border-amber-500/30 shrink-0">0 سيارة</span>
+      <span id="cars-count-badge" class="bg-accent-soft text-accent text-xs sm:text-sm font-black px-3.5 py-1.5 rounded-xl border border-accent-subtle shrink-0">0 سيارة</span>
     </div>
 
     <!-- شبكة عرض السيارات (تظهر مباشرة في أول شاشة) -->
-    <div id="cars-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <div id="cars-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="car-skeleton-card bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="skeleton-shimmer aspect-[16/10] w-full"></div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="skeleton-shimmer h-3 w-20 rounded-full"></div>
+          <div class="skeleton-shimmer h-5 w-3/4 rounded-lg"></div>
+          <div class="grid grid-cols-3 gap-2 pt-1"><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div></div>
+          <div class="skeleton-shimmer h-12 w-full rounded-2xl"></div>
+          <div class="skeleton-shimmer h-10 w-full rounded-xl"></div>
+        </div>
+      </div>
+      <div class="car-skeleton-card bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="skeleton-shimmer aspect-[16/10] w-full"></div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="skeleton-shimmer h-3 w-20 rounded-full"></div>
+          <div class="skeleton-shimmer h-5 w-3/4 rounded-lg"></div>
+          <div class="grid grid-cols-3 gap-2 pt-1"><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div></div>
+          <div class="skeleton-shimmer h-12 w-full rounded-2xl"></div>
+          <div class="skeleton-shimmer h-10 w-full rounded-xl"></div>
+        </div>
+      </div>
+      <div class="car-skeleton-card bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="skeleton-shimmer aspect-[16/10] w-full"></div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="skeleton-shimmer h-3 w-20 rounded-full"></div>
+          <div class="skeleton-shimmer h-5 w-3/4 rounded-lg"></div>
+          <div class="grid grid-cols-3 gap-2 pt-1"><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div></div>
+          <div class="skeleton-shimmer h-12 w-full rounded-2xl"></div>
+          <div class="skeleton-shimmer h-10 w-full rounded-xl"></div>
+        </div>
+      </div>
+      <div class="car-skeleton-card bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hidden md:block">
+        <div class="skeleton-shimmer aspect-[16/10] w-full"></div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="skeleton-shimmer h-3 w-20 rounded-full"></div>
+          <div class="skeleton-shimmer h-5 w-3/4 rounded-lg"></div>
+          <div class="grid grid-cols-3 gap-2 pt-1"><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div></div>
+          <div class="skeleton-shimmer h-12 w-full rounded-2xl"></div>
+          <div class="skeleton-shimmer h-10 w-full rounded-xl"></div>
+        </div>
+      </div>
+      <div class="car-skeleton-card bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hidden lg:block">
+        <div class="skeleton-shimmer aspect-[16/10] w-full"></div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="skeleton-shimmer h-3 w-20 rounded-full"></div>
+          <div class="skeleton-shimmer h-5 w-3/4 rounded-lg"></div>
+          <div class="grid grid-cols-3 gap-2 pt-1"><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div></div>
+          <div class="skeleton-shimmer h-12 w-full rounded-2xl"></div>
+          <div class="skeleton-shimmer h-10 w-full rounded-xl"></div>
+        </div>
+      </div>
+      <div class="car-skeleton-card bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hidden lg:block">
+        <div class="skeleton-shimmer aspect-[16/10] w-full"></div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="skeleton-shimmer h-3 w-20 rounded-full"></div>
+          <div class="skeleton-shimmer h-5 w-3/4 rounded-lg"></div>
+          <div class="grid grid-cols-3 gap-2 pt-1"><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div><div class="skeleton-shimmer h-7 rounded-lg"></div></div>
+          <div class="skeleton-shimmer h-12 w-full rounded-2xl"></div>
+          <div class="skeleton-shimmer h-10 w-full rounded-xl"></div>
+        </div>
+      </div>
+    </div>
 
-    <!-- قسم: لماذا تختار معرض أبو بهاء + التوصيل لباب المنزل -->
+    <!-- الأقسام التحريرية والثقة وشركاء التمويل والفوتر -->
     <div class="mt-12 space-y-8">
-      <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/90">
+      <!-- قسم: لماذا تختار معرض أبو بهاء + التوصيل لباب المنزل -->
+      <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#E2E8F0]">
         <div class="text-center max-w-2xl mx-auto mb-6">
-          <span class="bg-amber-500/15 text-amber-600 border border-amber-500/30 text-xs font-black px-3.5 py-1 rounded-full">⭐ التميز والمصداقية في صعيد مصر</span>
-          <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">لماذا تختار أبو بهاء لتجارة السيارات؟</h2>
+          <span class="bg-accent-soft text-accent border border-accent-subtle text-xs font-black px-3.5 py-1 rounded-full inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg><span>التميز والمصداقية في صعيد مصر</span></span>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2.5">لماذا تختار أبو بهاء لتجارة السيارات؟</h2>
           <p class="text-xs text-slate-500 mt-1">نجمع بين دقة الفحص الهندسي، أسرع موافقة تمويلية، وخدمة توصيل السيارة حتى باب منزلك</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
-            <div class="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow">🛡️</div>
+          <div class="bg-slate-50 p-5 rounded-2xl border border-[#E2E8F0] space-y-2.5 hover:shadow-sm transition">
+            <div class="trust-icon-badge !w-10 !h-10 !rounded-xl"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
             <h4 class="font-black text-sm text-slate-900">فحص 4 محاور بضمان الفابريكة</h4>
             <p class="text-xs text-slate-600 leading-relaxed">كل سيارة مرفق معها شهادة فحص هندسي لـ 6 مناطق بالهيكل والمحرك والفتيس بضمان مكتوب في العقد.</p>
           </div>
 
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
-            <div class="w-11 h-11 rounded-2xl bg-blue-900 text-amber-400 flex items-center justify-center text-xl shadow">🏦</div>
+          <div class="bg-slate-50 p-5 rounded-2xl border border-[#E2E8F0] space-y-2.5 hover:shadow-sm transition">
+            <div class="trust-icon-badge !w-10 !h-10 !rounded-xl"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></div>
             <h4 class="font-black text-sm text-slate-900">تمويل ميسر وموافقة خلال 24 ساعة</h4>
             <p class="text-xs text-slate-600 leading-relaxed">تعاقد رسمي مع كافة البنوك وشركات التمويل المصرية بأنظمة تبدأ بصورة البطاقة فقط وأقل مقدم.</p>
           </div>
 
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
-            <div class="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl shadow">🚚</div>
+          <div class="bg-slate-50 p-5 rounded-2xl border border-[#E2E8F0] space-y-2.5 hover:shadow-sm transition">
+            <div class="trust-icon-badge !w-10 !h-10 !rounded-xl"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></div>
             <h4 class="font-black text-sm text-slate-900">نوصلها لحد باب بيتك</h4>
             <p class="text-xs text-slate-600 leading-relaxed">خدمة شحن وتوصيل آمن للسيارة بعد الفحص والتعاقد إلى باب منزلك في أسيوط وجميع محافظات الجمهورية.</p>
           </div>
 
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2 hover:shadow-md transition">
-            <div class="w-11 h-11 rounded-2xl bg-purple-700 text-white flex items-center justify-center text-xl shadow">📑</div>
+          <div class="bg-slate-50 p-5 rounded-2xl border border-[#E2E8F0] space-y-2.5 hover:shadow-sm transition">
+            <div class="trust-icon-badge !w-10 !h-10 !rounded-xl"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15l2 2 4-4"/></svg></div>
             <h4 class="font-black text-sm text-slate-900">إنهاء إجراءات النقل والترخيص</h4>
             <p class="text-xs text-slate-600 leading-relaxed">نساعدك في إنهاء كافة إجراءات العقود المسجلة والشهر العقاري والترخيص والتأمين بشفافية كاملة.</p>
           </div>
@@ -266,82 +375,158 @@
       </section>
 
       <!-- قسم: تنبيهات VIP المربوط مباشرة بالـ CRM -->
-      <section class="glass-header text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-amber-500/20 relative overflow-hidden">
+      <section class="glass-header text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-white/10 relative overflow-hidden">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div class="lg:col-span-5 space-y-2">
-            <span class="bg-amber-400 text-slate-950 text-[11px] font-black px-3 py-1 rounded-full inline-block">🔔 خدمة تنبيهات الـ VIP المجانية</span>
-            <h3 class="text-lg sm:text-xl font-black text-white">كن أول من يعلم بالسيارات الجديدة والعروض الحصرية!</h3>
+            <span class="bg-accent-soft text-[#D4AF37] border border-[var(--accent-border)] text-[11px] font-black px-3 py-1 rounded-full inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span>خدمة تنبيهات الـ VIP المجانية</span></span>
+            <h3 class="text-lg sm:text-xl font-black text-white">كن أول من يعلم بالسيارات الجديدة والعروض الحصرية</h3>
             <p class="text-xs text-slate-300 leading-relaxed">سجل اسمك ورقم واتساب والسيارة التي تبحث عنها، وسيقوم فريق مبيعات أبو بهاء لتجارة السيارات بإبلاغك فور وصولها قبل عرضها للجمهور.</p>
           </div>
           <form id="vip-alerts-crm-form" onsubmit="App.submitVipAlertToCrm(event)" class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-            <input id="alert-client-name" required type="text" placeholder="اسمك الكريم *" class="bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-3 text-white font-bold focus:outline-none focus:border-amber-400" />
-            <input id="alert-client-phone" required type="tel" placeholder="رقم الموبايل / واتساب *" class="bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-3 text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
-            <input id="alert-client-car" type="text" placeholder="السيارة أو الميزانية المطلوبة..." class="bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-3 text-white font-bold focus:outline-none focus:border-amber-400" />
-            <button type="submit" class="sm:col-span-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs sm:text-sm">
-              <span>🚀</span> اشترك الآن في قائمة تنبيهات العروض والسيارات الجديدة
+            <input id="alert-client-name" required type="text" placeholder="اسمك الكريم *" class="bg-[#0B0E14]/90 border border-white/15 rounded-xl px-3.5 py-3 text-white font-bold focus:outline-none focus:border-[#D4AF37]" />
+            <input id="alert-client-phone" required type="tel" placeholder="رقم الموبايل / واتساب *" class="bg-[#0B0E14]/90 border border-white/15 rounded-xl px-3.5 py-3 text-white font-mono font-bold focus:outline-none focus:border-[#D4AF37]" />
+            <input id="alert-client-car" type="text" placeholder="السيارة أو الميزانية المطلوبة..." class="bg-[#0B0E14]/90 border border-white/15 rounded-xl px-3.5 py-3 text-white font-bold focus:outline-none focus:border-[#D4AF37]" />
+            <button type="submit" class="sm:col-span-3 btn-luxury-accent font-black py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 text-xs sm:text-sm">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              <span>اشترك الآن في قائمة تنبيهات العروض والسيارات الجديدة</span>
             </button>
           </form>
         </div>
       </section>
 
-      <!-- الفوتر المؤسسي الشامل (Mega Footer) -->
-      <section class="bg-slate-950 text-slate-300 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pb-6 border-b border-slate-800">
-          <div class="md:col-span-5 space-y-3">
+      <!-- شريط شركاء التمويل والدفع المعتمدون (بطاقات مؤسسية متساوية الأبعاد Monochrome) -->
+      <section aria-label="شركاء التمويل والدفع المعتمدون" class="bg-white rounded-3xl p-6 sm:p-7 border border-[#E2E8F0] shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
+          <div class="flex items-center gap-2.5">
+            <span class="trust-icon-badge">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
+            </span>
+            <div>
+              <h3 class="font-black text-sm sm:text-base text-slate-900">شركاء التمويل والدفع المعتمدون</h3>
+              <p class="text-[11px] text-slate-500">تعاقدات مباشرة مع كبرى البنوك وشركات التمويل المصرية لتسريع الموافقة الائتمانية</p>
+            </div>
+          </div>
+          <span class="text-[11px] font-extrabold text-accent bg-accent-soft border border-accent-subtle px-3 py-1 rounded-full self-start sm:self-auto">10 جهات معتمدة</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">NBE</span>
+            <span class="text-xs font-black text-slate-900">البنك الأهلي المصري</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">BANQUE MISR</span>
+            <span class="text-xs font-black text-slate-900">بنك مصر</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">CIB</span>
+            <span class="text-xs font-black text-slate-900">البنك التجاري الدولي</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">QNB</span>
+            <span class="text-xs font-black text-slate-900">QNB مصر</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">ADIB</span>
+            <span class="text-xs font-black text-slate-900">مصرف أبو ظبي الإسلامي</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">CONTACT</span>
+            <span class="text-xs font-black text-slate-900">كونتكت للتمويل</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">DRIVE</span>
+            <span class="text-xs font-black text-slate-900">درايف للتمويل</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">AMAN</span>
+            <span class="text-xs font-black text-slate-900">أمان للتمويل</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">VALU</span>
+            <span class="text-xs font-black text-slate-900">فاليو</span>
+          </div>
+          <div class="partner-tile">
+            <span class="text-[10px] font-black tracking-widest text-accent font-mono">INSTAPAY</span>
+            <span class="text-xs font-black text-slate-900">إنستاباي</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- الفوتر المؤسسي الشامل (Mega Footer — يضم الأرقام الأربعة بشكل منظم) -->
+      <section class="bg-[#0B0E14] text-slate-300 rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pb-6 border-b border-white/10">
+          <div class="md:col-span-4 space-y-3">
             <div class="flex items-center gap-3">
-              <img src="./logo.jpg" alt="أبو بهاء" onerror="this.style.display='none'" class="w-12 h-12 rounded-2xl border-2 border-amber-500 object-cover" />
+              <img src="./logo.jpg" alt="أبو بهاء" onerror="this.style.display='none'" class="w-12 h-12 rounded-2xl border border-[#D4AF37]/50 object-cover" />
               <div>
                 <h3 class="text-lg font-black text-white">أبو بهاء لتجارة السيارات</h3>
-                <p class="text-xs text-amber-400 font-bold">📍 أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</p>
+                <p class="text-xs text-[#D4AF37] font-bold flex items-center gap-1.5"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</span></p>
               </div>
             </div>
             <p class="text-xs text-slate-400 leading-relaxed">
               الوجهة الأولى للسيارات المفحوصة والمعتمدة في أسيوط وصعيد مصر. نقدم حلول البيع النقدي، الاستبدال الفوري، والتمويل البنكي الميسر بأعلى معايير الشفافية والضمان الهندسي.
             </p>
-            <div class="text-xs text-slate-300 font-bold">
-              🕒 مواعيد العمل: يومياً من 11:00 صباحاً حتى 11:00 مساءً
+            <div class="text-xs text-slate-300 font-bold bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
+              <span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>مواعيد العمل: يومياً من 11:00 صباحاً حتى 11:00 مساءً</span></span>
             </div>
           </div>
 
-          <div class="md:col-span-3 space-y-2 text-xs">
-            <h4 class="font-black text-amber-400 text-sm mb-2">⚡ روابط وخدمات سريعة</h4>
-            <ul class="space-y-2 font-bold">
-              <li><button type="button" onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'});" class="hover:text-amber-300 transition">🏠 تصفح جميع السيارات المتاحة</button></li>
-              <li><button type="button" onclick="App.openGeneralFinanceModal()" class="hover:text-amber-300 transition">🧮 حاسبة التمويل والقدرة الشرائية</button></li>
-              <li><button type="button" onclick="App.openTradeInModal()" class="hover:text-amber-300 transition">🔄 استبدل أو بع سيارتك نقداً</button></li>
-              <li><button type="button" onclick="App.openVipRequestModal()" class="hover:text-amber-300 transition">🎯 اطلب سيارتك بالطلب الخاص (VIP)</button></li>
-              <li><button type="button" onclick="App.openCompareModal()" class="hover:text-amber-300 transition">⚖️ جدول المقارنة الفنية للسيارات</button></li>
+          <div class="md:col-span-3 space-y-2.5 text-xs">
+            <h4 class="font-black text-[#D4AF37] text-sm mb-2 flex items-center gap-1.5"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>روابط وخدمات سريعة</span></h4>
+            <ul class="space-y-2.5 font-bold">
+              <li><button type="button" onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'});" class="hover:text-[#D4AF37] transition inline-flex items-center gap-2"><svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg><span>تصفح جميع السيارات المتاحة</span></button></li>
+              <li><button type="button" onclick="App.openGeneralFinanceModal()" class="hover:text-[#D4AF37] transition inline-flex items-center gap-2"><svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg><span>حاسبة التمويل والقدرة الشرائية</span></button></li>
+              <li><button type="button" onclick="App.openTradeInModal()" class="hover:text-[#D4AF37] transition inline-flex items-center gap-2"><svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span>استبدل أو بع سيارتك نقداً</span></button></li>
+              <li><button type="button" onclick="App.openVipRequestModal()" class="hover:text-[#D4AF37] transition inline-flex items-center gap-2"><svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg><span>اطلب سيارتك بالطلب الخاص (VIP)</span></button></li>
+              <li><button type="button" onclick="App.openCompareModal()" class="hover:text-[#D4AF37] transition inline-flex items-center gap-2"><svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg><span>جدول المقارنة الفنية للسيارات</span></button></li>
             </ul>
           </div>
 
-          <div class="md:col-span-4 space-y-2.5 text-xs">
-            <h4 class="font-black text-amber-400 text-sm mb-2">📞 تواصل مباشر مع إدارة المبيعات</h4>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="App.whatsApp('01060970007', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-slate-900 hover:bg-emerald-950 border border-slate-800 hover:border-emerald-600 text-white py-2 px-3 rounded-xl font-mono font-bold transition flex items-center justify-center gap-1.5"><span class="text-emerald-400">💬</span> 01060970007</button>
-              <button type="button" onclick="App.whatsApp('01001446377', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-slate-900 hover:bg-emerald-950 border border-slate-800 hover:border-emerald-600 text-white py-2 px-3 rounded-xl font-mono font-bold transition flex items-center justify-center gap-1.5"><span class="text-emerald-400">💬</span> 01001446377</button>
-              <button type="button" onclick="App.whatsApp('01091167083', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-slate-900 hover:bg-emerald-950 border border-slate-800 hover:border-emerald-600 text-white py-2 px-3 rounded-xl font-mono font-bold transition flex items-center justify-center gap-1.5"><span class="text-emerald-400">💬</span> 01091167083</button>
-              <button type="button" onclick="App.whatsApp('01063764207', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" class="bg-slate-900 hover:bg-emerald-950 border border-slate-800 hover:border-emerald-600 text-white py-2 px-3 rounded-xl font-mono font-bold transition flex items-center justify-center gap-1.5"><span class="text-emerald-400">💬</span> 01063764207</button>
+          <div class="md:col-span-5 space-y-2.5 text-xs">
+            <h4 class="font-black text-[#D4AF37] text-sm mb-2 flex items-center gap-1.5"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>تواصل مباشر مع إدارة المبيعات (اتصال / واتساب)</span></h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="footer-phone-card">
+                <span class="font-mono font-bold text-white tracking-wide">01060970007</span>
+                <div class="flex items-center gap-1.5">
+                  <a href="tel:01060970007" aria-label="اتصال 01060970007" title="اتصال هاتفي" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-[#D4AF37] hover:text-[#0B0E14] text-slate-200 flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+                  <button type="button" onclick="App.whatsApp('01060970007', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" aria-label="واتساب 01060970007" title="مراسلة واتساب" class="w-7 h-7 rounded-lg bg-[#1F5E48] hover:bg-[#27755A] text-white flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></button>
+                </div>
+              </div>
+
+              <div class="footer-phone-card">
+                <span class="font-mono font-bold text-white tracking-wide">01001446377</span>
+                <div class="flex items-center gap-1.5">
+                  <a href="tel:01001446377" aria-label="اتصال 01001446377" title="اتصال هاتفي" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-[#D4AF37] hover:text-[#0B0E14] text-slate-200 flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+                  <button type="button" onclick="App.whatsApp('01001446377', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" aria-label="واتساب 01001446377" title="مراسلة واتساب" class="w-7 h-7 rounded-lg bg-[#1F5E48] hover:bg-[#27755A] text-white flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></button>
+                </div>
+              </div>
+
+              <div class="footer-phone-card">
+                <span class="font-mono font-bold text-white tracking-wide">01091167083</span>
+                <div class="flex items-center gap-1.5">
+                  <a href="tel:01091167083" aria-label="اتصال 01091167083" title="اتصال هاتفي" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-[#D4AF37] hover:text-[#0B0E14] text-slate-200 flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+                  <button type="button" onclick="App.whatsApp('01091167083', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" aria-label="واتساب 01091167083" title="مراسلة واتساب" class="w-7 h-7 rounded-lg bg-[#1F5E48] hover:bg-[#27755A] text-white flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></button>
+                </div>
+              </div>
+
+              <div class="footer-phone-card">
+                <span class="font-mono font-bold text-white tracking-wide">01063764207</span>
+                <div class="flex items-center gap-1.5">
+                  <a href="tel:01063764207" aria-label="اتصال 01063764207" title="اتصال هاتفي" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-[#D4AF37] hover:text-[#0B0E14] text-slate-200 flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+                  <button type="button" onclick="App.whatsApp('01063764207', 'استفسار من الموقع الرسمي لمعرض أبو بهاء')" aria-label="واتساب 01063764207" title="مراسلة واتساب" class="w-7 h-7 rounded-lg bg-[#1F5E48] hover:bg-[#27755A] text-white flex items-center justify-center transition"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></button>
+                </div>
+              </div>
             </div>
-            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 mt-2 text-[11px] text-slate-300">
-              📍 العنوان التفصيلي: <b>أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</b>
+
+            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-[11px] text-slate-300">
+              <span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>العنوان التفصيلي: <b>أسيوط الأزهر - شارع الـ14 عمارة - عمارة 9</b></span></span>
             </div>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-3 text-[11px]">
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-slate-400 font-black ml-1">🏦 شركاء التمويل والدفع المعتمدون:</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">البنك الأهلي المصري</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">بنك مصر</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">البنك التجاري الدولي CIB</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">QNB مصر</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">مصرف أبو ظبي الإسلامي</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">كونتكت Contact</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">درايف Drive</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">أمان AMAN</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">فاليو ValU</span>
-            <span class="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-lg font-bold">إنستاباي InstaPay</span>
-          </div>
+        <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
+          <div class="font-bold">معرض سيارات معتمد ومفحوص هندسياً — أسيوط صعيد مصر</div>
           <div class="text-slate-500 font-bold">
             © 2026 أبو بهاء لتجارة السيارات — جميع الحقوق محفوظة
           </div>
@@ -351,54 +536,54 @@
   </main>
 
   <!-- شريط التنقل السفلي الذكي للموبايل -->
-  <nav class="fixed bottom-8 inset-x-3 sm:hidden bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-2 z-40 border border-slate-700 flex justify-around items-center text-[11px] no-print">
-    <button type="button" onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center gap-0.5 text-amber-400 font-bold p-1">
-      <span class="text-base">🏠</span>
+  <nav class="fixed bottom-8 inset-x-3 sm:hidden bg-[#0B0E14]/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-2 z-40 border border-white/10 flex justify-around items-center text-[11px] no-print">
+    <button type="button" onclick="App.resetFilters(); window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center gap-1 text-[#D4AF37] font-bold p-1">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       <span>الرئيسية</span>
     </button>
-    <button type="button" onclick="App.openGeneralFinanceModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
-      <span class="text-base">🧮</span>
+    <button type="button" onclick="App.openGeneralFinanceModal()" class="flex flex-col items-center gap-1 text-slate-200 font-bold p-1">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
       <span>التمويل</span>
     </button>
-    <button type="button" onclick="App.openCompareModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
-      <span class="text-base">⚖️</span>
-      <span class="whitespace-nowrap">المقارنة (<span id="m-compare-count" class="text-amber-400 font-black">0</span>)</span>
+    <button type="button" onclick="App.openCompareModal()" class="flex flex-col items-center gap-1 text-slate-200 font-bold p-1">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+      <span class="whitespace-nowrap">المقارنة (<span id="m-compare-count" class="text-[#D4AF37] font-black">0</span>)</span>
     </button>
-    <button type="button" onclick="App.openClientFavModal()" class="flex flex-col items-center gap-0.5 text-slate-200 font-bold p-1">
-      <span class="text-base">❤️</span>
-      <span class="whitespace-nowrap">المفضلة (<span id="m-fav-count" class="text-rose-400 font-black">0</span>)</span>
+    <button type="button" onclick="App.openClientFavModal()" class="flex flex-col items-center gap-1 text-slate-200 font-bold p-1">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      <span class="whitespace-nowrap">المفضلة (<span id="m-fav-count" class="text-[#D4AF37] font-black">0</span>)</span>
     </button>
-    <button type="button" onclick="App.toggleChat()" class="flex flex-col items-center gap-0.5 text-amber-300 font-bold p-1">
-      <span class="text-base">🤖</span>
+    <button type="button" onclick="App.toggleChat()" class="flex flex-col items-center gap-1 text-[#D4AF37] font-bold p-1">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
       <span>المستشار</span>
     </button>
   </nav>
 
   <!-- زر الشات والمستشار الذكي للابتوب -->
-  <button id="floating-chat-btn" type="button" onclick="App.toggleChat()" class="hidden sm:flex fixed bottom-12 right-5 bg-slate-900 hover:bg-slate-800 text-white w-14 h-14 rounded-full shadow-2xl items-center justify-center text-2xl z-40 transition transform hover:scale-105 border-2 border-amber-400 no-print" title="مستشار أبو بهاء الذكي">
-    💬
+  <button id="floating-chat-btn" type="button" onclick="App.toggleChat()" class="hidden sm:flex fixed bottom-12 right-5 bg-[#0B0E14] hover:bg-[#131823] text-[#D4AF37] w-14 h-14 rounded-full shadow-2xl items-center justify-center z-40 transition transform hover:scale-105 border border-[#D4AF37]/60 no-print" title="مستشار أبو بهاء الذكي" aria-label="مستشار أبو بهاء الذكي">
+    <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
   </button>
 
   <!-- نافذة المستشار الذكي -->
   <div id="chat-modal" class="fixed bottom-24 sm:bottom-28 right-3 left-3 sm:left-auto sm:right-5 bg-white sm:w-96 rounded-2xl shadow-2xl border border-slate-200 hidden flex-col z-40 overflow-hidden no-print">
     <div class="glass-header text-white p-3.5 flex justify-between items-center">
       <div>
-        <h3 class="font-black text-sm flex items-center gap-1.5"><span>🤖</span> مستشار أبو بهاء الذكي</h3>
-        <p class="text-[10px] text-amber-300">تحليل فوري للميزانية وترشيح كاش أو تقسيط</p>
+        <h3 class="font-black text-sm flex items-center gap-1.5"><svg class="w-4 h-4 text-[#D4AF37] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg><span>مستشار أبو بهاء الذكي</span></h3>
+        <p class="text-[10px] text-slate-300">تحليل فوري للميزانية وترشيح كاش أو تقسيط</p>
       </div>
-      <button type="button" onclick="App.toggleChat(false)" class="bg-white/10 hover:bg-white/20 text-white w-7 h-7 rounded-full font-bold text-xs flex items-center justify-center">✕</button>
+      <button type="button" onclick="App.toggleChat(false)" aria-label="إغلاق المساعد" class="bg-white/10 hover:bg-white/20 text-white w-7 h-7 rounded-full font-bold text-xs flex items-center justify-center"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div id="chat-messages" class="p-3.5 h-72 overflow-y-auto space-y-3 bg-slate-50 text-xs font-medium flex flex-col custom-scroll">
-      <div class="bg-blue-100 text-blue-950 p-3 rounded-2xl rounded-tr-none max-w-[90%] self-start shadow-sm leading-relaxed">
+      <div class="bg-slate-200/70 text-slate-900 p-3 rounded-2xl rounded-tr-none max-w-[90%] self-start shadow-sm leading-relaxed">
         أهلاً بك في <b>معرض أبو بهاء</b>! اضغط على زر الترشيح بالأسفل وأدخل ميزانيتك لأقترح عليك أفضل سيارة كاش أو بالتقسيط فوراً.
       </div>
     </div>
     <div class="p-2.5 bg-slate-100 border-t grid grid-cols-2 gap-1.5">
-      <button type="button" onclick="App.quickChat('matchmaker')" class="col-span-2 bg-amber-500 hover:bg-amber-400 text-slate-950 p-2 rounded-xl text-xs font-black transition shadow-sm">✨ رشح لي أفضل سيارة حسب ميزانيتي</button>
-      <button type="button" onclick="App.quickChat('prices')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">💰 قائمة الأسعار</button>
-      <button type="button" onclick="App.quickChat('installment')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">💳 أنظمة التقسيط</button>
-      <button type="button" onclick="App.quickChat('howto')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">🚗 خطوات الشراء</button>
-      <button type="button" onclick="App.quickChat('human')" class="bg-white hover:bg-blue-50 text-blue-900 border p-2 rounded-xl text-[11px] font-bold transition">👨‍💻 تواصل مع مشرف</button>
+      <button type="button" onclick="App.quickChat('matchmaker')" class="col-span-2 btn-luxury-accent p-2 rounded-xl text-xs font-black shadow-sm inline-flex items-center justify-center gap-1.5"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg><span>رشح لي أفضل سيارة حسب ميزانيتي</span></button>
+      <button type="button" onclick="App.quickChat('prices')" class="btn-luxury-outline p-2 rounded-xl text-[11px] font-bold inline-flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>قائمة الأسعار</span></button>
+      <button type="button" onclick="App.quickChat('installment')" class="btn-luxury-outline p-2 rounded-xl text-[11px] font-bold inline-flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg><span>أنظمة التقسيط</span></button>
+      <button type="button" onclick="App.quickChat('howto')" class="btn-luxury-outline p-2 rounded-xl text-[11px] font-bold inline-flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg><span>خطوات الشراء</span></button>
+      <button type="button" onclick="App.quickChat('human')" class="btn-luxury-outline p-2 rounded-xl text-[11px] font-bold inline-flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg><span>تواصل مع مشرف</span></button>
     </div>
   </div>
 
@@ -413,16 +598,16 @@
   </div>
 
   <!-- إشعارات Toast -->
-  <div id="toast-notification" class="fixed bottom-24 sm:bottom-12 left-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 z-[70] font-bold text-xs sm:text-sm border-r-4 border-amber-400 flex items-center gap-2 pointer-events-none no-print"></div>
+  <div id="toast-notification" class="fixed bottom-24 sm:bottom-12 left-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 z-[70] font-bold text-xs sm:text-sm border-r-4 border-[#C89B3C] flex items-center gap-2 pointer-events-none no-print"></div>
 
   <!-- شريط الحالة السفلي النظيف -->
-  <footer class="fixed bottom-0 inset-x-0 bg-slate-950 text-slate-300 z-30 border-t border-slate-800 shadow-2xl no-print">
+  <footer class="status-footer-bar fixed bottom-0 inset-x-0 z-30 shadow-sm no-print">
     <div class="max-w-7xl mx-auto px-4 h-8 flex items-center justify-between text-[10px]">
       <span class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
         <span>أبو بهاء لتجارة السيارات — مربوطة بمشروع elite-showroom</span>
       </span>
-      <span id="footer-session-info" class="font-bold text-amber-400">وضع تصفح العميل</span>
+      <span id="footer-session-info" class="font-bold text-accent">وضع تصفح العميل</span>
     </div>
   </footer>
 

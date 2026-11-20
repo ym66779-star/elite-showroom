@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abu-bahaa-showroom-v9';
+const CACHE_NAME = 'abu-bahaa-showroom-v12';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -30,7 +30,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. مسح جميع نسخ الكاش القديمة تلقائياً وتفعيل النسخة v9 على كل الأجهزة
+// 2. مسح جميع نسخ الكاش القديمة تلقائياً وتفعيل النسخة v12 على كل الأجهزة
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>

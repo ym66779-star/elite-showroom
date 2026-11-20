@@ -1,6 +1,6 @@
 /* ============================================================================
    Abu Bahaa Showroom - Admin Drawer (RTL), Command Center, Car CRUD & Auth UI
-   Strict RBAC Isolation: SuperAdmin vs Staff
+   Strict RBAC Isolation: SuperAdmin vs Staff — Zero Emojis (SVG Icons v10)
    ============================================================================ */
 
 const AdminDrawerUI = {
@@ -31,10 +31,6 @@ const AdminDrawerUI = {
     else this.openDrawer();
   },
 
-  /**
-   * Keeps header quiet (max 4 visitor controls; single "لوحة الإدارة" button for Admin/Staff)
-   * and populates the organized RTL Admin Drawer with RBAC isolation.
-   */
   syncHeaderAndDrawer() {
     const isAdmin = AuthService.isLogged();
     const isSuperAdmin = AuthService.isSuperAdmin();
@@ -58,11 +54,17 @@ const AdminDrawerUI = {
     const favTxt = document.getElementById('client-fav-btn-text');
     const compCount = document.getElementById('compare-count');
     const favCount = document.getElementById('client-favorites-count');
+    const mCompCount = document.getElementById('m-compare-count');
+    const mFavCount = document.getElementById('m-fav-count');
 
+    const compTotal = CarRepository.getCompare(isAdmin).length;
+    const favTotal = CarRepository.getFavorites().length;
     if (compTxt) compTxt.textContent = isAdmin ? 'مقارنة الإدارة' : 'المقارنة';
     if (favTxt) favTxt.textContent = isAdmin ? 'اهتمامات العملاء' : 'مفضلتي';
-    if (compCount) compCount.textContent = CarRepository.getCompare(isAdmin).length;
-    if (favCount) favCount.textContent = CarRepository.getFavorites().length;
+    if (compCount) compCount.textContent = compTotal;
+    if (favCount) favCount.textContent = favTotal;
+    if (mCompCount) mCompCount.textContent = compTotal;
+    if (mFavCount) mFavCount.textContent = favTotal;
 
     if (authBtn) {
       authBtn.classList.toggle('hidden', isAdmin);
@@ -91,31 +93,33 @@ const AdminDrawerUI = {
     if (!drawerBody) return;
 
     drawerBody.innerHTML = `
-      <div class="p-4 border-b border-slate-800 bg-slate-950/70 space-y-3">
+      <div class="p-4 border-b border-white/10 bg-[#0B0E14] space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <span class="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full ${isSuperAdmin ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/40'}">
-              ${isSuperAdmin ? '👑 المدير العام (SuperAdmin)' : '👤 مشرف مبيعات (Staff)'}
+            <span class="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-0.5 rounded-full ${isSuperAdmin ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/35' : 'bg-white/10 text-slate-200 border border-white/15'}">
+              ${isSuperAdmin ? UiIcons.get('crown', 'w-3 h-3') : UiIcons.get('user', 'w-3 h-3')}
+              <span>${isSuperAdmin ? 'المدير العام (SuperAdmin)' : 'مشرف مبيعات (Staff)'}</span>
             </span>
             <h3 class="text-sm font-black text-white mt-1.5">${escapeHtml(name)}</h3>
           </div>
-          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full ${FirebaseCloudService.isConnected ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'}">
-            ${FirebaseCloudService.isConnected ? '☁️ سحابي حي' : '💾 محلي'}
+          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${FirebaseCloudService.isConnected ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30'}">
+            ${UiIcons.get('cloud', 'w-3 h-3')}
+            <span>${FirebaseCloudService.isConnected ? 'سحابي حي' : 'محلي'}</span>
           </span>
         </div>
 
         <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
-          <div class="bg-slate-900 border border-slate-800 rounded-xl p-2">
+          <div class="bg-[#131823] border border-white/10 rounded-xl p-2">
             <span class="block text-[10px] text-slate-400 font-bold">المتاح</span>
-            <b class="text-amber-400 font-black text-sm">${cars.length}</b>
+            <b class="text-[#D4AF37] font-black text-sm">${cars.length}</b>
           </div>
-          <div class="bg-slate-900 border border-slate-800 rounded-xl p-2">
+          <div class="bg-[#131823] border border-white/10 rounded-xl p-2">
             <span class="block text-[10px] text-slate-400 font-bold">المباع</span>
-            <b class="text-emerald-400 font-black text-sm">${soldCars.length}</b>
+            <b class="text-white font-black text-sm">${soldCars.length}</b>
           </div>
-          <div class="bg-slate-900 border border-slate-800 rounded-xl p-2">
+          <div class="bg-[#131823] border border-white/10 rounded-xl p-2">
             <span class="block text-[10px] text-slate-400 font-bold">مهام معلقة</span>
-            <b class="text-rose-400 font-black text-sm">${totalTasks}</b>
+            <b class="text-slate-200 font-black text-sm">${totalTasks}</b>
           </div>
         </div>
       </div>
@@ -125,25 +129,29 @@ const AdminDrawerUI = {
           <div class="drawer-section-label">إدارة المعرض والعمليات</div>
           <div class="space-y-2">
             <button type="button" onclick="App.closeAdminDrawer(); App.openCarFormModal();" class="drawer-nav-item is-primary">
-              <span class="flex items-center gap-2"><span>➕</span><span>إضافة سيارة جديدة للمعرض</span></span>
-              <span class="text-xs opacity-80">←</span>
+              <span class="flex items-center gap-2">${UiIcons.get('plus', 'w-4 h-4')}<span>إضافة سيارة جديدة للمعرض</span></span>
+              ${UiIcons.get('arrowLeft', 'w-3.5 h-3.5 opacity-80')}
             </button>
             <button type="button" onclick="App.closeAdminDrawer(); App.openCommandCenter('overview');" class="drawer-nav-item">
-              <span class="flex items-center gap-2"><span>🎛️</span><span>مركز القيادة والإحصائيات</span></span>
-              <span class="text-[10px] bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-full">${totalTasks}</span>
+              <span class="flex items-center gap-2">${UiIcons.get('sliders', 'w-4 h-4 text-[#D4AF37]')}<span>مركز القيادة والإحصائيات</span></span>
+              <span class="text-[10px] bg-[#D4AF37] text-[#0B0E14] font-black px-2 py-0.5 rounded-full">${totalTasks}</span>
             </button>
             <div class="grid grid-cols-2 gap-1.5 pt-0.5">
               <button type="button" onclick="App.closeAdminDrawer(); App.openCommandCenter('reservations');" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                <span>📋 الحجوزات</span><span class="text-amber-400 font-black">${pendingRes}</span>
+                <span class="inline-flex items-center gap-1.5">${UiIcons.get('clipboardList', 'w-3.5 h-3.5 text-slate-400')}<span>الحجوزات</span></span>
+                <span class="text-[#D4AF37] font-black">${pendingRes}</span>
               </button>
               <button type="button" onclick="App.closeAdminDrawer(); App.openCommandCenter('inspections');" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                <span>🚗 المعاينات</span><span class="text-amber-400 font-black">${pendingInsp}</span>
+                <span class="inline-flex items-center gap-1.5">${UiIcons.get('car', 'w-3.5 h-3.5 text-slate-400')}<span>المعاينات</span></span>
+                <span class="text-[#D4AF37] font-black">${pendingInsp}</span>
               </button>
               <button type="button" onclick="App.closeAdminDrawer(); App.openCommandCenter('tradein');" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                <span>🔄 الاستبدال</span><span class="text-amber-400 font-black">${pendingTi}</span>
+                <span class="inline-flex items-center gap-1.5">${UiIcons.get('repeat', 'w-3.5 h-3.5 text-slate-400')}<span>الاستبدال</span></span>
+                <span class="text-[#D4AF37] font-black">${pendingTi}</span>
               </button>
               <button type="button" onclick="App.closeAdminDrawer(); App.openCommandCenter('sold');" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                <span>🏷️ المباعة</span><span class="text-emerald-400 font-black">${soldCars.length}</span>
+                <span class="inline-flex items-center gap-1.5">${UiIcons.get('tag', 'w-3.5 h-3.5 text-slate-400')}<span>المباعة</span></span>
+                <span class="text-emerald-300 font-black">${soldCars.length}</span>
               </button>
             </div>
           </div>
@@ -153,23 +161,23 @@ const AdminDrawerUI = {
           <div class="drawer-section-label">أدوات المبيعات والعملاء</div>
           <div class="space-y-2">
             <button type="button" onclick="App.closeAdminDrawer(); App.openBankProformaModal();" class="drawer-nav-item">
-              <span class="flex items-center gap-2"><span>🏦</span><span>عرض سعر رسمي للبنك (A4)</span></span>
-              <span class="text-[10px] text-slate-400">PDF/A4</span>
+              <span class="flex items-center gap-2">${UiIcons.get('building', 'w-4 h-4 text-[#D4AF37]')}<span>عرض سعر رسمي للبنك (A4)</span></span>
+              <span class="text-[10px] text-slate-400 font-mono">A4</span>
             </button>
             <button type="button" onclick="App.closeAdminDrawer(); App.openCrmManagerModal();" class="drawer-nav-item">
-              <span class="flex items-center gap-2"><span>🗂️</span><span>متابعة العملاء (Mini-CRM)</span></span>
-              <span class="text-[10px] bg-slate-800 text-amber-300 px-2 py-0.5 rounded-full">${crmCount}</span>
+              <span class="flex items-center gap-2">${UiIcons.get('folder', 'w-4 h-4 text-[#D4AF37]')}<span>متابعة العملاء (Mini-CRM)</span></span>
+              <span class="text-[10px] bg-white/10 text-[#D4AF37] px-2 py-0.5 rounded-full">${crmCount}</span>
             </button>
             <button type="button" onclick="App.closeAdminDrawer(); App.openStaffFavoritesModal();" class="drawer-nav-item">
-              <span class="flex items-center gap-2"><span>⭐</span><span>مفضلة المدير والمشرف</span></span>
-              <span class="text-[10px] bg-slate-800 text-amber-300 px-2 py-0.5 rounded-full">${staffFavCount}</span>
+              <span class="flex items-center gap-2">${UiIcons.get('star', 'w-4 h-4 text-[#D4AF37]')}<span>مفضلة المدير والمشرف</span></span>
+              <span class="text-[10px] bg-white/10 text-[#D4AF37] px-2 py-0.5 rounded-full">${staffFavCount}</span>
             </button>
             <div class="grid grid-cols-2 gap-1.5">
               <button type="button" onclick="App.closeAdminDrawer(); App.openCompareModal();" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                <span>⚖️ مقارنة الإدارة</span>
+                <span class="inline-flex items-center gap-1.5">${UiIcons.get('scale', 'w-3.5 h-3.5 text-slate-400')}<span>مقارنة الإدارة</span></span>
               </button>
               <button type="button" onclick="App.closeAdminDrawer(); App.openClientFavModal();" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                <span>❤️ اهتمامات العملاء</span>
+                <span class="inline-flex items-center gap-1.5">${UiIcons.get('heart', 'w-3.5 h-3.5 text-slate-400')}<span>اهتمامات العملاء</span></span>
               </button>
             </div>
           </div>
@@ -177,26 +185,26 @@ const AdminDrawerUI = {
 
         ${isSuperAdmin ? `
           <div>
-            <div class="drawer-section-label text-amber-400">الإدارة المالية والنظام (SuperAdmin)</div>
+            <div class="drawer-section-label text-[#D4AF37]">الإدارة المالية والنظام (SuperAdmin)</div>
             <div class="space-y-2">
               <button type="button" onclick="App.closeAdminDrawer(); App.exportExcelReport();" class="drawer-nav-item">
-                <span class="flex items-center gap-2"><span>📊</span><span>شيت Excel المحاسبي والأرباح</span></span>
-                <span class="text-[10px] text-emerald-400">CSV</span>
+                <span class="flex items-center gap-2">${UiIcons.get('barChart', 'w-4 h-4 text-emerald-400')}<span>شيت Excel المحاسبي والأرباح</span></span>
+                <span class="text-[10px] text-emerald-400 font-mono">CSV</span>
               </button>
               <button type="button" onclick="App.closeAdminDrawer(); App.exportExecutiveReport();" class="drawer-nav-item">
-                <span class="flex items-center gap-2"><span>📥</span><span>التقرير التنفيذي الشامل</span></span>
-                <span class="text-[10px] text-slate-400">TXT</span>
+                <span class="flex items-center gap-2">${UiIcons.get('fileText', 'w-4 h-4 text-slate-300')}<span>التقرير التنفيذي الشامل</span></span>
+                <span class="text-[10px] text-slate-400 font-mono">TXT</span>
               </button>
               <button type="button" onclick="App.closeAdminDrawer(); App.openCommandCenter('cloud');" class="drawer-nav-item">
-                <span class="flex items-center gap-2"><span>👥</span><span>إدارة المشرفين و Firebase</span></span>
-                <span class="text-[10px] text-amber-400">RBAC</span>
+                <span class="flex items-center gap-2">${UiIcons.get('users', 'w-4 h-4 text-[#D4AF37]')}<span>إدارة المشرفين و Firebase</span></span>
+                <span class="text-[10px] text-[#D4AF37] font-mono">RBAC</span>
               </button>
               <div class="grid grid-cols-2 gap-1.5">
                 <button type="button" onclick="App.closeAdminDrawer(); App.exportDatabaseJson();" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                  <span>💾 Backup (9)</span>
+                  <span class="inline-flex items-center gap-1.5">${UiIcons.get('download', 'w-3.5 h-3.5 text-emerald-400')}<span>Backup (9)</span></span>
                 </button>
                 <button type="button" onclick="App.closeAdminDrawer(); App.triggerImportDatabaseJson();" class="drawer-nav-item !py-2 !px-2.5 !text-[11px]">
-                  <span>📤 Restore</span>
+                  <span class="inline-flex items-center gap-1.5">${UiIcons.get('upload', 'w-3.5 h-3.5 text-[#D4AF37]')}<span>Restore</span></span>
                 </button>
               </div>
             </div>
@@ -206,19 +214,19 @@ const AdminDrawerUI = {
             <div class="drawer-section-label">السحابة والنسخ الاحتياطي</div>
             <div class="space-y-2">
               <button type="button" onclick="App.closeAdminDrawer(); App.openCommandCenter('cloud');" class="drawer-nav-item">
-                <span class="flex items-center gap-2"><span>☁️</span><span>حالة Firebase وإعداداتها</span></span>
+                <span class="flex items-center gap-2">${UiIcons.get('cloud', 'w-4 h-4 text-[#D4AF37]')}<span>حالة Firebase وإعداداتها</span></span>
               </button>
               <button type="button" onclick="App.closeAdminDrawer(); App.exportDatabaseJson();" class="drawer-nav-item">
-                <span class="flex items-center gap-2"><span>💾</span><span>تحميل نسخة احتياطية (JSON)</span></span>
+                <span class="flex items-center gap-2">${UiIcons.get('download', 'w-4 h-4 text-emerald-400')}<span>تحميل نسخة احتياطية (JSON)</span></span>
               </button>
             </div>
           </div>
         `}
       </div>
 
-      <div class="p-4 border-t border-slate-800 bg-slate-950/90">
-        <button type="button" onclick="App.closeAdminDrawer(); App.handleAuthClick();" class="w-full bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-black py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow">
-          <span>🔓</span>
+      <div class="p-4 border-t border-white/10 bg-[#0B0E14]">
+        <button type="button" onclick="App.closeAdminDrawer(); App.handleAuthClick();" class="w-full bg-white/10 hover:bg-rose-900/60 border border-white/15 hover:border-rose-500/40 text-white text-xs font-black py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow">
+          ${UiIcons.get('unlock', 'w-4 h-4')}
           <span>تسجيل الخروج</span>
         </button>
       </div>
@@ -240,12 +248,12 @@ const AdminDrawerUI = {
     const archivedTi = CarRepository.getArchivedTradeIns();
 
     const tabs = [
-      { id: 'overview', label: '📊 الأداء والإحصائيات', count: null },
-      { id: 'reservations', label: '📋 الحجوزات والمبيعات', count: activeRes.length },
-      { id: 'inspections', label: '🚗 مواعيد المعاينات', count: inspections.filter(i => i.status === 'pending').length },
-      { id: 'tradein', label: '🔄 الاستبدال والأرشيف', count: tradeIns.length },
-      { id: 'sold', label: '🏷️ أرشيف المباعة', count: soldCars.length },
-      { id: 'cloud', label: isSuperAdmin ? '⚙️ المشرفين و Firebase' : '☁️ حالة Firebase', count: null }
+      { id: 'overview', icon: 'barChart', label: 'الأداء والإحصائيات', count: null },
+      { id: 'reservations', icon: 'clipboardList', label: 'الحجوزات والمبيعات', count: activeRes.length },
+      { id: 'inspections', icon: 'car', label: 'مواعيد المعاينات', count: inspections.filter(i => i.status === 'pending').length },
+      { id: 'tradein', icon: 'repeat', label: 'الاستبدال والأرشيف', count: tradeIns.length },
+      { id: 'sold', icon: 'tag', label: 'أرشيف المباعة', count: soldCars.length },
+      { id: 'cloud', icon: isSuperAdmin ? 'settings' : 'cloud', label: isSuperAdmin ? 'المشرفين و Firebase' : 'حالة Firebase', count: null }
     ];
 
     let tabBodyHtml = '';
@@ -286,8 +294,8 @@ const AdminDrawerUI = {
               <h4 class="text-lg font-black text-amber-600 mt-1">${totalRev.toLocaleString('ar-EG')} ج.م</h4>
               ${isSuperAdmin ? `
                 <div class="mt-2 pt-2 border-t border-slate-200 text-[10px] space-y-0.5">
-                  <div class="text-emerald-700 font-black">💰 صافي ربح المباع: ${soldCars.reduce((s, c) => s + c.expectedProfit, 0).toLocaleString('ar-EG')} ج.م</div>
-                  <div class="text-blue-900 font-bold">📈 ربح المخزون المتوقع: ${cars.reduce((s, c) => s + c.expectedProfit, 0).toLocaleString('ar-EG')} ج.م</div>
+                  <div class="text-emerald-700 font-black">صافي ربح المباع: ${soldCars.reduce((s, c) => s + c.expectedProfit, 0).toLocaleString('ar-EG')} ج.م</div>
+                  <div class="text-blue-900 font-bold">ربح المخزون المتوقع: ${cars.reduce((s, c) => s + c.expectedProfit, 0).toLocaleString('ar-EG')} ج.م</div>
                 </div>
               ` : ''}
             </div>
@@ -299,7 +307,7 @@ const AdminDrawerUI = {
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-slate-50 p-4 rounded-2xl border">
-              <h4 class="font-black text-sm text-slate-900 mb-3">🔥 الماركات الأكثر طلباً ومشاهدة</h4>
+              <h4 class="font-black text-sm text-slate-900 mb-3 inline-flex items-center gap-1.5">${UiIcons.get('flame', 'w-4 h-4 text-rose-500')} الماركات الأكثر طلباً ومشاهدة</h4>
               <div class="space-y-3">
                 ${Object.entries(brandViews).map(([b, v]) => `
                   <div>
@@ -313,13 +321,13 @@ const AdminDrawerUI = {
             </div>
 
             <div class="bg-slate-50 p-4 rounded-2xl border">
-              <h4 class="font-black text-sm text-slate-900 mb-3">👥 تقييم إنجازات فريق المبيعات</h4>
+              <h4 class="font-black text-sm text-slate-900 mb-3 inline-flex items-center gap-1.5">${UiIcons.get('users', 'w-4 h-4 text-blue-900')} تقييم إنجازات فريق المبيعات</h4>
               <div class="space-y-2.5">
                 ${Object.keys(staffMap).length === 0 ? '<p class="text-xs text-slate-400 py-6 text-center font-bold">لا توجد عمليات مؤكدة بعد.</p>' :
                   Object.entries(staffMap).map(([stName, st]) => `
                     <div class="bg-white p-3 rounded-xl border text-xs flex justify-between items-center">
                       <div>
-                        <p class="font-black text-slate-900">👤 ${escapeHtml(stName)}</p>
+                        <p class="font-black text-slate-900 inline-flex items-center gap-1.5">${UiIcons.get('user', 'w-3.5 h-3.5 text-slate-500')} ${escapeHtml(stName)}</p>
                         <p class="text-slate-500 mt-0.5">مبيعات: <b>${st.sales}</b> | حجوزات: <b>${st.res}</b> | معاينات: <b>${st.insp}</b> | استبدال: <b>${st.ti}</b></p>
                       </div>
                       <span class="bg-blue-100 text-blue-900 font-black px-2.5 py-1 rounded-lg">${st.sales + st.res + st.insp + st.ti} نقطة</span>
@@ -330,10 +338,19 @@ const AdminDrawerUI = {
           </div>
 
           <div class="flex flex-wrap justify-between items-center gap-2 pt-3 border-t">
-            <button type="button" onclick="App.openAdminWatchlistModal()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-black px-4 py-2.5 rounded-xl transition">⭐ فتح قائمة متابعتي الخاصة</button>
+            <button type="button" onclick="App.openAdminWatchlistModal()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-black px-4 py-2.5 rounded-xl inline-flex items-center gap-1.5 transition">
+              ${UiIcons.get('star', 'w-4 h-4')}
+              <span>فتح قائمة متابعتي الخاصة</span>
+            </button>
             <div class="flex flex-wrap gap-2">
-              <button type="button" onclick="App.openStaffFavoritesModal()" class="bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-black px-4 py-2.5 rounded-xl transition">⭐ مفضلة المدير والمشرف</button>
-              <button type="button" onclick="App.exportExecutiveReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow transition">📥 تحميل التقرير التنفيذي الشامل (.txt)</button>
+              <button type="button" onclick="App.openStaffFavoritesModal()" class="bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-black px-4 py-2.5 rounded-xl inline-flex items-center gap-1.5 transition">
+                ${UiIcons.get('starFilled', 'w-4 h-4')}
+                <span>مفضلة المدير والمشرف</span>
+              </button>
+              <button type="button" onclick="App.exportExecutiveReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow inline-flex items-center gap-1.5 transition">
+                ${UiIcons.get('download', 'w-4 h-4')}
+                <span>تحميل التقرير التنفيذي الشامل (.txt)</span>
+              </button>
             </div>
           </div>
         </div>
@@ -347,22 +364,22 @@ const AdminDrawerUI = {
             ${activeRes.map(r => `
               <div class="bg-slate-50 p-4 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                 <div>
-                  <h4 class="font-black text-slate-900 text-sm">🚗 ${escapeHtml(r.carTitle)}</h4>
+                  <h4 class="font-black text-slate-900 text-sm inline-flex items-center gap-1.5">${UiIcons.get('car', 'w-4 h-4 text-blue-900')} ${escapeHtml(r.carTitle)}</h4>
                   <p class="text-blue-900 font-bold mt-1">العميل: ${escapeHtml(r.clientName)} | الهاتف: ${escapeHtml(r.clientPhone)}</p>
                   <p class="text-slate-600 mt-0.5">المشرف المتابع: <b class="text-indigo-700">${escapeHtml(r.handledBy)}</b> | ${escapeHtml(r.requestedAt)}</p>
-                  <span class="inline-block mt-1 px-2.5 py-0.5 rounded-lg font-black ${r.status === 'confirmed_by_staff' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}">
-                    ${r.status === 'confirmed_by_staff' ? '✓ حجز مؤكد (السيارة محجوزة بالمعرض)' : '⏳ بانتظار تأكيد المشرف'}
+                  <span class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-lg font-black ${r.status === 'confirmed_by_staff' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}">
+                    ${r.status === 'confirmed_by_staff' ? '✓ حجز مؤكد (السيارة محجوزة بالمعرض)' : 'بانتظار تأكيد المشرف'}
                   </span>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                  <button type="button" onclick="App.whatsAppRes('${escapeHtml(r.id)}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-2 rounded-xl font-bold">💬 واتساب</button>
-                  <button type="button" onclick="App.openPrintableContract('RESERVATION', '${escapeHtml(r.id)}')" class="bg-slate-900 hover:bg-slate-800 text-amber-400 px-3 py-2 rounded-xl font-black shadow">📄 إيصال عربون (A4)</button>
+                  <button type="button" onclick="App.whatsAppRes('${escapeHtml(r.id)}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-2 rounded-xl font-bold inline-flex items-center gap-1">${UiIcons.get('messageCircle', 'w-3.5 h-3.5')} واتساب</button>
+                  <button type="button" onclick="App.openPrintableContract('RESERVATION', '${escapeHtml(r.id)}')" class="bg-slate-900 hover:bg-slate-800 text-amber-400 px-3 py-2 rounded-xl font-black shadow inline-flex items-center gap-1">${UiIcons.get('fileText', 'w-3.5 h-3.5')} إيصال عربون (A4)</button>
                   ${r.status === 'pending_admin' ? `
                     <button type="button" onclick="App.confirmReservation('${escapeHtml(r.id)}')" class="bg-purple-700 hover:bg-purple-600 text-white px-3.5 py-2 rounded-xl font-bold shadow">تأكيد الحجز</button>
                     <button type="button" onclick="App.rejectReservation('${escapeHtml(r.id)}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-2 rounded-xl font-bold">رفض</button>
                   ` : ''}
                   ${isSuperAdmin && r.status === 'confirmed_by_staff' ? `
-                    <button type="button" onclick="App.approveSaleFromRes('${escapeHtml(r.id)}')" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-black shadow">🏷️ اعتماد البيع النهائي</button>
+                    <button type="button" onclick="App.approveSaleFromRes('${escapeHtml(r.id)}')" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-black shadow inline-flex items-center gap-1">${UiIcons.get('tag', 'w-3.5 h-3.5')} اعتماد البيع النهائي</button>
                     <button type="button" onclick="App.rejectSaleFromRes('${escapeHtml(r.id)}')" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded-xl font-bold">إلغاء الحجز</button>
                   ` : ''}
                 </div>
@@ -378,16 +395,16 @@ const AdminDrawerUI = {
             ${inspections.map(item => `
               <div class="bg-slate-50 p-4 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                 <div>
-                  <h4 class="font-black text-slate-900 text-sm">🚗 ${escapeHtml(item.carTitle)}</h4>
+                  <h4 class="font-black text-slate-900 text-sm inline-flex items-center gap-1.5">${UiIcons.get('car', 'w-4 h-4 text-teal-700')} ${escapeHtml(item.carTitle)}</h4>
                   <p class="text-cyan-800 font-bold mt-1">${escapeHtml(item.type)} | التاريخ: <b>${escapeHtml(item.date)}</b></p>
                   <p class="text-slate-700 mt-0.5">العميل: <b>${escapeHtml(item.clientName)}</b> (${escapeHtml(item.clientPhone)}) | المشرف: ${escapeHtml(item.handledBy)}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                  <button type="button" onclick="App.whatsAppInsp('${escapeHtml(item.id)}')" class="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-bold">💬 واتساب</button>
+                  <button type="button" onclick="App.whatsAppInsp('${escapeHtml(item.id)}')" class="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-bold inline-flex items-center gap-1">${UiIcons.get('messageCircle', 'w-3.5 h-3.5')} واتساب</button>
                   ${item.status !== 'completed' ? `
-                    <button type="button" onclick="App.completeInspection('${escapeHtml(item.id)}')" class="bg-teal-600 hover:bg-teal-500 text-white px-3.5 py-2 rounded-xl font-bold shadow">✓ تأكيد الإتمام</button>
+                    <button type="button" onclick="App.completeInspection('${escapeHtml(item.id)}')" class="bg-teal-600 hover:bg-teal-500 text-white px-3.5 py-2 rounded-xl font-bold shadow inline-flex items-center gap-1">${UiIcons.get('check', 'w-3.5 h-3.5')} تأكيد الإتمام</button>
                   ` : `<span class="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-black">مكتملة ✓</span>`}
-                  <button type="button" onclick="App.deleteInspection('${escapeHtml(item.id)}')" class="bg-rose-100 text-rose-700 px-2.5 py-1.5 rounded-xl font-bold">🗑️</button>
+                  <button type="button" onclick="App.deleteInspection('${escapeHtml(item.id)}')" aria-label="حذف" class="bg-rose-100 text-rose-700 px-2.5 py-1.5 rounded-xl font-bold inline-flex items-center justify-center">${UiIcons.get('trash', 'w-3.5 h-3.5')}</button>
                 </div>
               </div>
             `).join('')}
@@ -398,20 +415,20 @@ const AdminDrawerUI = {
       tabBodyHtml = `
         <div class="space-y-6">
           <div>
-            <h4 class="font-black text-sm text-indigo-950 mb-3">📥 طلبات الاستبدال والتثمين الجديدة (${tradeIns.length})</h4>
+            <h4 class="font-black text-sm text-indigo-950 mb-3 inline-flex items-center gap-1.5">${UiIcons.get('repeat', 'w-4 h-4 text-amber-600')} طلبات الاستبدال والتثمين الجديدة (${tradeIns.length})</h4>
             ${tradeIns.length === 0 ? '<p class="text-xs text-slate-400 py-4 text-center bg-slate-50 rounded-xl border">لا توجد طلبات استبدال معلقة.</p>' : `
               <div class="space-y-2.5">
                 ${tradeIns.map(item => `
                   <div class="bg-slate-50 p-4 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                     <div>
-                      <h5 class="font-black text-slate-900 text-sm">🚗 ${escapeHtml(item.brand)} ${escapeHtml(item.model)} (${escapeHtml(item.year)}) - <span class="text-amber-700">${escapeHtml(item.type)}</span></h5>
+                      <h5 class="font-black text-slate-900 text-sm inline-flex items-center gap-1.5">${UiIcons.get('car', 'w-4 h-4 text-slate-600')} ${escapeHtml(item.brand)} ${escapeHtml(item.model)} (${escapeHtml(item.year)}) — <span class="text-amber-700">${escapeHtml(UiIcons.stripEmoji(item.type))}</span></h5>
                       <p class="text-slate-700 mt-1">العداد: ${escapeHtml(item.km || '0')} كم | العميل: <b>${escapeHtml(item.clientName || 'عميل')}</b> (${escapeHtml(item.clientPhone)})</p>
                       <p class="text-slate-500 mt-0.5">${escapeHtml(item.desc || '')}</p>
                     </div>
                     <div class="flex gap-2">
-                      <button type="button" onclick="App.whatsAppTradeIn('${escapeHtml(item.id)}')" class="bg-emerald-100 text-emerald-800 px-3 py-2 rounded-xl font-bold">💬 واتساب</button>
-                      <button type="button" onclick="App.archiveTradeIn('${escapeHtml(item.id)}')" class="bg-indigo-700 text-white px-3 py-2 rounded-xl font-bold">✓ أرشفة</button>
-                      <button type="button" onclick="App.deleteTradeIn('${escapeHtml(item.id)}', false)" class="bg-rose-100 text-rose-700 px-2.5 py-2 rounded-xl font-bold">🗑️</button>
+                      <button type="button" onclick="App.whatsAppTradeIn('${escapeHtml(item.id)}')" class="bg-emerald-100 text-emerald-800 px-3 py-2 rounded-xl font-bold inline-flex items-center gap-1">${UiIcons.get('messageCircle', 'w-3.5 h-3.5')} واتساب</button>
+                      <button type="button" onclick="App.archiveTradeIn('${escapeHtml(item.id)}')" class="bg-indigo-700 text-white px-3 py-2 rounded-xl font-bold inline-flex items-center gap-1">${UiIcons.get('check', 'w-3.5 h-3.5')} أرشفة</button>
+                      <button type="button" onclick="App.deleteTradeIn('${escapeHtml(item.id)}', false)" aria-label="حذف" class="bg-rose-100 text-rose-700 px-2.5 py-2 rounded-xl font-bold inline-flex items-center justify-center">${UiIcons.get('trash', 'w-3.5 h-3.5')}</button>
                     </div>
                   </div>
                 `).join('')}
@@ -420,13 +437,13 @@ const AdminDrawerUI = {
           </div>
 
           <div class="pt-4 border-t">
-            <h4 class="font-black text-sm text-slate-700 mb-3">📂 أرشيف الاستبدال المكتمل (${archivedTi.length})</h4>
+            <h4 class="font-black text-sm text-slate-700 mb-3 inline-flex items-center gap-1.5">${UiIcons.get('folder', 'w-4 h-4 text-slate-500')} أرشيف الاستبدال المكتمل (${archivedTi.length})</h4>
             ${archivedTi.length === 0 ? '<p class="text-xs text-slate-400 py-4 text-center">الأرشيف فارغ.</p>' : `
               <div class="space-y-2">
                 ${archivedTi.map(item => `
                   <div class="bg-white p-3 rounded-xl border flex justify-between items-center text-xs">
                     <div>
-                      <span class="font-black text-slate-900">${escapeHtml(item.brand)} ${escapeHtml(item.model)} (${escapeHtml(item.type)})</span>
+                      <span class="font-black text-slate-900">${escapeHtml(item.brand)} ${escapeHtml(item.model)} (${escapeHtml(UiIcons.stripEmoji(item.type))})</span>
                       <span class="text-slate-500 mx-2">| العميل: ${escapeHtml(item.clientName || 'عميل')}</span>
                       <span class="text-emerald-700 font-bold">✓ بواسطة: ${escapeHtml(item.archivedBy)}</span>
                     </div>
@@ -450,7 +467,7 @@ const AdminDrawerUI = {
                 <div class="text-xs flex-grow">
                   <h4 class="font-black text-slate-900">${escapeHtml(c.brand)} ${escapeHtml(c.model)} (${c.year})</h4>
                   <p class="text-blue-900 font-black">${c.formattedPrice}</p>
-                  <p class="text-emerald-700 font-bold text-[11px]">🏷️ ${escapeHtml(c.soldAt)} | بواسطة: ${escapeHtml(c.soldViaStaff || c.soldBy)}</p>
+                  <p class="text-emerald-700 font-bold text-[11px] inline-flex items-center gap-1">${UiIcons.get('tag', 'w-3 h-3')} ${escapeHtml(c.soldAt)} | بواسطة: ${escapeHtml(c.soldViaStaff || c.soldBy)}</p>
                 </div>
               </div>
             `).join('')}
@@ -466,7 +483,7 @@ const AdminDrawerUI = {
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
           <div class="bg-slate-50 p-4 rounded-2xl border space-y-3">
             <div class="flex items-center justify-between">
-              <h4 class="font-black text-sm text-blue-950 flex items-center gap-1.5"><span>☁️</span> الربط السحابي (elite-showroom)</h4>
+              <h4 class="font-black text-sm text-blue-950 flex items-center gap-1.5">${UiIcons.get('cloud', 'w-4 h-4')}<span>الربط السحابي (elite-showroom)</span></h4>
               <span class="px-2.5 py-0.5 rounded-full font-black text-[10px] ${FirebaseCloudService.isConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                 ${FirebaseCloudService.isConnected ? 'متصل الآن بـ Firestore ✓' : 'غير متصل'}
               </span>
@@ -474,23 +491,23 @@ const AdminDrawerUI = {
             <p class="text-slate-500 leading-relaxed">تم تثبيت إعدادات مشروعك <b>elite-showroom</b> بشكل افتراضي. يقبل الحقل صيغة JSON أو كود JavaScript (<code class="font-mono">firebaseConfig</code>):</p>
             <textarea id="firebase-config-input" dir="ltr" class="w-full border rounded-xl p-3 font-mono text-[11px] h-32 bg-white">${savedCfg ? escapeHtml(JSON.stringify(savedCfg, null, 2)) : ''}</textarea>
             <div class="flex gap-2">
-              <button type="button" onclick="App.saveFirebaseConfigFromUI()" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white font-black py-2.5 rounded-xl shadow transition">⚡ حفظ ومزامنة سحابية فورية</button>
+              <button type="button" onclick="App.saveFirebaseConfigFromUI()" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white font-black py-2.5 rounded-xl shadow inline-flex items-center justify-center gap-1.5 transition">${UiIcons.get('zap', 'w-4 h-4')} حفظ ومزامنة سحابية فورية</button>
               ${FirebaseCloudService.isConnected ? `<button type="button" onclick="FirebaseCloudService.disconnect(); App.openCommandCenter('cloud');" class="bg-rose-100 text-rose-700 font-bold px-3 py-2.5 rounded-xl">فصل مؤقت</button>` : ''}
             </div>
             <div class="pt-3 border-t flex flex-wrap justify-between items-center gap-2">
               <span class="text-slate-600 font-bold">النسخة الاحتياطية الكاملة (9 جداول):</span>
               <div class="flex items-center gap-1.5 flex-wrap">
-                <button type="button" onclick="App.exportDatabaseJson()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-black px-3 py-1.5 rounded-lg transition">💾 تحميل Backup JSON</button>
+                <button type="button" onclick="App.exportDatabaseJson()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-black px-3 py-1.5 rounded-lg inline-flex items-center gap-1 transition">${UiIcons.get('download', 'w-3.5 h-3.5')} تحميل Backup JSON</button>
                 ${isSuperAdmin ? `
-                  <button id="import-db-json-btn" type="button" onclick="App.triggerImportDatabaseJson()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-lg transition shadow-sm">📤 استعادة نسخة (Restore)</button>
+                  <button id="import-db-json-btn" type="button" onclick="App.triggerImportDatabaseJson()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-lg inline-flex items-center gap-1 transition shadow-sm">${UiIcons.get('upload', 'w-3.5 h-3.5')} استعادة نسخة (Restore)</button>
                 ` : ''}
               </div>
             </div>
           </div>
 
           <div class="bg-slate-50 p-4 rounded-2xl border space-y-3">
-            <h4 class="font-black text-sm text-slate-900">👥 إدارة فريق المشرفين والصلاحيات</h4>
-            ${!isSuperAdmin ? '<p class="text-amber-800 bg-amber-50 p-3 rounded-xl font-bold border border-amber-200">🔒 إدارة حسابات المشرفين واستعادة النسخ الاحتياطية مخصصة للمدير العام فقط.</p>' : `
+            <h4 class="font-black text-sm text-slate-900 inline-flex items-center gap-1.5">${UiIcons.get('users', 'w-4 h-4 text-blue-900')} إدارة فريق المشرفين والصلاحيات</h4>
+            ${!isSuperAdmin ? `<p class="text-amber-800 bg-amber-50 p-3 rounded-xl font-bold border border-amber-200 inline-flex items-center gap-2">${UiIcons.get('lock', 'w-4 h-4')} إدارة حسابات المشرفين واستعادة النسخ الاحتياطية مخصصة للمدير العام فقط.</p>` : `
               <div class="space-y-2 max-h-40 overflow-y-auto custom-scroll">
                 ${admins.map(a => `
                   <div class="bg-white p-2.5 rounded-xl border flex justify-between items-center">
@@ -513,7 +530,7 @@ const AdminDrawerUI = {
                   <option value="Staff">مشرف مبيعات</option>
                   <option value="SuperAdmin">مدير عام</option>
                 </select>
-                <button type="submit" class="w-full bg-slate-900 text-amber-400 font-black py-2 rounded-xl">➕ إضافة المشرف</button>
+                <button type="submit" class="w-full bg-slate-900 text-amber-400 font-black py-2 rounded-xl inline-flex items-center justify-center gap-1.5">${UiIcons.get('plus', 'w-4 h-4')} إضافة المشرف</button>
               </form>
             `}
           </div>
@@ -525,17 +542,20 @@ const AdminDrawerUI = {
       <div class="bg-white rounded-3xl max-w-5xl w-full p-5 sm:p-7 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
         <div class="flex justify-between items-center border-b pb-4 mb-4">
           <div>
-            <h3 class="font-black text-lg sm:text-xl text-slate-900 flex items-center gap-2"><span>🎛️</span> مركز قيادة ${escapeHtml(DEALER_BRAND_NAME)}</h3>
+            <h3 class="font-black text-lg sm:text-xl text-slate-900 flex items-center gap-2">${UiIcons.get('sliders', 'w-5 h-5 text-amber-600')}<span>مركز قيادة ${escapeHtml(DEALER_BRAND_NAME)}</span></h3>
             <p class="text-xs text-slate-500">تحكم مركزي كامل في المخزون، المبيعات، الفريق، والربط السحابي بمشروع elite-showroom</p>
           </div>
-          <button type="button" onclick="App.closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-9 h-9 rounded-full font-black text-sm flex items-center justify-center">✕</button>
+          <button type="button" onclick="App.closeModal()" aria-label="إغلاق" class="bg-slate-200 hover:bg-slate-300 text-slate-900 w-9 h-9 rounded-full inline-flex items-center justify-center transition">
+            ${UiIcons.get('x', 'w-4 h-4')}
+          </button>
         </div>
 
         <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 border-b custom-scroll">
           ${tabs.map(t => `
-            <button type="button" onclick="App.openCommandCenter('${t.id}')" class="px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 ${this.activeCommandTab === t.id ? 'bg-blue-950 text-amber-400 shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+            <button type="button" onclick="App.openCommandCenter('${t.id}')" class="px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 ${this.activeCommandTab === t.id ? 'btn-luxury-primary shadow-sm' : 'btn-luxury-outline'}">
+              ${UiIcons.get(t.icon, 'w-3.5 h-3.5')}
               <span>${t.label}</span>
-              ${t.count !== null ? `<span class="px-1.5 py-0.5 rounded-full text-[10px] ${this.activeCommandTab === t.id ? 'bg-amber-400 text-slate-950' : 'bg-slate-300 text-slate-800'}">${t.count}</span>` : ''}
+              ${t.count !== null ? `<span class="px-1.5 py-0.5 rounded-full text-[10px] ${this.activeCommandTab === t.id ? 'bg-[#D4AF37] text-[#0B0E14]' : 'bg-slate-200 text-slate-800'}">${t.count}</span>` : ''}
             </button>
           `).join('')}
         </div>
@@ -555,11 +575,11 @@ const AdminDrawerUI = {
           role: document.getElementById('new-role').value
         });
         if (!res.ok) {
-          App.showToast(res.reason === 'duplicate' ? '⚠️ اسم المستخدم مسجل بالفعل!' : '🔒 غير مصرح لك.', 'warning');
+          App.showToast(res.reason === 'duplicate' ? 'اسم المستخدم مسجل بالفعل!' : 'غير مصرح لك.', 'warning');
           return;
         }
         this.openCommandCenter('cloud');
-        App.showToast('✅ تم إضافة المشرف الجديد ومزامنته مع السحابة!', 'success');
+        App.showToast('تم إضافة المشرف الجديد ومزامنته مع السحابة!', 'success');
       };
     }
   },
@@ -573,18 +593,18 @@ const AdminDrawerUI = {
       await FirebaseCloudService.syncToCloud();
       this.openCommandCenter('cloud');
     } catch (e) {
-      App.showToast('❌ صيغة الإعدادات غير صحيحة، تأكد من وجود apiKey و projectId.', 'error');
+      App.showToast('صيغة الإعدادات غير صحيحة، تأكد من وجود apiKey و projectId.', 'error');
     }
   },
 
   deleteAdminUser(username) {
     if (!AuthService.isSuperAdmin()) {
-      App.showToast('🔒 هذه الصلاحية للمدير العام فقط.', 'error');
+      App.showToast('هذه الصلاحية للمدير العام فقط.', 'error');
       return;
     }
     if (AuthService.deleteAdmin(username)) {
       this.openCommandCenter('cloud');
-      App.showToast('🗑️ تم حذف حساب المشرف.', 'warning');
+      App.showToast('تم حذف حساب المشرف.', 'warning');
     }
   },
 
@@ -596,8 +616,10 @@ const AdminDrawerUI = {
 
     App.openModalHtml(`
       <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
-        <button type="button" onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
-        <h3 class="font-black text-lg mb-1 text-amber-700">⭐ قائمة متابعتي الخاصة (${escapeHtml(AuthService.getName())})</h3>
+        <button type="button" onclick="App.closeModal()" aria-label="إغلاق" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full inline-flex items-center justify-center transition">
+          ${UiIcons.get('x', 'w-4 h-4')}
+        </button>
+        <h3 class="font-black text-lg mb-1 text-amber-700 inline-flex items-center gap-2">${UiIcons.get('starFilled', 'w-5 h-5 text-amber-500')} قائمة متابعتي الخاصة (${escapeHtml(AuthService.getName())})</h3>
         <p class="text-xs text-slate-500 mb-4">قائمة خاصة بك لمتابعة السيارات المهمة لعملائك.</p>
 
         ${cars.length === 0 ? '<p class="text-slate-400 py-10 text-center text-xs font-bold">لم تقم بإضافة سيارات لقائمة متابعتك بعد.</p>' : `
@@ -620,7 +642,6 @@ const AdminDrawerUI = {
     `);
   },
 
-  // Car Upsert Modal (Add / Edit)
   openCarFormModal(editCarId = null) {
     if (!AuthService.isLogged()) return;
     const existing = editCarId ? CarRepository.getAllCars().find(c => String(c.id) === String(editCarId)) : null;
@@ -631,8 +652,13 @@ const AdminDrawerUI = {
 
     App.openModalHtml(`
       <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
-        <button type="button" onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
-        <h3 class="font-black text-lg text-slate-900 mb-1">${isEdit ? '✏️ تعديل بيانات السيارة وألبوم الصور' : '➕ إضافة سيارة جديدة للمعرض'}</h3>
+        <button type="button" onclick="App.closeModal()" aria-label="إغلاق" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full inline-flex items-center justify-center transition">
+          ${UiIcons.get('x', 'w-4 h-4')}
+        </button>
+        <h3 class="font-black text-lg text-slate-900 mb-1 inline-flex items-center gap-2">
+          ${isEdit ? UiIcons.get('pencil', 'w-5 h-5 text-amber-600') : UiIcons.get('plus', 'w-5 h-5 text-emerald-600')}
+          <span>${isEdit ? 'تعديل بيانات السيارة وألبوم الصور' : 'إضافة سيارة جديدة للمعرض'}</span>
+        </h3>
         <p class="text-xs text-slate-500 mb-4">أضف المواصفات، السعر، حالة الفابريكة، وألبوم الصور ليتم حفظها سحابياً</p>
 
         <form id="car-upsert-form" class="space-y-3 text-xs">
@@ -669,7 +695,7 @@ const AdminDrawerUI = {
             </div>
             <div>
               <label class="block font-bold text-rose-700 mb-1">السعر السابق قبل الخصم (اختياري)</label>
-              <input id="cf-old-price" type="number" min="0" value="${isEdit && existing.oldPrice ? existing.oldPrice : ''}" placeholder="لإظهار شارة خصم 🔥" class="w-full border p-2.5 rounded-xl font-bold text-rose-700" />
+              <input id="cf-old-price" type="number" min="0" value="${isEdit && existing.oldPrice ? existing.oldPrice : ''}" placeholder="لإظهار شارة خصم" class="w-full border p-2.5 rounded-xl font-bold text-rose-700" />
             </div>
             <div>
               <label class="block font-bold text-slate-700 mb-1">رقم واتساب المسؤول</label>
@@ -679,7 +705,7 @@ const AdminDrawerUI = {
 
           ${isSuperAdmin ? `
             <div class="bg-slate-900 text-white p-3.5 rounded-2xl border border-amber-400/50 space-y-2 always-dark">
-              <label class="block font-black text-amber-400">🔐 التكلفة السرية وحد التفاوض المسموح (تظهر للمدير العام فقط):</label>
+              <label class="font-black text-amber-400 inline-flex items-center gap-1.5">${UiIcons.get('lock', 'w-3.5 h-3.5')} التكلفة السرية وحد التفاوض المسموح (تظهر للمدير العام فقط):</label>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <span class="block text-[10px] text-slate-300 font-bold mb-1">سعر شراء السيارة (ج.م)</span>
@@ -698,11 +724,11 @@ const AdminDrawerUI = {
           ` : ''}
 
           <div class="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200 space-y-2">
-            <label class="block font-black text-emerald-950">🛡️ حالة الفابريكة والدهان التفصيلية:</label>
+            <label class="font-black text-emerald-950 inline-flex items-center gap-1.5">${UiIcons.get('shieldCheck', 'w-4 h-4 text-emerald-600')} حالة الفابريكة والدهان التفصيلية:</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <select id="cf-paint-status" class="w-full border p-2 rounded-xl font-black bg-white text-slate-800">
                 ${PAINT_STATUS_OPTIONS.map(opt => `
-                  <option value="${escapeHtml(opt.value)}" ${isEdit && existing.paintStatus === opt.value ? 'selected' : ''}>${escapeHtml(opt.label)}</option>
+                  <option value="${escapeHtml(opt.value)}" ${isEdit && existing.paintStatus === opt.value ? 'selected' : ''}>${escapeHtml(UiIcons.stripEmoji(opt.label))}</option>
                 `).join('')}
               </select>
               <input id="cf-paint-details" value="${isEdit ? escapeHtml(existing.paintDetails) : ''}" placeholder="تفصيل الدهان (مثال: فابريكة بالكامل بدون ملاحظات)" class="w-full border p-2 rounded-xl bg-white" />
@@ -711,7 +737,7 @@ const AdminDrawerUI = {
 
           <div class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-200 space-y-2">
             <div class="flex justify-between items-center">
-              <label class="font-black text-blue-950">📷 ألبوم صور السيارة (ضغط WebP فوري أو رابط):</label>
+              <label class="font-black text-blue-950 inline-flex items-center gap-1.5">${UiIcons.get('camera', 'w-4 h-4')} ألبوم صور السيارة (ضغط WebP فوري أو رابط):</label>
               <span id="upload-status-text" class="text-[10px] font-bold text-blue-800"></span>
             </div>
             <input id="cf-file-input" type="file" accept="image/*" multiple onchange="App.handleCarFilesSelected(this.files)" class="w-full text-xs file:ml-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-900 file:text-white hover:file:bg-blue-800 cursor-pointer" />
@@ -723,7 +749,7 @@ const AdminDrawerUI = {
           </div>
 
           <div class="bg-slate-50 p-3.5 rounded-2xl border space-y-2">
-            <label class="block font-black text-slate-800">⚙️ درجات تقرير الفحص الفني (من 10):</label>
+            <label class="font-black text-slate-800 inline-flex items-center gap-1.5">${UiIcons.get('settings', 'w-4 h-4')} درجات تقرير الفحص الفني (من 10):</label>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
                 <span class="block text-[10px] text-slate-500 font-bold mb-1">المحرك</span>
@@ -749,8 +775,9 @@ const AdminDrawerUI = {
             <textarea id="cf-desc" required class="w-full border p-2.5 rounded-xl h-20">${isEdit ? escapeHtml(existing.description) : ''}</textarea>
           </div>
 
-          <button id="cf-submit-btn" type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-black py-3 rounded-xl shadow transition">
-            ${isEdit ? '💾 حفظ التعديلات ومزامنة السحابة' : '🚀 نشر السيارة في المعرض والسحابة'}
+          <button id="cf-submit-btn" type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-black py-3 rounded-xl shadow inline-flex items-center justify-center gap-2 transition">
+            ${UiIcons.get('checkCircle', 'w-4 h-4')}
+            <span>${isEdit ? 'حفظ التعديلات ومزامنة السحابة' : 'نشر السيارة في المعرض والسحابة'}</span>
           </button>
         </form>
       </div>
@@ -801,10 +828,10 @@ const AdminDrawerUI = {
 
       if (isEdit) {
         CarRepository.updateCar(carObj);
-        App.showToast('✅ تم تحديث بيانات السيارة ومزامنتها مع Firebase!', 'success');
+        App.showToast('تم تحديث بيانات السيارة ومزامنتها مع Firebase!', 'success');
       } else {
         CarRepository.addCar(carObj);
-        App.showToast('🎉 تمت إضافة السيارة وحفظها في قاعدة بيانات Firebase!', 'success');
+        App.showToast('تمت إضافة السيارة وحفظها في قاعدة بيانات Firebase!', 'success');
       }
       App.closeModal();
       App.syncAll();
@@ -823,7 +850,7 @@ const AdminDrawerUI = {
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      if (statusTxt) statusTxt.textContent = `⚡ جاري ضغط الصورة WebP (${i + 1}/${fileList.length})...`;
+      if (statusTxt) statusTxt.textContent = `جاري ضغط الصورة WebP (${i + 1}/${fileList.length})...`;
       try {
         const url = await FirebaseCloudService.uploadCarImage(file, (pct) => {
           if (bar) bar.style.width = `${pct}%`;
@@ -854,7 +881,7 @@ const AdminDrawerUI = {
     container.innerHTML = this.tempUploadedImages.map((img, idx) => `
       <div class="relative shrink-0">
         <img src="${escapeHtml(img)}" class="w-16 h-12 object-cover rounded-lg border" />
-        <button type="button" onclick="App.removeTempThumb(${idx})" class="absolute -top-1 -left-1 bg-rose-600 text-white w-4 h-4 rounded-full text-[9px] flex items-center justify-center">✕</button>
+        <button type="button" onclick="App.removeTempThumb(${idx})" aria-label="حذف الصورة" class="absolute -top-1 -left-1 bg-rose-600 text-white w-4 h-4 rounded-full flex items-center justify-center shadow">${UiIcons.get('x', 'w-2.5 h-2.5')}</button>
       </div>
     `).join('');
   },
@@ -870,14 +897,14 @@ const AdminDrawerUI = {
         CarRepository.deleteCar(carId);
         App.closeModal();
         App.syncAll();
-        App.showToast('🗑️ تم حذف السيارة من المعرض والسحابة بنجاح.', 'error');
+        App.showToast('تم حذف السيارة من المعرض والسحابة بنجاح.', 'error');
       }
     );
   },
 
   directSellCar(carId) {
     if (!AuthService.isSuperAdmin()) {
-      App.showToast('⚠️ صلاحية البيع النهائي المباشر للمدير العام فقط.', 'warning');
+      App.showToast('صلاحية البيع النهائي المباشر للمدير العام فقط.', 'warning');
       return;
     }
     App.confirmAction(
@@ -890,7 +917,7 @@ const AdminDrawerUI = {
         if (CarRepository.markAsSold(carId, adminName, adminName)) {
           App.closeModal();
           App.syncAll();
-          App.showToast('🏷️ مبروك! تم اعتماد البيع المباشر ومزامنته مع السحابة.', 'success');
+          App.showToast('تم اعتماد البيع المباشر ومزامنته مع السحابة.', 'success');
         }
       }
     );
@@ -923,7 +950,7 @@ const AdminDrawerUI = {
 
     App.syncAll();
     this.openCommandCenter('reservations');
-    App.showToast('✅ تم تأكيد الحجز للعميل وتحديث حالة السيارة إلى "محجوزة".', 'success');
+    App.showToast('تم تأكيد الحجز للعميل وتحديث حالة السيارة إلى "محجوزة".', 'success');
   },
 
   rejectReservation(resId) {
@@ -949,12 +976,12 @@ const AdminDrawerUI = {
     FirebaseCloudService.syncToCloud();
     App.syncAll();
     this.openCommandCenter('reservations');
-    App.showToast('🗑️ تم رفض وحذف طلب الحجز.', 'warning');
+    App.showToast('تم رفض وحذف طلب الحجز.', 'warning');
   },
 
   approveSaleFromRes(resId) {
     if (!AuthService.isSuperAdmin()) {
-      App.showToast('🔒 اعتماد البيع النهائي للمدير العام فقط.', 'error');
+      App.showToast('اعتماد البيع النهائي للمدير العام فقط.', 'error');
       return;
     }
     let reservations = CarRepository.getReservations();
@@ -975,7 +1002,7 @@ const AdminDrawerUI = {
         CarRepository.markAsSold(target.carId, AuthService.getName(), target.handledBy);
         App.syncAll();
         this.openCommandCenter('reservations');
-        App.showToast('🏷️ مبروك! تم اعتماد البيع النهائي ونقل السيارة للأرشيف.', 'success');
+        App.showToast('تم اعتماد البيع النهائي ونقل السيارة للأرشيف.', 'success');
       }
     );
   },
@@ -998,7 +1025,7 @@ const AdminDrawerUI = {
     CarRepository.updateInspections(list);
     App.syncAll();
     this.openCommandCenter('inspections');
-    App.showToast('✅ تم تأكيد إتمام المعاينة واحتسابها في تقييم الأداء!', 'success');
+    App.showToast('تم تأكيد إتمام المعاينة واحتسابها في تقييم الأداء!', 'success');
   },
 
   deleteInspection(inspId) {
@@ -1007,7 +1034,7 @@ const AdminDrawerUI = {
     CarRepository.updateInspections(list);
     App.syncAll();
     this.openCommandCenter('inspections');
-    App.showToast('🗑️ تم حذف سجل المعاينة.', 'warning');
+    App.showToast('تم حذف سجل المعاينة.', 'warning');
   },
 
   archiveTradeIn(id) {
@@ -1015,7 +1042,7 @@ const AdminDrawerUI = {
     CarRepository.archiveTradeIn(id, AuthService.getName());
     App.syncAll();
     this.openCommandCenter('tradein');
-    App.showToast('📂 تمت أرشفة الطلب واحتسابه في تقييم الأداء!', 'success');
+    App.showToast('تمت أرشفة الطلب واحتسابه في تقييم الأداء!', 'success');
   },
 
   deleteTradeIn(id, isArchived) {
@@ -1027,7 +1054,7 @@ const AdminDrawerUI = {
     }
     App.syncAll();
     this.openCommandCenter('tradein');
-    App.showToast('🗑️ تم حذف الطلب بنجاح.', 'warning');
+    App.showToast('تم حذف الطلب بنجاح.', 'warning');
   },
 
   handleAuthClick() {
@@ -1035,7 +1062,7 @@ const AdminDrawerUI = {
       AuthService.logout();
       this.closeDrawer();
       App.syncAll();
-      App.showToast('🔒 تم تسجيل الخروج بنجاح.', 'info');
+      App.showToast('تم تسجيل الخروج بنجاح.', 'info');
     } else {
       this.openLoginModal();
     }
@@ -1044,20 +1071,22 @@ const AdminDrawerUI = {
   openLoginModal() {
     App.openModalHtml(`
       <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
-        <button type="button" onclick="App.closeModal()" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center">✕</button>
-        <h3 class="text-lg font-black mb-1 text-slate-900">🔐 بوابة دخول إدارة المعرض</h3>
+        <button type="button" onclick="App.closeModal()" aria-label="إغلاق" class="absolute top-4 left-4 bg-slate-200 hover:bg-slate-300 text-slate-900 w-8 h-8 rounded-full inline-flex items-center justify-center transition">
+          ${UiIcons.get('x', 'w-4 h-4')}
+        </button>
+        <h3 class="text-lg font-black mb-1 text-slate-900 inline-flex items-center gap-2">${UiIcons.get('lock', 'w-5 h-5 text-accent')} بوابة دخول إدارة المعرض</h3>
         <p class="text-xs text-slate-500 mb-4">سجل دخولك للوصول إلى لوحة الإدارة والربط السحابي بـ Firebase</p>
         <form id="sec-login" class="space-y-3 text-xs">
           <input id="l-user" required placeholder="اسم المستخدم (admin أو yasser)" class="w-full border p-3 rounded-xl font-bold" />
           <input id="l-pass" required type="password" placeholder="كلمة المرور" class="w-full border p-3 rounded-xl font-bold" />
-          <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 space-y-1">
-            <p class="font-black">💡 دخول سريع للتجربة (اضغط للتعبئة التلقائية):</p>
-            <div class="flex gap-2 pt-1">
-              <button type="button" onclick="document.getElementById('l-user').value='admin'; document.getElementById('l-pass').value='Elite@2026#Secure';" class="bg-amber-200/70 hover:bg-amber-300 px-2.5 py-1 rounded-lg font-black transition">👑 حساب المدير العام</button>
-              <button type="button" onclick="document.getElementById('l-user').value='yasser'; document.getElementById('l-pass').value='Yasser*99';" class="bg-blue-100 hover:bg-blue-200 text-blue-900 px-2.5 py-1 rounded-lg font-black transition">👤 حساب المشرف (يسري)</button>
+          <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-[11px] text-slate-800 space-y-1.5">
+            <p class="font-black inline-flex items-center gap-1">${UiIcons.get('sparkles', 'w-3.5 h-3.5 text-accent')} دخول سريع للتجربة (اضغط للتعبئة التلقائية):</p>
+            <div class="flex gap-2 pt-0.5">
+              <button type="button" onclick="document.getElementById('l-user').value='admin'; document.getElementById('l-pass').value='Elite@2026#Secure';" class="btn-luxury-accent px-2.5 py-1.5 rounded-lg font-black inline-flex items-center gap-1">${UiIcons.get('crown', 'w-3.5 h-3.5')} حساب المدير العام</button>
+              <button type="button" onclick="document.getElementById('l-user').value='yasser'; document.getElementById('l-pass').value='Yasser*99';" class="btn-luxury-outline px-2.5 py-1.5 rounded-lg font-black inline-flex items-center gap-1">${UiIcons.get('user', 'w-3.5 h-3.5')} حساب المشرف (يسري)</button>
             </div>
           </div>
-          <button type="submit" class="w-full bg-blue-950 hover:bg-blue-900 text-amber-400 font-black py-3 rounded-xl shadow">تسجيل الدخول للوحة الإدارة</button>
+          <button type="submit" class="w-full btn-luxury-primary font-black py-3 rounded-xl shadow">تسجيل الدخول للوحة الإدارة</button>
         </form>
       </div>
     `);
@@ -1069,9 +1098,9 @@ const AdminDrawerUI = {
       if (AuthService.login(u, p)) {
         App.closeModal();
         App.syncAll();
-        App.showToast(`🎉 مرحباً بك في لوحة الإدارة يا ${AuthService.getName()}!`, 'success');
+        App.showToast(`مرحباً بك في لوحة الإدارة يا ${AuthService.getName()}!`, 'success');
       } else {
-        App.showToast('❌ اسم المستخدم أو كلمة المرور غير صحيحة!', 'error');
+        App.showToast('اسم المستخدم أو كلمة المرور غير صحيحة!', 'error');
       }
     };
   }
